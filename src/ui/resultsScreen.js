@@ -19,12 +19,13 @@ export function showResults(rows, { trackName, reward = null, training = false }
   for (const r of rows) {
     const tr = document.createElement('tr');
     if (r.isPlayer) tr.className = 'me';
+    else if (r.isRival) tr.className = 'rival';
     // Encore en piste : temps estimé s'il est proche de l'arrivée, sinon « non terminé »
     const far = r.estimated && r.gap > 15;
     const time = far ? 'NON TERMINÉ' : r.position === 1 ? formatTime(r.time) : `+${r.gap.toFixed(2)} s`;
     tr.innerHTML = `
       <td class="pos">${r.position}</td>
-      <td class="name"><i style="background:${r.colors.body};box-shadow:0 0 6px ${r.colors.glow}"></i>${r.isPlayer ? 'TOI' : r.name}</td>
+      <td class="name"><i style="background:${r.colors.body};box-shadow:0 0 6px ${r.colors.glow}"></i>${r.isPlayer ? 'TOI' : r.isRival ? `★ ${r.name}` : r.name}</td>
       <td class="hide-narrow">${r.car}</td>
       <td class="${r.estimated ? 'est' : ''}">${time}${r.estimated && !far ? ' ~' : ''}</td>
       <td class="hide-narrow ${r.bestLap === bestOfRace ? 'best' : ''}">${formatTime(r.bestLap)}</td>`;
@@ -35,6 +36,7 @@ export function showResults(rows, { trackName, reward = null, training = false }
   box.classList.toggle('hidden', !reward);
   el('res-promo').classList.add('hidden');
   el('res-cars').classList.add('hidden');
+  el('res-rival').classList.add('hidden');
   el('res-record').classList.add('hidden');
   if (training) {
     el('res-record').textContent = 'ENTRAÎNEMENT — PAS DE TROPHÉES';
@@ -42,6 +44,15 @@ export function showResults(rows, { trackName, reward = null, training = false }
   }
   if (reward) {
     el('res-gain').textContent = `+${reward.gained}`;
+    const rivalRow = rows.find((r) => r.isRival);
+    if (rivalRow) {
+      const rb = el('res-rival');
+      rb.classList.remove('hidden');
+      rb.classList.toggle('won', reward.rivalBeaten);
+      rb.textContent = reward.rivalBeaten
+        ? `★ RIVAL ${rivalRow.name} BATTU ! +${reward.rivalBonus} TROPHÉES BONUS${reward.firstRivalWin ? ' — PREMIÈRE FOIS !' : ''}`
+        : `★ ${rivalRow.name} a fini devant toi — bats-le pour +3 trophées bonus`;
+    }
     const tag = el('res-league');
     tag.textContent = reward.newLeague.name;
     tag.style.color = reward.newLeague.color;

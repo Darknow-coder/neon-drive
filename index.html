@@ -29,6 +29,7 @@
     <div class="hud-block hud-times">
       <div><span class="hud-label">ACTUEL</span> <span class="hud-mono" id="hud-time">0:00.000</span></div>
       <div><span class="hud-label">MEILLEUR</span> <span class="hud-mono" id="hud-best">--:--.---</span></div>
+      <div class="hud-rival hidden" id="hud-rival"></div>
     </div>
     <div class="hud-center" id="hud-msg"></div>
     <div class="hud-block hud-speed">
@@ -127,6 +128,7 @@
       </div>
       <div class="promo hidden" id="res-promo"></div>
       <div class="promo hidden" id="res-cars"></div>
+      <div class="rival-banner hidden" id="res-rival"></div>
       <div class="record hidden" id="res-record"></div>
       <table class="results-table">
         <thead><tr><th></th><th>PILOTE</th><th class="hide-narrow">VOITURE</th><th>TEMPS</th><th class="hide-narrow">MEILLEUR TOUR</th></tr></thead>
@@ -153,6 +155,7 @@
         <div class="trophy-line"><span class="trophy-ico"></span><b id="menu-trophies">0</b> <span class="muted" id="menu-trophies-word">trophées</span></div>
         <div class="league-bar"><div class="league-fill" id="menu-league-fill"></div></div>
         <div class="league-next muted" id="menu-league-next">Prochaine ligue : ARGENT (100)</div>
+        <div class="menu-rival" id="menu-rival"></div>
       </div>
     </div>
 
@@ -219,6 +222,7 @@
     <div class="reveal-label">CIRCUIT TIRÉ AU SORT</div>
     <div class="reveal-name" id="reveal-name"></div>
     <div class="reveal-profile" id="reveal-profile"></div>
+    <div class="reveal-rival hidden" id="reveal-rival"></div>
   </div>
 
   <!-- Affichage des erreurs (pour pouvoir les signaler) -->

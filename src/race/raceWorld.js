@@ -2,7 +2,7 @@
 // Utilisée par le jeu ET par les outils de test (node tools/aiRace.js) :
 // les deux font donc exactement la même course.
 
-import { buildTrack, gridSlots, queryTrack } from '../track/buildTrack.js';
+import { buildTrack, gridSlots, queryTrack, updateMovingObstacles } from '../track/buildTrack.js';
 import { createCar, stepCar, resetCarMotion } from '../physics/carPhysics.js';
 import { collideCarWithWalls, collideCarWithObstacles } from '../physics/collisions.js';
 import { collideCars } from '../physics/carCollisions.js';
@@ -10,6 +10,7 @@ import { surfaceFor } from '../physics/surface.js';
 import { createLapTracker, updateLapTracker } from './lapTracker.js';
 import { createAiDriver } from '../ai/aiDriver.js';
 import { AI_PROFILES, LEAGUE_SKILL } from '../data/aiProfiles.js';
+import { RIVAL_SKILL } from '../data/rivals.js';
 import { createIntent } from '../core/input.js';
 import { mulberry32 } from '../core/math.js';
 
@@ -41,13 +42,17 @@ export function createRaceWorld(opts) {
     car.position = k + 1;
     car.wallHits = 0;
     car.carHits = 0;
+    car.isRival = !!e.isRival;
     if (!e.isPlayer) {
+      const baseProfile = AI_PROFILES[e.profile ?? 'balanced'];
       car.ai = createAiDriver(car, track, {
-        profile: AI_PROFILES[e.profile ?? 'balanced'],
-        pace: skill.pace,
-        mistakesMul: skill.mistakes,
-        lineMul: skill.line,
-        driftMul: skill.drift,
+        // Un rival garde la personnalité de son profil, avec un talent supérieur
+        profile: e.isRival ? { ...baseProfile, ...RIVAL_SKILL, ...(e.skill ?? {}) } : baseProfile,
+        // Un rival a un niveau propre, plus élevé (fixé avant la course)
+        pace: skill.pace * (e.paceMul ?? 1),
+        mistakesMul: skill.mistakes * (e.mistakeMul ?? 1),
+        lineMul: e.isRival ? 0.5 : skill.line,
+        driftMul: e.isRival ? 1 : skill.drift,
         rng: mulberry32((rng() * 1e9) | 0),
       });
     }
@@ -104,6 +109,7 @@ export function createRaceWorld(opts) {
   function step(dt, playerIntent) {
     world.time += dt;
     if (!world.started && world.time >= 0) world.started = true;
+    updateMovingObstacles(track, Math.max(0, world.time));
     updateDraft(dt);
 
     for (const car of cars) {

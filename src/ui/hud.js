@@ -13,6 +13,7 @@ export function createHud() {
     pos: document.getElementById('hud-pos'),
     total: document.getElementById('hud-total'),
     msg: document.getElementById('hud-msg'),
+    rival: document.getElementById('hud-rival'),
     time: document.getElementById('hud-time'),
     best: document.getElementById('hud-best'),
     speed: document.getElementById('hud-speed'),
@@ -30,12 +31,19 @@ export function createHud() {
 
   return {
     show(v) { el.root.classList.toggle('hidden', !v); },
-    update({ car, lap, laps, lapTime, bestLap, lastMsg, position, total, big }) {
+    update({ car, lap, laps, lapTime, bestLap, lastMsg, position, total, big, rival = null }) {
       set('lap', el.lap, lap > 0 ? String(lap) : '–');
       set('laps', el.laps, `/${laps}`);
       set('pos', el.pos, String(position));
       set('total', el.total, `/${total}`);
       set('msg', el.msg, lastMsg || '');
+      const rivalTxt = rival ? `★ ${rival.name} : ${rival.position}e${rival.position > position ? ' — derrière toi' : ''}` : '';
+      if (cache.rivalTxt !== rivalTxt) {
+        cache.rivalTxt = rivalTxt;
+        el.rival.textContent = rivalTxt;
+        el.rival.classList.toggle('hidden', !rival);
+        el.rival.classList.toggle('ahead', !!rival && rival.position > position);
+      }
       if (cache.big !== !!big) { cache.big = !!big; el.msg.classList.toggle('big', !!big); }
       set('time', el.time, lap > 0 ? formatTime(lapTime) : '0:00.000');
       set('best', el.best, formatTime(bestLap));

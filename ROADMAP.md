@@ -17,7 +17,11 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Météo : pluie (adhérence réduite pour tous, effets visuels et sonores)
 - [x] 3 nouveaux circuits : RAINLINE (Argent), DUNE RUNNER (Or), ORBITAL RING (Diamant)
 - [x] 3 nouvelles voitures : SPECTRE (250), COMET (400), BASTION (600)
-- [ ] Rival « boss » par ligue, musiques supplémentaires, obstacles mobiles, circuit Élite
+- [x] Designs de voitures distincts, aperçu des voitures verrouillées
+- [x] Rivaux « boss » par ligue (SPARK, VANTA, MIRAGE, ZENITH, NEMESIS) : +3 trophées si battu
+- [x] 2 musiques supplémentaires (désert « Mirage », orbitale « Orbite »)
+- [x] Piliers mobiles + circuit Élite CITADEL
+- [ ] Circuits créés avec l'éditeur, nouvelles voitures
 - 10 à 12 circuits (2 par ligue), thèmes visuels, raccourcis, obstacles mobiles, pluie
 - 12 à 15 voitures avec raretés
 - Un rival « boss » par ligue

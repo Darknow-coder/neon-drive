@@ -20,6 +20,7 @@ import { createSfx } from './audio/sfx.js';
 import { createMusic } from './audio/music.js';
 import { createSettingsScreen } from './ui/settings.js';
 import { createTutorial } from './scenes/tutorial.js';
+import { rivalFor } from './data/rivals.js';
 
 const $ = (id) => document.getElementById(id);
 const show = (id, v = true) => $(id).classList.toggle('hidden', !v);
@@ -55,7 +56,9 @@ const music = createMusic(audio);
 /** Ambiance musicale selon l'écran affiché. */
 function updateMusic() {
   if (!audio.ctx) return;
-  music.setMode(state === 'race' || state === 'reveal' ? 'race' : 'menu');
+  // En course : le morceau dépend de l'environnement du circuit
+  const style = getTrackData(trackId).theme?.style ?? 'city';
+  music.setMode(state === 'race' || state === 'reveal' ? 'race' : 'menu', style);
 }
 // Sur mobile, le son ne peut démarrer qu'après un geste du joueur
 const unlockAudio = () => {
@@ -129,13 +132,18 @@ function startRace() {
     playerColors: liveryFor(save, carId),
     sfx,
     settings: save.settings,
+    rival: !training, // le rival de la ligue est présent en course classée
     onFinish: (rows) => {
       state = 'results';
       setRaceUi(false);
       let reward = null;
       if (!training) {
         const me = rows.find((r) => r.isPlayer);
-        reward = applyRaceResult(save, { position: me.position, trackId, carId, bestLap: me.bestLap });
+        const rv = rows.find((r) => r.isRival);
+        reward = applyRaceResult(save, {
+          position: me.position, trackId, carId, bestLap: me.bestLap,
+          rivalId: session.rival?.id ?? null, rivalBeaten: !!rv && me.position < rv.position,
+        });
         persist();
       }
       showResults(rows, { trackName: session.trackName, reward, training });
@@ -226,7 +234,7 @@ function startRankedRace() {
   show('pause', false);
   setRaceUi(false);
   updateMusic();
-  revealTrack(pool, chosen, () => startRace());
+  revealTrack(pool, chosen, () => startRace(), rivalFor(leagueFor(save.trophies).id));
 }
 
 function startTraining() {

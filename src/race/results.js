@@ -20,6 +20,7 @@ export function computeResults(world) {
       car: car.def.name,
       colors: car.livery ?? car.def.colors,
       isPlayer: car.isPlayer,
+      isRival: !!car.isRival,
       finished: car.finished,
       estimated,
       time,

@@ -49,15 +49,20 @@ export function validateTrack(t) {
   }
 
   // 3) Passages à côté des piliers : au moins 2,5 largeurs de voiture
-  for (const ob of t.obstacles) {
-    const off = (ob.x - t.x[ob.index]) * t.nx[ob.index] + (ob.y - t.y[ob.index]) * t.ny[ob.index];
+  for (const ob0 of t.obstacles) {
+    // Pilier mobile : on vérifie les deux extrémités de son mouvement
+    const positions = ob0.move ? [ob0.baseOffset - ob0.move.amp, ob0.baseOffset + ob0.move.amp] : [ob0.baseOffset ?? null];
+    for (const posOff of positions) {
+    const ob = ob0;
+    const off = posOff ?? ((ob.x - t.x[ob.index]) * t.nx[ob.index] + (ob.y - t.y[ob.index]) * t.ny[ob.index]);
     const hw = t.hw[ob.index] - t.wallThickness / 2;
     const room = Math.min(hw + off - ob.r, hw - off - ob.r);
     const best = Math.max(hw + off - ob.r, hw - off - ob.r);
     if (best < CAR_W * 2.5) {
       problems.push({ kind: 'pillar', msg: `Pilier à ${(ob.index / t.count).toFixed(2)} : aucun passage assez large (${Math.round(best)} u)`, indices: [ob.index] });
-    } else if (room < CAR_W * 2.5 && room > -ob.r) {
+    } else if (!ob0.move && room < CAR_W * 2.5 && room > -ob.r) {
       problems.push({ kind: 'pillar', msg: `Pilier à ${(ob.index / t.count).toFixed(2)} : passage trop étroit d'un côté (${Math.round(room)} u) — centre-le ou colle-le au mur`, indices: [ob.index] });
+    }
     }
   }
 

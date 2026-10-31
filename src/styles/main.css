@@ -670,3 +670,17 @@ html, body {
 .thumb.locked { color: var(--muted); }
 .thumb .lk { position: absolute; top: 2px; right: 5px; font-size: 12px; }
 @media (max-height: 520px) { .thumb { width: 62px; } .thumb canvas { width: 56px; height: 42px; } }
+
+/* ---------- Rivaux ---------- */
+.menu-rival { font-size: 13px; margin-top: 4px; color: #ffd34d; }
+.menu-rival b { letter-spacing: 1px; }
+.reveal-rival { margin-top: 14px; text-align: center; padding: 8px 18px; border: 1px solid #ffd34d; border-radius: 12px; background: rgba(255, 211, 77, 0.08); animation: fadein 0.4s ease-out; }
+.reveal-rival .rv-title { font-family: var(--font-display); font-size: 11px; letter-spacing: 3px; color: #ffd34d; }
+.reveal-rival .rv-name { font-family: var(--font-display); font-weight: 900; font-size: 24px; letter-spacing: 3px; }
+.reveal-rival .rv-quote { color: var(--muted); font-style: italic; font-size: 14px; }
+.hud-rival { font-size: 13px; color: #ffd34d; font-weight: 700; letter-spacing: 1px; }
+.hud-rival.ahead { color: #3dff9e; }
+.rival-banner { text-align: center; font-family: var(--font-display); font-weight: 700; letter-spacing: 2px; font-size: 13px; padding: 6px; border-radius: 8px; border: 1px solid #ffd34d; color: #ffd34d; }
+.rival-banner.won { background: rgba(255, 211, 77, 0.15); animation: pulse 1.6s ease-in-out infinite; }
+.results-table tr.rival td.name { color: #ffd34d; }
+@media (max-height: 420px) { .rival-banner { font-size: 11px; padding: 3px; } .reveal-rival .rv-name { font-size: 18px; } }

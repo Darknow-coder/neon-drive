@@ -133,6 +133,23 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
   // ----- Ombres au pied des piliers (le pilier lui-même est dessiné en direct) -----
   function drawPillarBases() {
     for (const ob of track.obstacles) {
+      if (ob.move) {
+        // Rail sur lequel coulisse le pilier (indique son trajet)
+        const i = ob.index;
+        const a = edgePoint(i, ob.baseOffset - ob.move.amp);
+        const b2 = edgePoint(i, ob.baseOffset + ob.move.amp);
+        cctx.save();
+        cctx.lineCap = 'round';
+        cctx.strokeStyle = 'rgba(0,0,0,0.55)';
+        cctx.lineWidth = ob.r * 1.2;
+        cctx.beginPath(); cctx.moveTo(...a); cctx.lineTo(...b2); cctx.stroke();
+        cctx.strokeStyle = 'rgba(255,225,77,0.5)';
+        cctx.lineWidth = 3;
+        cctx.setLineDash([10, 8]);
+        cctx.beginPath(); cctx.moveTo(...a); cctx.lineTo(...b2); cctx.stroke();
+        cctx.restore();
+        continue;
+      }
       const g = cctx.createRadialGradient(ob.x + 6, ob.y + 8, ob.r * 0.6, ob.x + 6, ob.y + 8, ob.r * 1.9);
       g.addColorStop(0, 'rgba(0,0,0,0.6)');
       g.addColorStop(1, 'rgba(0,0,0,0)');

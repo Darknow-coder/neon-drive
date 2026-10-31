@@ -144,7 +144,9 @@ export function buildTrack(data) {
 //   offset : décalage latéral depuis le centre (négatif = à gauche)
 // Ainsi, si on modifie la forme du circuit, ils restent bien placés.
 //
-//   obstacles : { type: 'pillar', at, offset, r }
+//   obstacles : { type: 'pillar', at, offset, r, move? }
+//               move = { amp, period, phase } : le pilier coulisse latéralement
+//               (offset ± amp, période en secondes) — mouvement régulier et prévisible
 //   zones     : { type: 'boost' | 'slick', at, length, offset, width }
 // ---------------------------------------------------------------------------
 function buildFeatures(track, data) {
@@ -158,6 +160,9 @@ function buildFeatures(track, data) {
       x: track.x[i] + track.nx[i] * off,
       y: track.y[i] + track.ny[i] * off,
       r: o.r ?? 28,
+      baseOffset: off,
+      offset: off,
+      move: o.move ? { amp: o.move.amp ?? 60, period: o.move.period ?? 3, phase: o.move.phase ?? 0 } : null,
     });
   }
   for (const z of data.zones ?? []) {
@@ -261,4 +266,21 @@ export function gridSlots(track, n) {
     });
   }
   return slots;
+}
+
+/** Décalage latéral d'un pilier mobile à l'instant `time`. */
+export function obstacleOffsetAt(ob, time) {
+  if (!ob.move) return ob.baseOffset;
+  return ob.baseOffset + ob.move.amp * Math.sin((2 * Math.PI * time) / ob.move.period + ob.move.phase);
+}
+
+/** Met à jour la position des piliers mobiles (appelé à chaque pas de la course). */
+export function updateMovingObstacles(track, time) {
+  for (const ob of track.obstacles) {
+    if (!ob.move) continue;
+    const off = obstacleOffsetAt(ob, time);
+    ob.offset = off;
+    ob.x = track.x[ob.index] + track.nx[ob.index] * off;
+    ob.y = track.y[ob.index] + track.ny[ob.index] * off;
+  }
 }

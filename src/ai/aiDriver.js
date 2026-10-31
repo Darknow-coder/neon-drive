@@ -11,6 +11,7 @@
 // la position en course.
 
 import { getRacingLine, computeSpeedProfile } from './racingLine.js';
+import { obstacleOffsetAt } from '../track/buildTrack.js';
 import { GLOBAL_TUNING } from '../physics/carPhysics.js';
 import { clamp, damp, smoothstep, createIntentObject } from './aiUtils.js';
 
@@ -169,10 +170,34 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
       }
     }
 
+    // ---------------- Piliers mobiles : on prévoit où ils seront ----------------
+    st.obsTimer = Math.max(0, (st.obsTimer || 0) - dt);
+    if (st.obsTimer <= 0) st.obsLat = null;
+    for (const ob of track.obstacles) {
+      if (!ob.move) continue;
+      let gap = (ob.index - i) * track.spacing;
+      if (gap < -track.length / 2) gap += track.length;
+      if (gap < -30 || gap > 160 + speed * 1.2) continue;
+      const tArr = Math.max(0, gap) / Math.max(speed, 120);
+      const pred = obstacleOffsetAt(ob, world.time + tArr);
+      const myLat = st.obsLat ?? (line.off[ob.index] + st.bias);
+      if (Math.abs(pred - myLat) < ob.r + 52) {
+        const hw = track.hw[ob.index] - 40;
+        // On passe du côté opposé à sa position prévue (s'il y a la place)
+        const left = pred - ob.r - 50, right = pred + ob.r + 50;
+        const canLeft = left > -hw, canRight = right < hw;
+        st.obsLat = canLeft && (!canRight || pred > 0) ? left : right;
+        st.obsLat = clamp(st.obsLat, -hw, hw);
+        st.obsTimer = 0.5;
+      }
+    }
+
     // ---------------- Point visé sur la trajectoire ----------------
     const look = 60 + speed * (0.24 + (1 - profile.lineFocus) * 0.1);
     const j = (i + Math.max(2, Math.round(look / track.spacing))) % n;
-    let biasTarget = st.passLat !== null ? st.passLat - line.off[j] : 0;
+    let biasTarget = st.obsLat !== null && st.obsLat !== undefined
+      ? st.obsLat - line.off[j]
+      : st.passLat !== null ? st.passLat - line.off[j] : 0;
     biasTarget += sidePush;
     biasTarget += Math.sin(st.time * noiseFreq * 6.283 + noisePhase) * noiseAmp;
     if (mk === 'wide') biasTarget += -Math.sign(line.curv[j] || st.mistake.dir) * 95;
@@ -180,7 +205,7 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
     // pour ne pas toucher le mur intérieur avec l'avant.
     const driftNear = car.drifting || prof.drift[j] === 1 || prof.drift[i] === 1;
     if (driftNear) biasTarget += -Math.sign(line.curv[j]) * 32;
-    st.bias += (biasTarget - st.bias) * damp(2.2, dt);
+    st.bias += (biasTarget - st.bias) * damp(st.obsLat != null ? 4 : 2.2, dt);
     const latOff = clamp(line.off[j] + st.bias, line.lo[j], line.hi[j]);
     const tx = track.x[j] + track.nx[j] * latOff;
     const ty = track.y[j] + track.ny[j] * latOff;

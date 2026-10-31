@@ -32,6 +32,7 @@ export function defaultSave() {
       controls: { swapped: false, autoGas: false, size: 1 },
     },
     tutorialDone: false,
+    rivalsBeaten: {},        // { idRival: nombre de victoires contre lui }
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
@@ -88,6 +89,9 @@ function sanitize(raw) {
     }
   }
   s.createdAt = num(raw.createdAt, Date.now());
+  if (raw.rivalsBeaten && typeof raw.rivalsBeaten === 'object') {
+    for (const [k, v] of Object.entries(raw.rivalsBeaten)) if (num(v, 0) > 0) s.rivalsBeaten[k] = Math.floor(v);
+  }
   // Joueur existant (sauvegarde sans ce champ, mais avec des courses) : pas de tutoriel imposé
   s.tutorialDone = typeof raw.tutorialDone === 'boolean' ? raw.tutorialDone : s.stats.races > 0;
   return s;

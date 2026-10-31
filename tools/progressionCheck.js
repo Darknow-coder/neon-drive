@@ -139,5 +139,18 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   check(defaultSave().tutorialDone === false, 'nouveau joueur : tutoriel proposé');
 }
 
+// --- Rivaux ---
+{
+  const s = defaultSave();
+  const r = applyRaceResult(s, { position: 3, trackId: 'neon-boulevard', carId: 'nova', bestLap: 25, rivalId: 'spark', rivalBeaten: true });
+  check(r.gained === TROPHY_REWARDS[2] + 3 && r.rivalBonus === 3 && r.firstRivalWin, 'rival battu : +3 trophées bonus');
+  const r2 = applyRaceResult(s, { position: 2, trackId: 'neon-boulevard', carId: 'nova', bestLap: 25, rivalId: 'spark', rivalBeaten: true });
+  check(!r2.firstRivalWin && s.rivalsBeaten.spark === 2, 'victoires contre le rival comptées');
+  const r3 = applyRaceResult(s, { position: 5, trackId: 'neon-boulevard', carId: 'nova', bestLap: 25, rivalId: 'spark', rivalBeaten: false });
+  check(r3.gained === TROPHY_REWARDS[4] && r3.rivalBonus === 0, 'rival devant : pas de bonus');
+  const r4 = applyRaceResult(s, { position: 1, trackId: 'neon-boulevard', carId: 'nova', bestLap: 25 });
+  check(r4.gained === 10, 'entraînement / sans rival : pas de bonus');
+}
+
 console.log(`${ok} vérifications réussies, ${ko} échec(s). Ligues : ${LEAGUES.map((l) => `${l.name} ≥ ${l.min}`).join(', ')}`);
 process.exit(ko ? 1 : 0);

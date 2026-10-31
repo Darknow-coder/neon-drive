@@ -71,6 +71,7 @@ function computeRacingLine(track) {
   //    (s'il y a la place), avec une approche progressive.
   const SLOPE = 0.3; // écart latéral toléré par unité de distance (~17°)
   for (const ob of track.obstacles) {
+    if (ob.move) continue; // les piliers mobiles sont évités en direct par le pilote
     const obOff = (ob.x - track.x[ob.index]) * track.nx[ob.index] + (ob.y - track.y[ob.index]) * track.ny[ob.index];
     const clear = ob.r + 44;
     const hwHere = track.hw[ob.index] - LINE_MARGIN;
@@ -90,7 +91,7 @@ function computeRacingLine(track) {
     }
   }
   for (let i = 0; i < n; i++) off[i] = Math.min(hi[i], Math.max(lo[i], off[i]));
-  if (track.obstacles.length) relax([4, 2, 1]);
+  if (track.obstacles.some((o) => !o.move)) relax([4, 2, 1]);
   update();
 
   // Courbure de la trajectoire (cercle passant par 3 points espacés)

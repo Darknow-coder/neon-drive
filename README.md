@@ -54,7 +54,8 @@ node tools/carBalance.js     # compare les voitures avec le même pilote IA
 node tools/aiRace.js 20      # 20 courses complètes entre IA : classements, dépassements, chocs
 node tools/blockCheck.js     # aucune IA ne reste bloquée derrière une voiture arrêtée
 node tools/trackFlow.js      # exigence de chaque circuit (vitesse moyenne, freinages, drift)
-node tools/progressionCheck.js # trophées, ligues, tirage des circuits, sauvegarde (35 vérifications)
+node tools/progressionCheck.js # trophées, ligues, rivaux, tirage des circuits, sauvegarde
+node tools/rivalCheck.js       # force des rivaux dans leur ligue
 ```
 
 ## Intelligence artificielle
@@ -112,6 +113,8 @@ Options d'un circuit : `theme.style` (`'city'`, `'desert'`, `'orbital'`), `weath
 
 Éléments spéciaux possibles (placés par position sur le tour, de 0 à 1) :
 - `obstacles: [{ type: 'pillar', at: 0.3, offset: 0, r: 26 }]`
+- pilier mobile : `{ type: 'pillar', at: 0.5, offset: 0, r: 22, move: { amp: 60, period: 3, phase: 0 } }`
+  (à ajouter dans le fichier exporté ; l'éditeur affiche sa position centrale)
 - `zones: [{ type: 'boost', at: 0.5, length: 110, offset: 0, width: 80 }]`
 - `zones: [{ type: 'slick', at: 0.7, length: 260 }]` (zone glissante)
 

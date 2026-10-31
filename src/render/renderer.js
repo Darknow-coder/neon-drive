@@ -136,11 +136,17 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
       const y = lerp(car.prevY, car.y, alpha) - 30;
       if (x < view.x0 - 60 || x > view.x1 + 60 || y < view.y0 - 60 || y > view.y1 + 60) continue;
       const colors = car.livery ?? car.def.colors;
+      const label = car.isRival ? `★ ${car.name}` : car.name;
       ctx.fillStyle = 'rgba(7,4,26,0.6)';
-      const w = ctx.measureText(car.name).width + fs * 0.8;
+      const w = ctx.measureText(label).width + fs * 0.8;
       ctx.fillRect(x - w / 2, y - fs * 1.15, w, fs * 1.25);
-      ctx.fillStyle = colors.glow;
-      ctx.fillText(car.name, x, y);
+      if (car.isRival) {
+        ctx.strokeStyle = '#ffd34d';
+        ctx.lineWidth = fs * 0.1;
+        ctx.strokeRect(x - w / 2, y - fs * 1.15, w, fs * 1.25);
+      }
+      ctx.fillStyle = car.isRival ? '#ffd34d' : colors.glow;
+      ctx.fillText(label, x, y);
     }
 
     // Effets d'écran

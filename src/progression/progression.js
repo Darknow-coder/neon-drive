@@ -4,6 +4,7 @@
 import { TROPHY_REWARDS, leagueFor, leagueRank } from '../data/progression.js';
 import { TRACKS } from '../data/tracks/index.js';
 import { syncUnlocks } from './garage.js';
+import { RIVAL_BONUS } from '../data/rivals.js';
 
 /** Circuits accessibles dans une ligue (ceux des ligues inférieures inclus). */
 export function tracksForLeague(leagueId) {
@@ -27,11 +28,19 @@ export function pickTrack(save, rng = Math.random) {
  * Applique le résultat d'une course à la sauvegarde (la modifie) et
  * retourne un résumé pour l'écran de résultats.
  */
-export function applyRaceResult(save, { position, trackId, carId, bestLap }) {
+export function applyRaceResult(save, { position, trackId, carId, bestLap, rivalId = null, rivalBeaten = false }) {
   const before = save.trophies;
   const oldLeague = leagueFor(before);
-  const gained = TROPHY_REWARDS[position - 1] ?? 0;
+  const base = TROPHY_REWARDS[position - 1] ?? 0;
+  // Bonus pour avoir fini devant le rival de la ligue
+  const rivalBonus = rivalId && rivalBeaten ? RIVAL_BONUS : 0;
+  const gained = base + rivalBonus;
   save.trophies = before + gained;
+  let firstRivalWin = false;
+  if (rivalId && rivalBeaten) {
+    firstRivalWin = !save.rivalsBeaten[rivalId];
+    save.rivalsBeaten[rivalId] = (save.rivalsBeaten[rivalId] ?? 0) + 1;
+  }
   const newLeague = leagueFor(save.trophies);
 
   save.stats.races++;
@@ -61,5 +70,5 @@ export function applyRaceResult(save, { position, trackId, carId, bestLap }) {
 
   const unlockedCars = syncUnlocks(save);
 
-  return { gained, before, after: save.trophies, oldLeague, newLeague, promoted, unlockedTracks, unlockedCars, newRecord, previousRecord };
+  return { gained, base, rivalBonus, rivalId, rivalBeaten, firstRivalWin, before, after: save.trophies, oldLeague, newLeague, promoted, unlockedTracks, unlockedCars, newRecord, previousRecord };
 }

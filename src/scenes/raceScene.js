@@ -5,6 +5,7 @@ import { buildTrack } from '../track/buildTrack.js';
 import { getTrackData } from '../data/tracks/index.js';
 import { getCar } from '../data/cars.js';
 import { AI_DRIVERS } from '../data/aiProfiles.js';
+import { rivalFor } from '../data/rivals.js';
 import { createRaceWorld } from '../race/raceWorld.js';
 import { createTrackRenderer } from '../render/trackRenderer.js';
 import { createParticles } from '../render/particles.js';
@@ -15,7 +16,7 @@ import { computeResults, randomGrid } from '../race/results.js';
 
 const PLAYER_COLORS = { body: '#00f0ff', accent: '#ff2bd6', glow: '#00f0ff' };
 
-export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, onFinish }) {
+export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, rival = false, onFinish }) {
   const track = buildTrack(getTrackData(trackId));
   const trackRenderer = createTrackRenderer(track, { lowEnd });
   const particles = createParticles(lowEnd ? 320 : 520);
@@ -24,16 +25,23 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   // Grille tirée au sort : le joueur part dans l'une des 3 dernières places
   // (mode « solo » : sans adversaires, pour le tutoriel)
   const playerEntry = { def: getCar(carId), name: 'TOI', isPlayer: true, colors: playerColors };
-  const entries = solo ? [playerEntry] : randomGrid(
-    AI_DRIVERS.map((d) => ({ def: getCar(d.car), name: d.name, profile: d.profile, colors: d.colors })),
-    playerEntry,
-    { backRows: 3 },
-  );
+  let aiEntries = AI_DRIVERS.map((d) => ({ def: getCar(d.car), name: d.name, profile: d.profile, colors: d.colors }));
+  // Course classée : le rival de la ligue remplace un pilote habituel (au hasard)
+  const rivalData = rival ? rivalFor(league) : null;
+  if (rivalData) {
+    aiEntries.splice(Math.floor(Math.random() * aiEntries.length), 1);
+    aiEntries.push({
+      def: getCar(rivalData.car), name: rivalData.name, profile: rivalData.profile, colors: rivalData.colors,
+      isRival: true, paceMul: rivalData.paceMul, mistakeMul: rivalData.mistakeMul, skill: rivalData.skill,
+    });
+  }
+  const entries = solo ? [playerEntry] : randomGrid(aiEntries, playerEntry, { backRows: 3 });
   let endTimer = -1; // compte à rebours avant l'affichage des résultats
   let resultsShown = false;
 
   let world = createRaceWorld({ track, entries, laps, league, countdown });
   let player = world.player;
+  const rivalCar = world.cars.find((c) => c.isRival) ?? null;
   const fx = new Map(world.cars.map((c) => [c, createCarFx()]));
   let message = '';
   let messageTimer = 0;
@@ -168,6 +176,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       position: player.position,
       total: world.cars.length,
       big: !world.started || world.time < 1,
+      rival: rivalCar ? { name: rivalCar.name, position: rivalCar.position } : null,
     });
   }
 
@@ -186,6 +195,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   return {
     update, render, resize, respawn, setCarDef, reloadGraphics, dispose, isFinished,
     trackName: track.name,
+    rival: rivalData,
     get car() { return player; },
     get world() { return world; },
     track,

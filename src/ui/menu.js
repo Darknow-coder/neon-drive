@@ -1,6 +1,8 @@
 // Menu principal : ligue, trophées, progression, statistiques.
 
 import { leagueFor, nextLeague, leagueProgress } from '../data/progression.js';
+import { rivalFor } from '../data/rivals.js';
+import { getCar } from '../data/cars.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -16,6 +18,11 @@ export function renderMenu(save, saveStatus) {
   $('menu-league-next').textContent = next
     ? `Prochaine ligue : ${next.name} (${next.min} trophées — encore ${next.min - save.trophies})`
     : 'Ligue maximale atteinte !';
+  const rv = rivalFor(league.id);
+  const beaten = rv ? save.rivalsBeaten?.[rv.id] ?? 0 : 0;
+  $('menu-rival').innerHTML = rv
+    ? `★ Rival de la ligue : <b>${rv.name}</b> (${getCar(rv.car).name}) — ${beaten ? `battu ${beaten} fois` : 'jamais battu'}`
+    : '';
   const st = save.stats;
   $('menu-stats').textContent = st.races
     ? `${st.races} course${st.races > 1 ? 's' : ''} · ${st.wins} victoire${st.wins > 1 ? 's' : ''} · ${st.podiums} podium${st.podiums > 1 ? 's' : ''}`
@@ -33,13 +40,15 @@ export function renderMenu(save, saveStatus) {
 }
 
 /** Animation de tirage au sort du circuit. Appelle `done` à la fin. */
-export function revealTrack(pool, chosen, done) {
+export function revealTrack(pool, chosen, done, rival = null) {
   const el = $('reveal');
   const name = $('reveal-name');
   const prof = $('reveal-profile');
   el.classList.remove('hidden');
   prof.textContent = '';
   name.classList.remove('landed');
+  const rvEl = $('reveal-rival');
+  rvEl.classList.add('hidden');
   let k = 0;
   const steps = 12;
   const tick = () => {
@@ -52,7 +61,11 @@ export function revealTrack(pool, chosen, done) {
       prof.textContent = chosen.profile.toUpperCase();
       void name.offsetWidth; // relance l'animation
       name.classList.add('landed');
-      setTimeout(() => { el.classList.add('hidden'); done(); }, 1100);
+      if (rival) {
+        rvEl.innerHTML = `<div class="rv-title">★ RIVAL EN COURSE</div><div class="rv-name" style="color:${rival.colors.glow}">${rival.name}</div><div class="rv-quote">${getCar(rival.car).name} — « ${rival.quote} »</div>`;
+        setTimeout(() => rvEl.classList.remove('hidden'), 350);
+      }
+      setTimeout(() => { el.classList.add('hidden'); done(); }, rival ? 2300 : 1100);
     }
   };
   tick();
