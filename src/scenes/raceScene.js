@@ -15,22 +15,24 @@ import { computeResults, randomGrid } from '../race/results.js';
 
 const PLAYER_COLORS = { body: '#00f0ff', accent: '#ff2bd6', glow: '#00f0ff' };
 
-export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, onFinish }) {
+export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, onFinish }) {
   const track = buildTrack(getTrackData(trackId));
   const trackRenderer = createTrackRenderer(track, { lowEnd });
   const particles = createParticles(lowEnd ? 320 : 520);
   const camera = createCamera();
 
   // Grille tirée au sort : le joueur part dans l'une des 3 dernières places
-  const entries = randomGrid(
+  // (mode « solo » : sans adversaires, pour le tutoriel)
+  const playerEntry = { def: getCar(carId), name: 'TOI', isPlayer: true, colors: playerColors };
+  const entries = solo ? [playerEntry] : randomGrid(
     AI_DRIVERS.map((d) => ({ def: getCar(d.car), name: d.name, profile: d.profile, colors: d.colors })),
-    { def: getCar(carId), name: 'TOI', isPlayer: true, colors: playerColors },
+    playerEntry,
     { backRows: 3 },
   );
   let endTimer = -1; // compte à rebours avant l'affichage des résultats
   let resultsShown = false;
 
-  let world = createRaceWorld({ track, entries, laps, league, countdown: 3 });
+  let world = createRaceWorld({ track, entries, laps, league, countdown });
   let player = world.player;
   const fx = new Map(world.cars.map((c) => [c, createCarFx()]));
   let message = '';
@@ -130,7 +132,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       message = `ARRIVÉE — ${player.position}${player.position === 1 ? 'ER' : 'E'} / ${world.cars.length}`;
       messageTimer = 9999;
       sfx?.finish(player.position);
-    } else if (!player.finished && world.playerPositionLocked() && !scene.lockedMsg) {
+    } else if (!solo && !player.finished && world.playerPositionLocked() && !scene.lockedMsg) {
       scene.lockedMsg = true;
       message = 'TOUS LES ADVERSAIRES SONT ARRIVÉS';
       messageTimer = 9999;
@@ -142,7 +144,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
     if (!resultsShown) {
       if (endTimer < 0) {
         if (player.finished) endTimer = 5;
-        else if (world.playerPositionLocked()) endTimer = 4;
+        else if (!solo && world.playerPositionLocked()) endTimer = 4;
       } else {
         endTimer -= dt;
         if (endTimer <= 0 || world.finished) {

@@ -27,7 +27,11 @@ export function defaultSave() {
       owned: ['nova'],       // voitures possédées (paliers, et plus tard boutique…)
       liveries: {},          // { idVoiture: { body, accent } }
     },
-    settings: { music: 0.7, sfx: 0.85, vibration: true },
+    settings: {
+      music: 0.7, sfx: 0.85, vibration: true,
+      controls: { swapped: false, autoGas: false, size: 1 },
+    },
+    tutorialDone: false,
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
@@ -60,6 +64,12 @@ function sanitize(raw) {
     s.settings.music = vol(raw.settings.music, s.settings.music);
     s.settings.sfx = vol(raw.settings.sfx, s.settings.sfx);
     if (typeof raw.settings.vibration === 'boolean') s.settings.vibration = raw.settings.vibration;
+    const c = raw.settings.controls;
+    if (c && typeof c === 'object') {
+      if (typeof c.swapped === 'boolean') s.settings.controls.swapped = c.swapped;
+      if (typeof c.autoGas === 'boolean') s.settings.controls.autoGas = c.autoGas;
+      if (typeof c.size === 'number' && c.size >= 0.7 && c.size <= 1.4) s.settings.controls.size = c.size;
+    }
   }
   const isColor = (c) => typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c);
   if (raw.garage && typeof raw.garage === 'object') {
@@ -78,6 +88,8 @@ function sanitize(raw) {
     }
   }
   s.createdAt = num(raw.createdAt, Date.now());
+  // Joueur existant (sauvegarde sans ce champ, mais avec des courses) : pas de tutoriel imposé
+  s.tutorialDone = typeof raw.tutorialDone === 'boolean' ? raw.tutorialDone : s.stats.races > 0;
   return s;
 }
 
@@ -153,4 +165,34 @@ function safeLocalStorage() {
   } catch {
     return null;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Export / import par code (pour changer d'appareil ou garder une copie).
+// Format : « ND1. » + données (JSON en base64) + « . » + somme de contrôle.
+// ---------------------------------------------------------------------------
+function checksum(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+  return (h >>> 0).toString(36);
+}
+const toB64 = (str) => btoa(unescape(encodeURIComponent(str)));
+const fromB64 = (b64) => decodeURIComponent(escape(atob(b64)));
+
+export function exportSaveCode(data) {
+  const body = toB64(JSON.stringify(data));
+  return `ND1.${body}.${checksum(body)}`;
+}
+
+/** Retourne la sauvegarde contenue dans le code, ou lève une erreur explicite. */
+export function importSaveCode(code) {
+  const clean = String(code).replace(/\s+/g, '');
+  const m = /^ND1\.([A-Za-z0-9+/=]+)\.([a-z0-9]+)$/.exec(clean);
+  if (!m) throw new Error("Ce n'est pas un code de sauvegarde NEON//DRIVE.");
+  if (checksum(m[1]) !== m[2]) throw new Error('Code incomplet ou modifié (vérifie le copier-coller).');
+  let raw;
+  try { raw = JSON.parse(fromB64(m[1])); } catch { throw new Error('Code illisible.'); }
+  const data = sanitize(migrate(raw));
+  if (!data) throw new Error('Données invalides.');
+  return data;
 }

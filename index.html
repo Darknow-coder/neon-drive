@@ -39,6 +39,14 @@
     </div>
   </div>
 
+  <!-- Tutoriel -->
+  <div id="tutorial" class="tutorial hidden">
+    <div class="tuto-step" id="tuto-step">LEÇON 1</div>
+    <div class="tuto-text" id="tuto-text"></div>
+    <div class="tuto-help" id="tuto-help"></div>
+    <button class="tuto-skip" id="tuto-skip">PASSER LE TUTORIEL</button>
+  </div>
+
   <!-- Boutons système -->
   <div id="sys-buttons" class="sys-buttons hidden">
     <button class="sys-btn" id="btn-pause" title="Pause (Échap / P)">❚❚</button>
@@ -77,6 +85,25 @@
       <label class="set-row"><span>Musique</span><input type="range" min="0" max="1" step="0.05" id="set-music" /><output id="set-music-out"></output></label>
       <label class="set-row"><span>Effets sonores</span><input type="range" min="0" max="1" step="0.05" id="set-sfx" /><output id="set-sfx-out"></output></label>
       <label class="set-row set-check"><span>Vibrations (mobile)</span><input type="checkbox" id="set-vibration" /></label>
+      <div class="set-section">COMMANDES TACTILES</div>
+      <label class="set-row set-check"><span>Inverser (direction à droite, pédales à gauche)</span><input type="checkbox" id="set-swapped" /></label>
+      <label class="set-row set-check"><span>Accélération automatique</span><input type="checkbox" id="set-autogas" /></label>
+      <label class="set-row"><span>Taille des boutons</span><input type="range" min="0.75" max="1.35" step="0.05" id="set-size" /><output id="set-size-out"></output></label>
+      <div class="set-section">SAUVEGARDE</div>
+      <div class="row-btns">
+        <button class="menu-btn" id="save-export">EXPORTER</button>
+        <button class="menu-btn" id="save-import">IMPORTER</button>
+        <button class="menu-btn" id="btn-tutorial-again">TUTORIEL</button>
+      </div>
+      <div class="save-io hidden" id="save-io">
+        <div class="muted small" id="save-io-help"></div>
+        <textarea id="save-code" rows="3" spellcheck="false"></textarea>
+        <div class="row-btns">
+          <button class="menu-btn" id="save-io-action">COPIER</button>
+          <button class="menu-btn" id="save-io-cancel">FERMER</button>
+        </div>
+        <div class="small" id="save-io-msg"></div>
+      </div>
       <button class="menu-btn primary" id="settings-close">OK</button>
     </div>
   </div>

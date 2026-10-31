@@ -131,7 +131,7 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
         ctx.fill();
         continue;
       }
-      if (!car.name) continue;
+      if (!car.name || car.isPlayer) continue;
       const x = lerp(car.prevX, car.x, alpha);
       const y = lerp(car.prevY, car.y, alpha) - 30;
       if (x < view.x0 - 60 || x > view.x1 + 60 || y < view.y0 - 60 || y > view.y1 + 60) continue;

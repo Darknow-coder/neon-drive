@@ -1,7 +1,7 @@
 // Tests automatiques de la progression et de la sauvegarde.
 // Usage : node tools/progressionCheck.js
 import { TROPHY_REWARDS, LEAGUES, leagueFor, leagueProgress } from '../src/data/progression.js';
-import { createSaveStore, defaultSave } from '../src/progression/save.js';
+import { createSaveStore, defaultSave, exportSaveCode, importSaveCode } from '../src/progression/save.js';
 import { applyRaceResult, pickTrack, tracksForLeague } from '../src/progression/progression.js';
 import { mulberry32 } from '../src/core/math.js';
 import { syncUnlocks, isOwned, liveryFor, setLivery, selectedCar, nextCarUnlock } from '../src/progression/garage.js';
@@ -118,6 +118,25 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 5, garage: { owned: 'x', liveries: { nova: { body: 'rouge', accent: '#00ff00' } } } }));
   const l2 = createSaveStore(st).load().data;
   check(l2.garage.owned.join() === 'nova' && !l2.garage.liveries.nova.body && l2.garage.liveries.nova.accent === '#00ff00', 'garage abîmé réparé');
+}
+
+// --- Export / import de sauvegarde ---
+{
+  const s = defaultSave(); s.trophies = 321; s.garage.owned.push('volt'); s.settings.controls.autoGas = true; s.tutorialDone = true;
+  const code = exportSaveCode(s);
+  const back = importSaveCode(code);
+  check(back.trophies === 321 && back.garage.owned.includes('volt') && back.settings.controls.autoGas && back.tutorialDone, 'export puis import identiques');
+  check(importSaveCode('  ' + code.slice(0, 20) + '\n' + code.slice(20) + ' ').trophies === 321, 'espaces et retours à la ligne tolérés');
+  const bad = (c) => { try { importSaveCode(c); return false; } catch { return true; } };
+  check(bad('bonjour'), 'code invalide refusé');
+  check(bad(code.slice(0, -3) + 'zzz'), 'code modifié refusé (somme de contrôle)');
+  check(bad(code.replace('ND1.', 'ND1.A')), 'code tronqué / altéré refusé');
+}
+{
+  const st = memStorage();
+  st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 40, stats: { races: 6 } }));
+  check(createSaveStore(st).load().data.tutorialDone === true, 'joueur existant : pas de tutoriel imposé');
+  check(defaultSave().tutorialDone === false, 'nouveau joueur : tutoriel proposé');
 }
 
 console.log(`${ok} vérifications réussies, ${ko} échec(s). Ligues : ${LEAGUES.map((l) => `${l.name} ≥ ${l.min}`).join(', ')}`);

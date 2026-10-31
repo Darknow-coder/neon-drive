@@ -24,6 +24,8 @@ export function createInput({ touchRoot, onAction } = {}) {
   const pointers = new Map(); // pointerId -> action
   let steerSmooth = 0;
   const intent = createIntent();
+  // Options : accélération automatique (on ne gère que la direction et le frein)
+  const options = { autoGas: false };
 
   // ----- Clavier -----
   window.addEventListener('keydown', (e) => {
@@ -98,10 +100,23 @@ export function createInput({ touchRoot, onAction } = {}) {
       if (Math.abs(steerSmooth) < 0.001 && target === 0) steerSmooth = 0;
 
       intent.steer = steerSmooth;
-      intent.throttle = keys.has('gas') || touchState.gas ? 1 : 0;
       intent.brake = keys.has('brake') || touchState.brake ? 1 : 0;
+      intent.throttle = options.autoGas
+        ? (intent.brake ? 0 : 1)
+        : keys.has('gas') || touchState.gas ? 1 : 0;
       intent.boost = keys.has('boost') || touchState.boost;
       return intent;
+    },
+    setOptions(o) { Object.assign(options, o); },
+    /** État brut des commandes (utilisé par le tutoriel). */
+    get pressed() {
+      return {
+        left: keys.has('left') || touchState.left,
+        right: keys.has('right') || touchState.right,
+        gas: keys.has('gas') || touchState.gas,
+        brake: keys.has('brake') || touchState.brake,
+        boost: keys.has('boost') || touchState.boost,
+      };
     },
     reset() {
       keys.clear();

@@ -19,6 +19,7 @@ import { createAudio } from './audio/audio.js';
 import { createSfx } from './audio/sfx.js';
 import { createMusic } from './audio/music.js';
 import { createSettingsScreen } from './ui/settings.js';
+import { createTutorial } from './scenes/tutorial.js';
 
 const $ = (id) => document.getElementById(id);
 const show = (id, v = true) => $(id).classList.toggle('hidden', !v);
@@ -91,12 +92,23 @@ const input = createInput({
 });
 
 // ---------------- Écrans ----------------
-function setRaceUi(visible) {
+function setRaceUi(visible, tutorial = false) {
   hud.show(visible);
+  $('hud').classList.toggle('tuto', tutorial);
   show('sys-buttons', visible);
   show('touch', visible && touch);
 }
 show('btn-tuning', devMode);
+
+/** Applique les options de commandes (disposition, accélération auto, taille). */
+function applyControls() {
+  const c = save.settings.controls;
+  touchRoot.classList.toggle('swapped', c.swapped);
+  touchRoot.classList.toggle('autogas', c.autoGas);
+  touchRoot.style.setProperty('--bs', String(c.size));
+  input.setOptions({ autoGas: c.autoGas });
+}
+applyControls();
 
 function refreshMenu() {
   renderMenu(save, saveStatus);
@@ -172,8 +184,38 @@ function backToMenu() {
   updateMusic();
 }
 
+/** Tutoriel : leçon de pilotage en solo. */
+function startTutorial() {
+  session?.dispose();
+  training = true;
+  trackId = 'neon-boulevard';
+  carId = selectedCar(save);
+  const scene = createRaceScene({
+    renderer, input, hud, lowEnd, trackId, carId, laps: 99, solo: true, countdown: 1.5,
+    playerColors: liveryFor(save, carId), sfx, settings: save.settings,
+  });
+  session = createTutorial({
+    scene, input, touch, autoGas: save.settings.controls.autoGas,
+    onDone: () => {
+      save.tutorialDone = true;
+      persist();
+      setTimeout(backToMenu, 300);
+    },
+  });
+  input.reset();
+  hideResults();
+  show('pause', false);
+  show('start', false);
+  setRaceUi(true, true);
+  state = 'race';
+  updateMusic();
+  loop.start();
+}
+
 /** Course classée : circuit tiré au sort parmi ceux de la ligue du joueur. */
 function startRankedRace() {
+  // Première fois : la leçon de pilotage d'abord
+  if (!save.tutorialDone) { startTutorial(); return; }
   training = false;
   const pool = tracksForLeague(leagueFor(save.trophies).id);
   const chosen = pickTrack(save);
@@ -248,18 +290,26 @@ $('btn-tuning').addEventListener('click', () => tuning.toggle());
 $('btn-pause').addEventListener('click', () => state === 'race' && pause());
 $('btn-resume').addEventListener('click', resume);
 // « Recommencer » relance le même circuit (sans trophées pour la course abandonnée)
-$('btn-restart').addEventListener('click', startRace);
+$('btn-restart').addEventListener('click', () => (session?.isTutorial ? startTutorial() : startRace()));
 $('btn-quit').addEventListener('click', backToMenu);
 // « Rejouer » : nouvelle course classée (nouveau tirage) ou même circuit en entraînement
 $('btn-again').addEventListener('click', () => (training ? startTraining() : startRankedRace()));
 $('btn-training').addEventListener('click', () => showTrainingPicker(true));
 $('btn-garage').addEventListener('click', () => garage.open());
 const settingsScreen = createSettingsScreen({
-  settings: save.settings,
-  onChange: (commit) => { audio.applyVolumes(); if (commit) persist(); },
+  save,
+  onChange: (commit) => { audio.applyVolumes(); applyControls(); if (commit) persist(); },
+  onImport: (data) => {
+    // Remplace toute la progression par celle du code, puis recharge le jeu
+    for (const k of Object.keys(save)) delete save[k];
+    Object.assign(save, data);
+    persist();
+    location.reload();
+  },
+  onTutorial: () => startTutorial(),
 });
 $('btn-settings').addEventListener('click', () => settingsScreen.open());
-$('btn-pause-settings').addEventListener('click', () => settingsScreen.open());
+$('btn-pause-settings').addEventListener('click', () => settingsScreen.open({ inRace: true }));
 $('btn-train-back').addEventListener('click', () => showTrainingPicker(false));
 $('btn-menu').addEventListener('click', backToMenu);
 
