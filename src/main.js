@@ -142,9 +142,9 @@ function refreshMenu() {
   renderMenu(save, saveStatus);
   // Bouton COUPE : reprise d'une coupe en cours, ou ligue de la prochaine coupe
   $('cup-sub').textContent = save.cup
-    ? `REPRENDRE · COURSE ${save.cup.race + 1}/3`
-    : LEAGUES.find((l) => l.id === leagueFor(save.trophies).id)?.name ?? '';
-  $('menu-car').innerHTML = `Voiture : <b>${carName(selectedCar(save))}</b>`;
+    ? `Reprendre · course ${save.cup.race + 1}/3`
+    : `3 courses · ligue ${LEAGUES.find((l) => l.id === leagueFor(save.trophies).id)?.name ?? ''}`;
+  $('btn-cup').classList.toggle('live', !!save.cup);
 }
 
 const shop = createShop({ save, onSave: persist, sfx, onClose: refreshMenu });
@@ -548,6 +548,12 @@ $('btn-elim').addEventListener('click', () => { enterFullscreenOnMobile(); start
 $('btn-again').addEventListener('click', () => (session?.isElimination ? startElimination() : training ? startTraining() : startRankedRace()));
 $('btn-training').addEventListener('click', () => showTrainingPicker(true));
 $('btn-garage').addEventListener('click', () => garage.open());
+$('btn-car-show').addEventListener('click', () => garage.open());
+$('btn-event').classList.add('soon');
+$('btn-event').addEventListener('click', () => {
+  $('event-sub').textContent = 'Arrive très bientôt !';
+  sfx.click();
+});
 $('btn-road').addEventListener('click', () => road.open());
 $('btn-shop').addEventListener('click', () => shop.open());
 $('btn-missions').addEventListener('click', () => missions.open());

@@ -95,6 +95,11 @@
       <label class="set-row set-check"><span>Inverser (direction à droite, pédales à gauche)</span><input type="checkbox" id="set-swapped" /></label>
       <label class="set-row set-check"><span>Accélération automatique</span><input type="checkbox" id="set-autogas" /></label>
       <label class="set-row"><span>Taille des boutons</span><input type="range" min="0.75" max="1.35" step="0.05" id="set-size" /><output id="set-size-out"></output></label>
+      <div class="set-section">COMMANDES</div>
+      <div class="controls-help">
+        <div class="help-kb"><b>Clavier :</b> ← → tourner · ↑ / Z accélérer · ↓ / S / Espace freiner · freiner + tourner vite = drift · Maj / B boost · R replacer · Échap pause</div>
+        <div class="help-touch"><b>Tactile :</b> pouce gauche ◀ ▶ · pouce droit GAZ, FREIN/DRIFT, BOOST</div>
+      </div>
       <div class="set-section">SAUVEGARDE</div>
       <div class="row-btns">
         <button class="menu-btn" id="save-export">EXPORTER</button>
@@ -153,54 +158,75 @@
 
   <!-- Écran de démarrage -->
   <!-- Menu principal -->
-  <div id="start" class="start-screen">
-    <div class="logo">NEON<span>//</span>DRIVE</div>
+  <div id="start" class="start-screen menu">
+    <div class="menu-bg" aria-hidden="true"><div class="menu-sun"></div><div class="menu-floor"></div></div>
 
-    <div class="league-card" id="league-card">
-      <div class="league-badge" id="menu-league-badge">BRONZE</div>
-      <div class="league-info">
-        <div class="trophy-line"><span class="trophy-ico"></span><b id="menu-trophies">0</b> <span class="muted" id="menu-trophies-word">trophées</span>
-          <span class="credit-chip" id="menu-credits"></span></div>
-        <div class="league-bar"><div class="league-fill" id="menu-league-fill"></div></div>
-        <div class="league-next muted" id="menu-league-next">Prochaine ligue : ARGENT (100)</div>
-        <div class="menu-rival" id="menu-rival"></div>
+    <!-- Barre du haut -->
+    <header class="menu-top">
+      <div class="logo">NEON<span>//</span>DRIVE</div>
+      <div class="menu-wallet">
+        <span class="chip trophy-chip"><span data-ico="trophy"></span><b id="menu-trophies">0</b><span class="sr" id="menu-trophies-word">trophées</span></span>
+        <span class="chip credit-chip" id="menu-credits"></span>
+        <button class="chip icon-chip" id="btn-settings" aria-label="Réglages"><span data-ico="gear"></span></button>
+      </div>
+    </header>
+
+    <div class="menu-body" id="menu-main">
+      <!-- Colonne gauche : progression + voiture -->
+      <section class="menu-left">
+        <div class="league-card" id="league-card">
+          <div class="league-badge" id="menu-league-badge">BRONZE</div>
+          <div class="league-info">
+            <div class="league-bar"><div class="league-fill" id="menu-league-fill"></div></div>
+            <div class="league-next" id="menu-league-next"></div>
+            <div class="menu-rival" id="menu-rival"></div>
+          </div>
+        </div>
+        <button class="car-show" id="btn-car-show" aria-label="Ouvrir le garage">
+          <canvas id="menu-car-canvas" width="440" height="300"></canvas>
+          <div class="car-show-info"><b id="menu-car-name">NOVA</b><span id="menu-car">niveau 1</span><i>GARAGE ›</i></div>
+        </button>
+        <div class="menu-stats" id="menu-stats"></div>
+        <div class="save-warning hidden" id="save-warning"></div>
+      </section>
+
+      <!-- Colonne droite : jouer -->
+      <section class="menu-right">
+        <button class="hero-race" id="btn-start">
+          <span class="hero-ico" data-ico="play"></span>
+          <span class="hero-txt"><b>COURSE</b><small id="menu-race-sub">Classée · circuit tiré au sort</small></span>
+          <span class="hero-gain" id="menu-race-gain"></span>
+        </button>
+        <div class="mode-grid">
+          <button class="mode-tile t-cup" id="btn-cup"><span class="mt-ico" data-ico="cup"></span><b>COUPE</b><small id="cup-sub"></small><em>3 courses aux points contre les mêmes rivaux. Grosse récompense au podium.</em></button>
+          <button class="mode-tile t-elim" id="btn-elim"><span class="mt-ico" data-ico="elim"></span><b>ÉLIMINATION</b><small>Le dernier sort</small><em>À chaque tour, la dernière voiture est éliminée. Survis jusqu'au bout !</em></button>
+          <button class="mode-tile t-chrono" id="btn-timetrial"><span class="mt-ico" data-ico="chrono"></span><b>CHRONO</b><small id="tt-sub">Contre-la-montre</small><em>Bats ton fantôme et décroche les médailles de chaque circuit.</em></button>
+          <button class="mode-tile t-event" id="btn-event"><span class="mt-ico" data-ico="event"></span><b>ÉVÉNEMENT</b><small id="event-sub">Bientôt</small><em id="event-desc">Un défi spécial chaque semaine, avec une récompense exclusive.</em><span class="badge hidden" id="event-badge">!</span></button>
+        </div>
+        <button class="training-link" id="btn-training"><span data-ico="train"></span> Entraînement libre ›</button>
+      </section>
+    </div>
+
+    <!-- Entraînement : choix du circuit -->
+    <div class="menu-body menu-training hidden" id="menu-training">
+      <div class="training-panel">
+        <div class="training-title">ENTRAÎNEMENT LIBRE</div>
+        <div class="muted small">Choisis un circuit — l'entraînement ne rapporte rien, roule autant que tu veux.</div>
+        <div class="track-pick" id="track-pick"></div>
+        <div class="row-btns">
+          <button class="menu-btn" id="btn-train-back">‹ RETOUR</button>
+          <button class="menu-btn primary" id="btn-train-go">ROULER ›</button>
+        </div>
       </div>
     </div>
 
-    <div class="menu-actions" id="menu-main">
-      <div class="row-btns main-row">
-        <button class="start-btn" id="btn-start">COURSE</button>
-        <button class="start-btn cup-start" id="btn-cup">COUPE<small id="cup-sub"></small></button>
-        <button class="start-btn elim-start" id="btn-elim">ÉLIMINATION<small>LE DERNIER SORT</small></button>
-      </div>
-      <div class="row-btns">
-        <button class="menu-btn badge-host shop-btn" id="btn-shop">BOUTIQUE<span class="badge hidden" id="shop-badge">0</span></button>
-        <button class="menu-btn badge-host" id="btn-missions">MISSIONS<span class="badge hidden" id="missions-badge">0</span></button>
-        <button class="menu-btn badge-host" id="btn-road">ROUTE<span class="badge hidden" id="road-badge">0</span></button>
-        <button class="menu-btn" id="btn-garage">GARAGE</button>
-      </div>
-      <div class="row-btns small-row">
-        <button class="menu-btn tt-btn" id="btn-timetrial">CONTRE-LA-MONTRE</button>
-        <button class="menu-btn" id="btn-training">ENTRAÎNEMENT</button>
-        <button class="menu-btn icon-btn" id="btn-settings" aria-label="Réglages">⚙</button>
-      </div>
-      <div class="menu-car muted" id="menu-car"></div>
-    </div>
-    <div class="menu-actions hidden" id="menu-training">
-      <div class="muted small">Choisis un circuit — l'entraînement ne rapporte pas de trophées</div>
-      <div class="track-pick" id="track-pick"></div>
-      <div class="row-btns">
-        <button class="menu-btn primary" id="btn-train-go">ROULER</button>
-        <button class="menu-btn" id="btn-train-back">RETOUR</button>
-      </div>
-    </div>
-
-    <div class="menu-stats muted" id="menu-stats"></div>
-    <div class="save-warning hidden" id="save-warning"></div>
-    <div class="controls-help">
-      <div class="help-kb"><b>Clavier :</b> ← → tourner · ↑ / Z accélérer · ↓ / S / Espace freiner · Freiner + tourner à grande vitesse = DRIFT · Maj / B boost · R replacer · Échap pause</div>
-      <div class="help-touch"><b>Tactile :</b> pouce gauche ◀ ▶ · pouce droit GAZ, FREIN/DRIFT, BOOST — le drift remplit le boost</div>
-    </div>
+    <!-- Barre du bas -->
+    <nav class="menu-nav">
+      <button class="nav-btn n-shop badge-host" id="btn-shop"><span data-ico="shop"></span><b>BOUTIQUE</b><span class="badge hidden" id="shop-badge">0</span></button>
+      <button class="nav-btn badge-host" id="btn-missions"><span data-ico="missions"></span><b>MISSIONS</b><span class="badge hidden" id="missions-badge">0</span></button>
+      <button class="nav-btn badge-host" id="btn-road"><span data-ico="road"></span><b>ROUTE</b><span class="badge hidden" id="road-badge">0</span></button>
+      <button class="nav-btn" id="btn-garage"><span data-ico="garage"></span><b>GARAGE</b></button>
+    </nav>
   </div>
 
   <!-- Garage -->

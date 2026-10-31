@@ -40,7 +40,21 @@ const LOCK = `
   <path d="M15 21h2l.6 4h-3.2z" fill="#3a1d05"/>
 </svg>`;
 
-const SVGS = { trophy: TROPHY, credit: CREDIT, lock: LOCK };
+// Icônes au trait (couleur héritée : currentColor) pour le menu
+const line = (body) => `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+const SHOP = line('<path d="M6 11h20l-2 15H8z"/><path d="M11 11V8a5 5 0 0 1 10 0v3"/><path d="M13 17h6"/>');
+const MISSIONS = line('<circle cx="16" cy="16" r="11"/><circle cx="16" cy="16" r="6"/><circle cx="16" cy="16" r="1.6" fill="currentColor"/><path d="M24 8l3-3M27 5v4h-4"/>');
+const ROAD = line('<path d="M6 27c4-6 3-10 8-13s9-3 12-9"/><path d="M5 5v8"/><path d="M5 5h7l-1.5 2.5L12 10H5"/><circle cx="26" cy="5" r="1.6" fill="currentColor"/>');
+const GARAGE = line('<path d="M4 27V12l12-7 12 7v15"/><path d="M9 27v-9h14v9"/><path d="M9 22h14"/>');
+const CUP = line('<path d="M10 5h12v6a6 6 0 0 1-12 0z"/><path d="M10 7H6v2a4 4 0 0 0 4 4M22 7h4v2a4 4 0 0 1-4 4"/><path d="M16 17v4M11 27h10l-1-6h-8z"/>');
+const ELIM = line('<path d="M5 25h4V15H5zM13 25h4V9h-4zM21 25h4V5h-4z"/><path d="M4 5l7 7M11 5l-7 7" stroke="#ff2b5a"/>');
+const CHRONO = line('<circle cx="16" cy="18" r="10"/><path d="M16 18l5-4"/><path d="M13 4h6M16 4v4"/><path d="M25 8l2-2"/>');
+const EVENT = line('<path d="M16 4l3.5 7.2 7.9 1.1-5.7 5.6 1.4 7.9L16 22l-7.1 3.8 1.4-7.9-5.7-5.6 7.9-1.1z"/>');
+const GEAR = line('<circle cx="16" cy="16" r="4"/><path d="M16 3v4M16 25v4M3 16h4M25 16h4M6.8 6.8l2.8 2.8M22.4 22.4l2.8 2.8M6.8 25.2l2.8-2.8M22.4 9.6l2.8-2.8"/>');
+const PLAY = '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M10 6l16 10-16 10z" fill="currentColor"/></svg>';
+const TRAIN = line('<path d="M6 26h20"/><path d="M8 26V14l8-6 8 6v12"/><path d="M13 26v-6h6v6"/>');
+
+const SVGS = { trophy: TROPHY, credit: CREDIT, lock: LOCK, shop: SHOP, missions: MISSIONS, road: ROAD, garage: GARAGE, cup: CUP, elim: ELIM, chrono: CHRONO, event: EVENT, gear: GEAR, play: PLAY, train: TRAIN };
 
 /** Icône en ligne (HTML). `cls` : classe supplémentaire (taille…). */
 export function ico(name, cls = '') {

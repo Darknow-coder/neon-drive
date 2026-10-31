@@ -1297,3 +1297,186 @@ html, body {
   .hud-count.me { font-size: 16px; }
   .hud-danger { bottom: calc(42px + var(--safe-b)); font-size: 12px; padding: 4px 12px; }
 }
+
+/* =====================================================================
+   MENU PRINCIPAL (refonte)
+   ===================================================================== */
+.start-screen.menu {
+  display: grid; grid-template-rows: auto 1fr auto; gap: 10px; align-items: stretch; justify-items: stretch;
+  padding: calc(10px + var(--safe-t)) calc(18px + var(--safe-r)) calc(10px + var(--safe-b)) calc(18px + var(--safe-l));
+  background: #07041a; text-align: left; overflow: hidden;
+}
+.menu > :not(.menu-bg) { position: relative; z-index: 1; }
+
+/* Fond : soleil rétro + grille au sol qui défile */
+.menu-bg { position: absolute; inset: 0; overflow: hidden; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 100%, rgba(255, 43, 214, 0.28), transparent 55%), linear-gradient(180deg, #07041a 0%, #12063a 55%, #1d0640 100%); }
+.menu-sun { position: absolute; left: 50%; top: 38%; width: min(46vw, 420px); aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%;
+  background: linear-gradient(180deg, #ffe680 0%, #ff8a3d 40%, #ff2bd6 75%, #8a2bff 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 50%, transparent 50% 54%, #000 54% 62%, transparent 62% 67%, #000 67% 74%, transparent 74% 80%, #000 80% 86%, transparent 86% 93%, #000 93%);
+  mask-image: linear-gradient(180deg, #000 50%, transparent 50% 54%, #000 54% 62%, transparent 62% 67%, #000 67% 74%, transparent 74% 80%, #000 80% 86%, transparent 86% 93%, #000 93%);
+  opacity: 0.32; filter: blur(0.5px) drop-shadow(0 0 40px #ff2bd6); }
+.menu-floor { position: absolute; left: -50%; right: -50%; bottom: -10%; height: 62%; transform: perspective(380px) rotateX(62deg); transform-origin: 50% 0;
+  background-image: linear-gradient(rgba(255, 43, 214, 0.55) 2px, transparent 2px), linear-gradient(90deg, rgba(0, 240, 255, 0.45) 2px, transparent 2px);
+  background-size: 70px 70px; animation: floor 2.4s linear infinite;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 30%); mask-image: linear-gradient(180deg, transparent, #000 30%); opacity: 0.55; }
+@keyframes floor { to { background-position: 0 70px, 0 0; } }
+
+/* Barre du haut */
+.menu-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.menu .logo { font-size: clamp(24px, 3.4vw, 38px); letter-spacing: 3px; }
+.menu-wallet { display: flex; align-items: center; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border-radius: 20px; font-family: var(--font-ui); font-weight: 800; font-size: 18px;
+  background: rgba(14, 8, 40, 0.8); border: 1px solid rgba(0, 240, 255, 0.35); color: #7af7ff; }
+.menu .credit-chip { margin-left: 0; vertical-align: 0; }
+.trophy-chip { color: #ffd34d; border-color: rgba(255, 211, 77, 0.45); }
+.chip .ico { width: 22px; height: 22px; }
+.icon-chip { width: 38px; padding: 0; justify-content: center; cursor: pointer; color: var(--text); }
+.icon-chip:hover { border-color: var(--cyan); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Corps : deux colonnes */
+.menu-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 22px; min-height: 0; align-items: stretch; }
+.menu-left, .menu-right { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+.menu .league-card { min-width: 0; padding: 10px 14px; background: rgba(14, 8, 40, 0.78); backdrop-filter: none; }
+.menu .league-badge { min-width: 86px; padding: 14px 8px; font-size: 12px; }
+.menu .league-next { font-size: 13px; color: var(--muted); }
+.menu .menu-rival { font-size: 13px; }
+.car-show { flex: 1; min-height: 0; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px; cursor: pointer;
+  border-radius: 16px; border: 1px solid rgba(0, 240, 255, 0.2); background: radial-gradient(ellipse at 50% 60%, rgba(138, 43, 255, 0.3), transparent 70%), rgba(10, 6, 30, 0.45); transition: border-color 0.2s; color: var(--text); }
+.car-show:hover { border-color: var(--cyan); }
+.car-show canvas { flex: 1; min-height: 0; width: 100%; height: 100%; object-fit: contain; max-height: 260px; }
+.car-show-info { display: flex; align-items: baseline; gap: 10px; font-family: var(--font-ui); }
+.car-show-info b { font-family: var(--font-display); font-size: 18px; letter-spacing: 3px; color: #fff; text-shadow: 0 0 10px var(--cyan); }
+.car-show-info span { color: var(--muted); font-size: 14px; }
+.car-show-info i { font-style: normal; font-size: 12px; letter-spacing: 1px; color: var(--cyan); }
+.menu .menu-stats { font-size: 12px; text-align: center; color: var(--muted); }
+
+/* Bouton COURSE */
+.hero-race { display: flex; align-items: center; gap: 16px; padding: 16px 22px; min-height: 96px; border-radius: 18px; cursor: pointer; text-align: left; color: #fff;
+  border: 2px solid var(--magenta); background: linear-gradient(110deg, rgba(255, 43, 214, 0.35), rgba(138, 43, 255, 0.35) 55%, rgba(0, 240, 255, 0.25));
+  box-shadow: 0 0 26px rgba(255, 43, 214, 0.45), inset 0 0 30px rgba(255, 255, 255, 0.06); transition: transform 0.12s, box-shadow 0.2s; animation: heroglow 2.6s ease-in-out infinite; }
+@keyframes heroglow { 50% { box-shadow: 0 0 40px rgba(255, 43, 214, 0.75), inset 0 0 30px rgba(255, 255, 255, 0.1); } }
+.hero-race:hover { transform: translateY(-2px); }
+.hero-race:active { transform: scale(0.98); }
+.hero-ico { width: 52px; height: 52px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fff; color: #8a2bff; box-shadow: 0 0 18px rgba(255, 255, 255, 0.6); }
+.hero-ico .ico { width: 26px; height: 26px; margin-left: 4px; }
+.hero-txt { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.hero-txt b { font-family: var(--font-display); font-weight: 900; font-size: 30px; letter-spacing: 5px; }
+.hero-txt small { font-size: 14px; color: #f3d6ff; }
+.hero-gain { font-family: var(--font-ui); font-weight: 800; font-size: 15px; color: #ffe680; white-space: nowrap; }
+.hero-gain .ico { width: 18px; height: 18px; }
+
+/* Tuiles des modes */
+.mode-grid { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(0, 1fr); gap: 10px; min-height: 0; }
+.mode-tile { --tc: #00f0ff; position: relative; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; align-content: center; padding: 10px 14px;
+  border-radius: 14px; cursor: pointer; text-align: left; color: var(--text); background: linear-gradient(135deg, color-mix(in srgb, var(--tc) 18%, rgba(14, 8, 40, 0.92)), rgba(14, 8, 40, 0.92) 70%);
+  border: 1px solid color-mix(in srgb, var(--tc) 55%, transparent); transition: transform 0.12s, box-shadow 0.2s; min-height: 0; }
+.mode-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 20px color-mix(in srgb, var(--tc) 35%, transparent); }
+.mode-tile:active { transform: scale(0.97); }
+.mt-ico { grid-row: 1 / span 2; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: var(--tc);
+  background: color-mix(in srgb, var(--tc) 14%, transparent); box-shadow: 0 0 14px color-mix(in srgb, var(--tc) 30%, transparent); }
+.mt-ico .ico { width: 28px; height: 28px; }
+.mode-tile b { font-family: var(--font-display); font-weight: 900; font-size: 15px; letter-spacing: 2px; align-self: end; }
+.mode-tile small { font-size: 13px; color: color-mix(in srgb, var(--tc) 55%, #fff); align-self: start; }
+.mode-tile .badge { top: -6px; right: -6px; }
+.t-cup { --tc: #ffd34d; } .t-elim { --tc: #ff2b5a; } .t-chrono { --tc: #3dff9e; } .t-event { --tc: #b07aff; }
+.mode-tile.soon { opacity: 0.6; }
+.t-cup.live { animation: tileglow 2s ease-in-out infinite; }
+@keyframes tileglow { 50% { box-shadow: 0 0 22px color-mix(in srgb, var(--tc) 55%, transparent); } }
+.training-link { align-self: center; display: inline-flex; align-items: center; gap: 6px; background: none; border: none; color: var(--muted); font-family: var(--font-ui); font-weight: 700; font-size: 14px; letter-spacing: 1px; cursor: pointer; padding: 4px 8px; }
+.training-link:hover { color: var(--cyan); }
+.training-link .ico { width: 18px; height: 18px; }
+
+/* Entraînement */
+.menu-training { display: flex; align-items: center; justify-content: center; }
+.training-panel { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px 22px; border-radius: 16px; background: rgba(14, 8, 40, 0.88); border: 1px solid rgba(0, 240, 255, 0.3); max-width: 100%; }
+.training-title { font-family: var(--font-display); font-weight: 900; letter-spacing: 3px; font-size: 18px; }
+
+/* Barre du bas */
+.menu-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.nav-btn { position: relative; display: flex; align-items: center; justify-content: center; gap: 10px; height: 52px; border-radius: 14px; cursor: pointer; color: var(--text);
+  background: rgba(14, 8, 40, 0.85); border: 1px solid rgba(0, 240, 255, 0.25); transition: transform 0.12s, border-color 0.2s; }
+.nav-btn:hover { border-color: var(--cyan); transform: translateY(-2px); }
+.nav-btn .ico { width: 24px; height: 24px; color: var(--cyan); }
+.nav-btn b { font-family: var(--font-display); font-size: 12px; letter-spacing: 2px; }
+.n-shop { border-color: rgba(255, 211, 77, 0.55); }
+.n-shop .ico { color: #ffd34d; }
+
+/* Téléphone à l'horizontale (écran peu haut) */
+@media (max-height: 460px) {
+  .start-screen.menu { gap: 6px; padding-top: calc(6px + var(--safe-t)); padding-bottom: calc(6px + var(--safe-b)); }
+  .menu .logo { font-size: 20px; }
+  .chip { height: 30px; font-size: 15px; padding: 0 10px; }
+  .chip .ico { width: 18px; height: 18px; }
+  .icon-chip { width: 30px; }
+  .menu-body { gap: 12px; }
+  .menu-left, .menu-right { gap: 6px; }
+  .menu .league-card { padding: 5px 10px; gap: 10px; }
+  .menu .league-badge { min-width: 66px; padding: 9px 6px; font-size: 10px; }
+  .menu .league-next, .menu .menu-rival { font-size: 11px; }
+  .menu .league-bar { margin: 3px 0; }
+  .car-show-info b { font-size: 14px; }
+  .car-show-info span, .car-show-info i { font-size: 11px; }
+  .menu .menu-stats { display: none; }
+  .hero-race { min-height: 0; padding: 8px 14px; gap: 10px; }
+  .hero-ico { width: 38px; height: 38px; }
+  .hero-ico .ico { width: 18px; height: 18px; }
+  .hero-txt b { font-size: 21px; letter-spacing: 4px; }
+  .hero-txt small { font-size: 11px; }
+  .hero-gain { font-size: 12px; }
+  .mode-grid { gap: 6px; }
+  .mode-tile { padding: 4px 10px; column-gap: 8px; border-radius: 12px; }
+  .mt-ico { width: 32px; height: 32px; border-radius: 9px; }
+  .mt-ico .ico { width: 20px; height: 20px; }
+  .mode-tile b { font-size: 12px; letter-spacing: 1px; }
+  .mode-tile small { font-size: 11px; }
+  .training-link { font-size: 12px; padding: 0 6px; }
+  .nav-btn { height: 40px; gap: 6px; border-radius: 11px; }
+  .nav-btn .ico { width: 19px; height: 19px; }
+  .nav-btn b { font-size: 10px; letter-spacing: 1px; }
+  .training-panel { padding: 10px 14px; gap: 8px; }
+}
+/* Écran étroit (téléphone en portrait) : une seule colonne qui défile */
+@media (max-width: 640px) {
+  .start-screen.menu { overflow-y: auto; grid-template-rows: auto auto auto; }
+  .menu-body { grid-template-columns: 1fr; }
+  .car-show canvas { max-height: 160px; height: 160px; }
+  .mode-grid { grid-auto-rows: 72px; }
+  .nav-btn b { display: none; }
+  .menu .logo { font-size: 18px; }
+}
+/* Corrections du menu */
+.menu button { font-family: var(--font-ui); }
+.start-screen.menu { overflow-x: hidden; }
+.mode-tile b { align-self: end; justify-self: start; }
+.mode-tile small { justify-self: start; line-height: 1.2; }
+@media (max-width: 640px) {
+  .menu-top { flex-wrap: wrap; justify-content: center; }
+  .chip { height: 32px; font-size: 15px; padding: 0 10px; }
+  .icon-chip { width: 32px; }
+  .menu .logo { font-size: 22px; width: 100%; text-align: center; }
+  .hero-txt b { font-size: 24px; }
+  .mode-tile small { font-size: 11px; }
+}
+.mode-tile em { grid-column: 1 / -1; display: none; font-style: normal; font-size: 13px; line-height: 1.35; color: var(--muted); margin-top: 8px; }
+@media (min-height: 600px) and (min-width: 900px) {
+  .mode-tile { align-content: center; padding: 14px 18px; }
+  .mode-tile em { display: block; }
+  .mt-ico { width: 52px; height: 52px; }
+  .mt-ico .ico { width: 32px; height: 32px; }
+  .mode-tile b { font-size: 17px; }
+}
+.start-screen.menu { padding-left: max(calc(18px + var(--safe-l)), calc((100vw - 1240px) / 2)); padding-right: max(calc(18px + var(--safe-r)), calc((100vw - 1240px) / 2)); }
+@media (max-width: 640px) {
+  .menu-body { grid-template-columns: minmax(0, 1fr); }
+  .mode-tile b { font-size: 13px; letter-spacing: 1px; }
+  .mode-tile { padding: 6px 10px; column-gap: 8px; }
+  .mt-ico { width: 36px; height: 36px; }
+  .hero-race { padding: 12px 14px; }
+  .hero-gain { display: none; }
+}
+
+/* Aide des commandes dans les réglages : toujours visible (la règle
+   « petit écran » plus haut ne concerne que l'ancien menu) */
+.settings-card .controls-help { display: block; font-size: 12px; text-align: left; line-height: 1.5; opacity: .85; margin: 4px 0 8px; }
