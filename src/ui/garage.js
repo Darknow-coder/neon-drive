@@ -5,6 +5,7 @@ import { isOwned, liveryFor, setLivery, unlockLabel } from '../progression/garag
 import { makeCarSprite } from '../render/carSprite.js';
 import { carLevel, fragmentsOf, upgradeCost, upgradeCar, unlockFragments, unlockWithFragments } from '../progression/economy.js';
 import { MAX_LEVEL } from '../data/economy.js';
+import { ico, credits as cr, iconImage } from './icons.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -59,10 +60,8 @@ export function createGarage({ save, onSave, onClose, sfx }) {
       ctx.strokeStyle = '#ffd34d';
       ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(W - 46, 46, 30, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.font = '700 30px system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('🔒', W - 46, 48);
+      const lockImg = iconImage('lock');
+      if (lockImg.complete) ctx.drawImage(lockImg, W - 64, 28, 36, 36);
     }
     raf = requestAnimationFrame(drawPreview);
   }
@@ -109,7 +108,7 @@ export function createGarage({ save, onSave, onClose, sfx }) {
       }
       b.append(cv);
       b.append(document.createTextNode(c.name));
-      if (!owned) { const lk = document.createElement('span'); lk.className = 'lk'; lk.textContent = '🔒'; b.append(lk); }
+      if (!owned) b.insertAdjacentHTML('beforeend', `<span class="lk">${ico('lock')}</span>`);
       else { const lv = document.createElement('span'); lv.className = 'lvl'; lv.textContent = `N${carLevel(save, c.id)}`; b.append(lv); }
       b.addEventListener('click', () => { index = k; render(); });
       thumbs.append(b);
@@ -125,7 +124,7 @@ export function createGarage({ save, onSave, onClose, sfx }) {
     $('garage-name').textContent = c.name;
     $('garage-tagline').textContent = c.tagline;
     $('garage-count').textContent = `${save.garage.owned.length} / ${CARS.length} voitures`;
-    $('garage-credits').textContent = `⚡ ${save.credits}`;
+    $('garage-credits').innerHTML = cr(save.credits);
     // Niveau, fragments et amélioration / déblocage anticipé
     const lvl = carLevel(save, c.id);
     const have = fragmentsOf(save, c.id);
@@ -139,7 +138,7 @@ export function createGarage({ save, onSave, onClose, sfx }) {
         $('frag-num').textContent = `${have} / ${cost.fragments}`;
         $('frag-fill').style.width = `${Math.min(100, (have / cost.fragments) * 100)}%`;
         const can = have >= cost.fragments && save.credits >= cost.credits;
-        upBtn.textContent = `AMÉLIORER → NIV. ${cost.level} (⚡ ${cost.credits} + ${cost.fragments} fragments)`;
+        upBtn.innerHTML = `AMÉLIORER → NIV. ${cost.level} &nbsp;${cr(cost.credits)} + ${cost.fragments} fragments`;
         upBtn.disabled = !can;
         upBtn.classList.toggle('can', can);
         $('garage-frags').classList.remove('hidden');
@@ -179,7 +178,7 @@ export function createGarage({ save, onSave, onClose, sfx }) {
     }
     $('garage-paint').classList.toggle('hidden', !owned);
     $('garage-lock').classList.toggle('hidden', owned);
-    $('garage-lock').textContent = owned ? '' : `🔒 ${unlockLabel(c)} — aperçu`;
+    $('garage-lock').innerHTML = owned ? '' : `${ico('lock')} ${unlockLabel(c)} — aperçu`;
     const sel = $('garage-select');
     const isSelected = save.selectedCar === c.id;
     sel.disabled = !owned || isSelected;

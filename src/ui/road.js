@@ -5,6 +5,7 @@ import { roadStatus, claimMilestone, claimableCount } from '../progression/econo
 import { liveryFor } from '../progression/garage.js';
 import { carIcon } from './carIcon.js';
 import { showRewards } from './packOpen.js';
+import { ico, credits as cr } from './icons.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -13,7 +14,7 @@ export function createRoad({ save, onSave, sfx, onClose }) {
 
   function rewardHtml(rw) {
     const parts = [];
-    if (rw.credits) parts.push(`<div style="color:#7af7ff">⚡ ${rw.credits}</div>`);
+    if (rw.credits) parts.push(`<div class="rn-cr">${cr(rw.credits)}</div>`);
     if (rw.pack) { const p = PACKS[rw.pack]; parts.push(`<span class="rn-pack" style="color:${p.color}">${p.name}</span>`); }
     if (rw.car) parts.push(`<div>${getCar(rw.car).name}</div>`);
     return parts.join('');
@@ -21,7 +22,7 @@ export function createRoad({ save, onSave, sfx, onClose }) {
 
   function render() {
     $('road-trophies').textContent = save.trophies;
-    $('road-credits').textContent = `⚡ ${save.credits}`;
+    $('road-credits').innerHTML = cr(save.credits);
     strip.innerHTML = '';
     const list = roadStatus(save);
     let focus = null;
@@ -32,9 +33,10 @@ export function createRoad({ save, onSave, sfx, onClose }) {
       rew.className = 'rn-rew';
       if (m.reward.car) rew.append(carIcon(getCar(m.reward.car), liveryFor(save, m.reward.car), 112, 68, { dim: !m.reached }));
       rew.insertAdjacentHTML('beforeend', rewardHtml(m.reward));
-      node.insertAdjacentHTML('afterbegin', `<div class="rn-at">🏆 ${m.at}</div>`);
+      node.insertAdjacentHTML('afterbegin', `<div class="rn-at">${ico('trophy')} ${m.at}</div>`);
       node.append(rew);
       if (m.claimed) node.insertAdjacentHTML('beforeend', '<div class="rn-state">✓ Récupéré</div>');
+      else if (!m.reached) node.insertAdjacentHTML('afterbegin', `<span class="rn-lock">${ico('lock')}</span>`);
       else if (m.reached) {
         const b = document.createElement('button');
         b.className = 'menu-btn primary';
@@ -47,7 +49,11 @@ export function createRoad({ save, onSave, sfx, onClose }) {
     }
     // Marque l'endroit où se trouve le joueur sur la route
     focus?.classList.add('current-marker');
-    focus?.scrollIntoView({ block: 'nearest', inline: 'center' });
+    // (après affichage de l'écran, sinon le défilement est ignoré)
+    requestAnimationFrame(() => {
+      if (!focus) return;
+      strip.scrollLeft = focus.offsetLeft - strip.clientWidth / 2 + focus.offsetWidth / 2;
+    });
     const n = claimableCount(save);
     $('road-claim-all').disabled = n === 0;
     $('road-hint').textContent = n ? `${n} récompense${n > 1 ? 's' : ''} à récupérer !` : 'Gagne des trophées en course pour avancer sur la route.';
@@ -70,6 +76,6 @@ export function createRoad({ save, onSave, sfx, onClose }) {
   $('road-back').addEventListener('click', () => { $('road').classList.add('hidden'); onClose?.(); });
 
   return {
-    open() { render(); $('road').classList.remove('hidden'); },
+    open() { $('road').classList.remove('hidden'); render(); },
   };
 }

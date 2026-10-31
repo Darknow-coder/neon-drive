@@ -2,6 +2,7 @@
 
 import { formatTime } from '../core/math.js';
 import { leagueProgress } from '../data/progression.js';
+import { ico } from './icons.js';
 
 const el = (id) => document.getElementById(id);
 
@@ -35,7 +36,7 @@ export function showResults(rows, { trackName, reward = null, training = false, 
   const cb = el('res-credits');
   cb.classList.toggle('hidden', !credits);
   if (credits) {
-    cb.innerHTML = `<span class="ct">+${credits.total} ⚡</span>` +
+    cb.innerHTML = `<span class="ct">${ico('credit', 'big')}+${credits.total}</span>` +
       credits.lines.map((l) => `<span class="cl">${l.label} <b>+${l.amount}</b></span>`).join('');
   }
 

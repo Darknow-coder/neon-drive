@@ -4,6 +4,7 @@ import { leagueFor, nextLeague, leagueProgress } from '../data/progression.js';
 import { rivalFor } from '../data/rivals.js';
 import { getCar } from '../data/cars.js';
 import { claimableCount } from '../progression/economy.js';
+import { credits as cr } from './icons.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -14,7 +15,7 @@ export function renderMenu(save, saveStatus) {
   badge.textContent = league.name;
   badge.style.setProperty('--lc', league.color);
   $('menu-trophies').textContent = String(save.trophies);
-  $('menu-credits').textContent = `⚡ ${save.credits}`;
+  $('menu-credits').innerHTML = cr(save.credits);
   const n = claimableCount(save);
   $('road-badge').textContent = String(n);
   $('road-badge').classList.toggle('hidden', n === 0);

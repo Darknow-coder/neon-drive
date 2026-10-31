@@ -33,7 +33,7 @@ export function defaultSave() {
     },
     tutorialDone: false,
     rivalsBeaten: {},        // { idRival: nombre de victoires contre lui }
-    credits: 0,              // monnaie gagnée en course (⚡)
+    credits: 0,              // monnaie gagnée en course (crédits NEON)
     cars: { levels: {}, fragments: {} }, // niveaux d'amélioration et fragments par voiture
     road: { claimed: [] },   // paliers de la route des trophées déjà récupérés
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…

@@ -165,6 +165,23 @@ export function createSfx(audio) {
     boostPad() { tone({ freq: 300, type: 'sawtooth', dur: 0.35, vol: 0.08, slide: 3 }); },
     boostReady() { tone({ freq: 1318, type: 'sine', dur: 0.12, vol: 0.06 }); tone({ freq: 1760, type: 'sine', dur: 0.15, vol: 0.05, delay: 0.07 }); },
     click() { tone({ freq: 1200, type: 'square', dur: 0.04, vol: 0.05 }); },
+    // Ouverture de pack : la charge monte, puis l'explosion
+    packCharge() {
+      if (!audio.ready) return;
+      tone({ freq: 140, type: 'sawtooth', dur: 0.95, vol: 0.07, slide: 6 });
+      tone({ freq: 70, type: 'square', dur: 0.95, vol: 0.05, slide: 4 });
+      noiseHit({ vol: 0.05, dur: 0.95, freq: 1200, q: 0.5 });
+    },
+    packBurst() {
+      noiseHit({ vol: 0.4, dur: 0.6, freq: 900, q: 0.4 });
+      tone({ freq: 90, type: 'sine', dur: 0.6, vol: 0.5, slide: 0.3 });
+      [1046, 1318, 1568, 2093].forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.5, vol: 0.06, delay: 0.05 + i * 0.05, reverb: 0.6 }));
+    },
+    cardFlip(rarity = 'common') {
+      noiseHit({ vol: 0.08, dur: 0.08, freq: 3000, q: 1 });
+      const seq = rarity === 'epic' ? [784, 1046, 1318, 1568, 2093] : rarity === 'rare' ? [880, 1175, 1568] : [1046];
+      seq.forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.35, vol: 0.07, delay: 0.12 + i * 0.07, reverb: 0.5 }));
+    },
     unlock() { [523, 784, 1046, 1568, 2093].forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.4, vol: 0.08, delay: i * 0.09, reverb: 0.6 })); },
     stopCar() { updateCar(null, false); },
   };

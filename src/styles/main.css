@@ -471,11 +471,11 @@ html, body {
 .small { font-size: 13px; }
 .trophy-ico {
   display: inline-block;
-  width: 18px;
-  height: 18px;
-  vertical-align: -3px;
+  width: 20px;
+  height: 20px;
+  vertical-align: -4px;
   margin-right: 5px;
-  background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffd34d' d='M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V17h3v3H8v-3h3v-2.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3V3zm0 4H6v1a2 2 0 0 0 1 1.7V7zm10 0v2.7A2 2 0 0 0 18 8V7h-1z'/%3E%3C/svg%3E");
+  background: no-repeat center / contain url("data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%2032%2032%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22tg%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%220%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23fff3b0%22/%3E%3Cstop%20offset%3D%220.45%22%20stop-color%3D%22%23ffd34d%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23ff8a3d%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Cpath%20d%3D%22M9%204h14v7a7%207%200%200%201-14%200z%22%20fill%3D%22url%28%23tg%29%22%20stroke%3D%22%23fff6cf%22%20stroke-width%3D%221.2%22/%3E%0A%20%20%3Cpath%20d%3D%22M9%206H5v2.5A4.5%204.5%200%200%200%209.6%2013M23%206h4v2.5A4.5%204.5%200%200%201%2022.4%2013%22%20fill%3D%22none%22%20stroke%3D%22%23ffd34d%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M14%2017.5h4v4h-4z%22%20fill%3D%22%23ff9f43%22/%3E%0A%20%20%3Cpath%20d%3D%22M10%2026.5h12l-1.5-5h-9z%22%20fill%3D%22url%28%23tg%29%22%20stroke%3D%22%23fff6cf%22%20stroke-width%3D%221%22/%3E%0A%20%20%3Cpath%20d%3D%22M16%206.5l1.2%202.5%202.7.3-2%201.9.5%202.7-2.4-1.3-2.4%201.3.5-2.7-2-1.9%202.7-.3z%22%20fill%3D%22%23fff8dc%22%20opacity%3D%220.9%22/%3E%0A%3C/svg%3E");
   filter: drop-shadow(0 0 4px rgba(255, 211, 77, 0.7));
 }
 .league-card {
@@ -691,7 +691,7 @@ html, body {
 .badge { position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--magenta); color: #fff; font-family: var(--font-ui); font-size: 13px; line-height: 22px; box-shadow: 0 0 10px var(--magenta); animation: pulse 1.6s ease-in-out infinite; }
 
 /* Route des trophées */
-#road, #pack-open { background: rgba(7, 4, 26, 0.95); }
+#road { background: rgba(7, 4, 26, 0.95); }
 .road-card { width: min(1000px, 100%); }
 .road-head-right { justify-self: end; font-size: 16px; }
 .road-head-right b { color: #ffd34d; }
@@ -711,19 +711,6 @@ html, body {
 .road-node .rn-state { font-size: 12px; color: var(--muted); padding: 6px 0; }
 .road-node.current-marker { outline: 2px dashed rgba(0, 240, 255, 0.6); outline-offset: 3px; }
 .road-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-
-/* Ouverture de pack */
-.pack-card { width: min(720px, 100%); align-items: center; }
-.pack-extra { color: #7af7ff; font-weight: 700; }
-.pack-cards { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; min-height: 150px; }
-.pcard { width: 140px; padding: 10px 8px; border-radius: 12px; text-align: center; background: rgba(14, 8, 40, 0.95); border: 1px solid var(--cyan); animation: flip 0.5s ease-out both; }
-@keyframes flip { from { transform: rotateY(90deg) scale(0.8); opacity: 0; } }
-.pcard canvas { width: 100px; height: 64px; }
-.pcard .pc-n { font-family: var(--font-display); font-weight: 900; font-size: 22px; color: #ffd34d; }
-.pcard .pc-name { font-weight: 700; letter-spacing: 1px; }
-.pcard .pc-goal { font-size: 12px; color: var(--muted); }
-.pcard .frag-bar { margin-top: 4px; }
-.pcard.ready { border-color: #3dff9e; box-shadow: 0 0 14px rgba(61, 255, 158, 0.5); }
 
 /* Garage : niveau, fragments, amélioration */
 .garage-level { font-family: var(--font-display); font-size: 12px; letter-spacing: 2px; color: #7af7ff; }
@@ -770,4 +757,148 @@ html, body {
   .garage-nav { width: 32px; height: 48px; font-size: 24px; }
   .thumb { width: 56px; font-size: 9px; }
   .thumb canvas { width: 50px; height: 36px; }
+}
+
+/* ---------- Icônes SVG ---------- */
+.ico { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -0.22em; line-height: 0; }
+.ico svg { width: 100%; height: 100%; overflow: visible; }
+.ico-trophy { filter: drop-shadow(0 0 3px rgba(255, 211, 77, 0.7)); }
+.ico-credit { filter: drop-shadow(0 0 3px rgba(0, 240, 255, 0.8)); margin-right: 3px; }
+.ico-lock { filter: drop-shadow(0 0 3px rgba(255, 211, 77, 0.6)); }
+.ico.big { width: 1.3em; height: 1.3em; }
+.cr-num { font-variant-numeric: tabular-nums; }
+.credit-chip .ico { width: 18px; height: 18px; vertical-align: -3px; }
+.thumb .lk { top: 3px; right: 5px; font-size: 14px; }
+.road-node .rn-lock { position: absolute; top: 6px; right: 6px; font-size: 13px; }
+.rn-cr { color: #7af7ff; font-size: 15px; }
+.upgrade-btn .ico { width: 15px; height: 15px; }
+
+/* ======================= OUVERTURE DE PACK ======================= */
+.pack-stage {
+  position: fixed; inset: 0; z-index: 50; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: radial-gradient(ellipse at center, #2a0e5a, #05020f 70%);
+  --pc: #00f0ff;
+  touch-action: manipulation;
+}
+#pack-fx { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.pack-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.pack-flash.go { animation: flash 0.55s ease-out; }
+@keyframes flash { 0% { opacity: 0.95; } 100% { opacity: 0; } }
+.pack-head { text-align: center; position: relative; z-index: 2; min-height: 48px; }
+.pack-title { font-family: var(--font-display); font-weight: 900; font-size: 24px; letter-spacing: 4px; color: #fff; text-shadow: 0 0 14px var(--pc), 0 0 30px var(--pc); }
+.pack-extra { color: #7af7ff; font-weight: 700; font-size: 16px; min-height: 20px; }
+.pack-hint { font-family: var(--font-display); font-size: 12px; letter-spacing: 3px; color: var(--muted); min-height: 16px; z-index: 2; animation: blink 1.4s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: 0.4; } }
+.pack-actions { display: flex; gap: 10px; z-index: 2; min-height: 44px; }
+.pack-actions .menu-btn { min-width: 160px; }
+
+/* --- Le pack scellé --- */
+.pack-wrap { position: relative; width: 180px; height: 260px; cursor: pointer; z-index: 2; animation: packfloat 2.4s ease-in-out infinite; }
+@keyframes packfloat { 50% { transform: translateY(-10px) rotate(1.5deg); } }
+.pack-rays {
+  position: absolute; left: 50%; top: 50%; width: 520px; height: 520px; margin: -260px 0 0 -260px; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--pc) 40%, transparent) 0deg 8deg, transparent 8deg 22deg);
+  -webkit-mask-image: radial-gradient(circle, #000 15%, transparent 65%); mask-image: radial-gradient(circle, #000 15%, transparent 65%);
+  opacity: 0.55; animation: spin 14s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.pack-body { position: absolute; inset: 0; }
+.pack-half { position: absolute; left: 0; width: 100%; overflow: hidden; transition: transform 0.7s cubic-bezier(.2,.7,.3,1), opacity 0.7s; }
+.pack-top { top: 0; height: 30%; clip-path: polygon(0 0, 100% 0, 100% 88%, 92% 100%, 84% 86%, 76% 100%, 68% 86%, 60% 100%, 52% 86%, 44% 100%, 36% 86%, 28% 100%, 20% 86%, 12% 100%, 4% 86%, 0 96%); }
+.pack-bottom { top: 26%; height: 74%; clip-path: polygon(0 5.4%, 4% 0, 12% 5.4%, 20% 0, 28% 5.4%, 36% 0, 44% 5.4%, 52% 0, 60% 5.4%, 68% 0, 76% 5.4%, 84% 0, 92% 5.4%, 100% 1%, 100% 100%, 0 100%); }
+.pack-face {
+  position: absolute; left: 0; width: 180px; height: 260px; border-radius: 14px;
+  background:
+    linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.55) 45%, transparent 60%) no-repeat,
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0 6px, transparent 6px 14px),
+    linear-gradient(160deg, color-mix(in srgb, var(--pc) 85%, #fff) 0%, var(--pc) 35%, #2a0a5a 100%);
+  background-size: 300% 100%, auto, auto;
+  border: 2px solid rgba(255,255,255,0.7);
+  box-shadow: 0 0 30px var(--pc), inset 0 0 30px rgba(255,255,255,0.25);
+  animation: foil 3s linear infinite;
+}
+@keyframes foil { from { background-position: 150% 0, 0 0, 0 0; } to { background-position: -150% 0, 0 0, 0 0; } }
+.pack-top .pack-face { top: 0; }
+.pack-bottom .pack-face { top: -35.1%; height: 260px; }
+.pack-face::after {
+  content: attr(data-label); position: absolute; left: 0; right: 0; top: 52%; transform: translateY(-50%);
+  font-family: var(--font-display); font-weight: 900; font-size: 16px; letter-spacing: 2px; color: #fff; text-align: center;
+  text-shadow: 0 0 10px rgba(0,0,0,0.6), 0 0 18px var(--pc); white-space: pre-line; line-height: 1.35;
+}
+.pack-wrap.charging { animation: shake 0.9s ease-in both; }
+@keyframes shake {
+  0% { transform: none; }
+  20% { transform: translate(-2px, 1px) rotate(-1deg) scale(1.02); }
+  40% { transform: translate(3px, -2px) rotate(2deg) scale(1.04); }
+  60% { transform: translate(-5px, 2px) rotate(-3deg) scale(1.07); }
+  80% { transform: translate(6px, -3px) rotate(4deg) scale(1.1); }
+  90% { transform: translate(-7px, 3px) rotate(-5deg) scale(1.14); }
+  100% { transform: translate(0, 0) rotate(0) scale(1.18); filter: brightness(2.2); }
+}
+.pack-wrap.opened { animation: none; cursor: default; }
+.pack-wrap.opened .pack-top { transform: translate(-40px, -260px) rotate(-38deg); opacity: 0; }
+.pack-wrap.opened .pack-bottom { transform: translateY(420px) rotate(8deg); opacity: 0; }
+.pack-wrap.opened .pack-rays { opacity: 0; transition: opacity 0.4s; }
+.pack-wrap.gone { display: none; }
+
+/* --- Les cartes --- */
+.pack-cards { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; z-index: 2; perspective: 900px; min-height: 0; }
+.fcard { position: relative; width: 140px; height: 196px; cursor: pointer; transition: transform 0.55s cubic-bezier(.2,.8,.3,1.1), opacity 0.35s; }
+.fcard.dealing { transform: translateY(-40px) scale(0.35); opacity: 0; }
+.fcard .inner { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(.3,.7,.3,1.2); }
+.fcard.flipped .inner { transform: rotateY(180deg); }
+.fcard .face { position: absolute; inset: 0; border-radius: 12px; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; }
+.fcard .back {
+  border: 2px solid var(--pc);
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--pc) 45%, transparent), transparent 55%),
+    repeating-linear-gradient(60deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 10px),
+    #120a30;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--pc) 60%, transparent);
+  display: flex; align-items: center; justify-content: center;
+}
+.fcard .back::after { content: 'N//D'; font-family: var(--font-display); font-weight: 900; font-size: 26px; color: #fff; text-shadow: 0 0 12px var(--pc); }
+.fcard:not(.flipped):hover { transform: translateY(-6px); }
+.fcard .front {
+  transform: rotateY(180deg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 8px 6px;
+  background: linear-gradient(180deg, #1a1045, #0d0828);
+  border: 2px solid var(--rc, #00f0ff);
+  box-shadow: 0 0 22px var(--rc, #00f0ff), inset 0 0 18px color-mix(in srgb, var(--rc, #00f0ff) 30%, transparent);
+}
+.fcard .front canvas { width: 104px; height: 66px; }
+.fcard .rar { font-family: var(--font-display); font-size: 9px; letter-spacing: 2px; color: var(--rc); }
+.fcard .n { font-family: var(--font-display); font-weight: 900; font-size: 26px; color: #fff; text-shadow: 0 0 10px var(--rc); }
+.fcard .nm { font-weight: 700; letter-spacing: 1px; font-size: 14px; }
+.fcard .goal { font-size: 11px; color: var(--muted); text-align: center; line-height: 1.2; }
+.fcard .frag-bar { width: 100%; margin-top: 2px; }
+.fcard .ready-tag { font-size: 10px; font-weight: 800; color: #3dff9e; letter-spacing: 1px; }
+.fcard .card-rays {
+  position: absolute; left: 50%; top: 50%; width: 360px; height: 360px; margin: -180px 0 0 -180px; pointer-events: none; z-index: -1; opacity: 0;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--rc) 55%, transparent) 0deg 7deg, transparent 7deg 20deg);
+  -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 62%); mask-image: radial-gradient(circle, #000 20%, transparent 62%);
+}
+.fcard.flipped.epic .card-rays { opacity: 0.8; animation: spin 9s linear infinite; transition: opacity 0.5s 0.3s; }
+.fcard.flipped.epic { animation: epicpop 0.6s ease-out 0.25s; }
+@keyframes epicpop { 40% { transform: scale(1.12); } }
+
+/* --- Récompense simple (crédits / voiture) --- */
+.reward-big { display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 2; animation: epicpop 0.6s ease-out; }
+.reward-big .ico { width: 84px; height: 84px; }
+.reward-big .amt { font-family: var(--font-display); font-weight: 900; font-size: 40px; color: #fff; text-shadow: 0 0 16px #00f0ff; font-variant-numeric: tabular-nums; }
+
+@media (max-height: 460px) {
+  .pack-wrap { width: 140px; height: 202px; }
+  .pack-face { width: 140px; height: 202px; }
+  .pack-bottom .pack-face { height: 202px; }
+  .pack-face::after { font-size: 12px; }
+  .fcard { width: 112px; height: 160px; }
+  .fcard .front canvas { width: 84px; height: 52px; }
+  .fcard .n { font-size: 20px; }
+  .fcard .nm { font-size: 12px; }
+  .pack-title { font-size: 18px; }
+  .pack-head { min-height: 38px; }
+  .pack-stage { gap: 6px; }
+  .reward-big .ico { width: 60px; height: 60px; }
 }
