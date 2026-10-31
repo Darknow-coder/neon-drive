@@ -104,16 +104,34 @@ html, body {
 .hud-mono { font-variant-numeric: tabular-nums; }
 .hud-value.hud-mono, .hud-lap .hud-value { font-family: var(--font-ui); font-weight: 700; font-size: 30px; }
 .hud-speed .hud-value.hud-mono { font-size: 38px; }
-.hud-lap { top: calc(10px + var(--safe-t)); left: calc(14px + var(--safe-l)); text-align: center; min-width: 64px; }
+.hud-pos { top: calc(10px + var(--safe-t)); left: calc(14px + var(--safe-l)); text-align: center; min-width: 64px; }
+.hud-pos .hud-value { color: var(--magenta); text-shadow: 0 0 10px rgba(255, 43, 214, 0.7); }
+.hud-lap { top: calc(10px + var(--safe-t)); left: calc(86px + var(--safe-l)); text-align: center; min-width: 64px; }
+.hud-value small { font-size: 0.55em; opacity: 0.7; margin-left: 1px; }
 .hud-times {
   top: calc(10px + var(--safe-t));
-  left: calc(92px + var(--safe-l));
+  left: calc(158px + var(--safe-l));
   font-size: 17px;
   font-weight: 600;
   line-height: 1.35;
 }
 .hud-times .hud-label { display: inline-block; width: 74px; }
-.hud-last { font-size: 13px; color: var(--magenta); min-height: 0; }
+.hud-center {
+  position: absolute;
+  left: 50%;
+  top: 26%;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: #fff;
+  text-shadow: 0 0 10px var(--magenta), 0 0 24px var(--magenta);
+  white-space: nowrap;
+  text-align: center;
+}
+.hud-center.big { font-size: 72px; top: 30%; text-shadow: 0 0 14px var(--cyan), 0 0 40px var(--cyan); }
+@media (max-height: 420px) { .hud-center.big { font-size: 54px; } .hud-center { font-size: 18px; } }
 .hud-speed {
   top: calc(10px + var(--safe-t));
   right: calc(14px + var(--safe-r));

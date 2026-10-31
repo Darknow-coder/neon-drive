@@ -5,7 +5,7 @@ import { createInput, isTouchDevice } from './core/input.js';
 import { createRenderer } from './render/renderer.js';
 import { createHud } from './ui/hud.js';
 import { createTuningPanel } from './ui/tuningPanel.js';
-import { createTestDrive } from './scenes/testDrive.js';
+import { createRaceScene } from './scenes/raceScene.js';
 import { TRACKS } from './data/tracks/index.js';
 
 const touch = isTouchDevice();
@@ -35,10 +35,9 @@ const input = createInput({
 // un écran noir.
 let trackId = TRACKS[0].id;
 function loadTrack(id) {
-  if (session && session.track.id === id) return;
   const carId = session ? session.car.def.id : 'nova';
   session?.dispose();
-  session = createTestDrive({ renderer, input, hud, lowEnd, trackId: id, carId });
+  session = createRaceScene({ renderer, input, hud, lowEnd, trackId: id, carId });
 }
 
 // Choix du circuit sur l'écran de départ (provisoire, avant le vrai menu)

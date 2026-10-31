@@ -15,15 +15,19 @@
 
   <!-- HUD -->
   <div id="hud" class="hud hidden">
+    <div class="hud-block hud-pos">
+      <div class="hud-label">POS</div>
+      <div class="hud-value"><span id="hud-pos">1</span><small id="hud-total">/6</small></div>
+    </div>
     <div class="hud-block hud-lap">
       <div class="hud-label">TOUR</div>
-      <div class="hud-value" id="hud-lap">1</div>
+      <div class="hud-value"><span id="hud-lap">1</span><small id="hud-laps">/3</small></div>
     </div>
     <div class="hud-block hud-times">
       <div><span class="hud-label">ACTUEL</span> <span class="hud-mono" id="hud-time">0:00.000</span></div>
       <div><span class="hud-label">MEILLEUR</span> <span class="hud-mono" id="hud-best">--:--.---</span></div>
-      <div class="hud-last" id="hud-last"></div>
     </div>
+    <div class="hud-center" id="hud-msg"></div>
     <div class="hud-block hud-speed">
       <div class="hud-value hud-mono" id="hud-speed">0</div>
       <div class="hud-label">KM/H</div>
@@ -57,7 +61,7 @@
   <!-- Écran de démarrage -->
   <div id="start" class="start-screen">
     <div class="logo">NEON<span>//</span>DRIVE</div>
-    <div class="subtitle">ÉTAPE 2 — ESSAIS SUR CIRCUIT</div>
+    <div class="subtitle">ÉTAPE 3 — COURSE CONTRE 5 IA</div>
     <div class="track-pick" id="track-pick"></div>
     <button class="start-btn" id="btn-start">TOUCHER POUR ROULER</button>
     <div class="controls-help">

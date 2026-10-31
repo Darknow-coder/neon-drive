@@ -36,9 +36,12 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
     headCone = makeHeadlightCone();
   }
 
+  // Un sprite par combinaison voiture + livrée
   function spriteFor(car) {
-    let s = sprites.get(car.def);
-    if (!s) { s = makeCarSprite(car.def, car.length, car.width); sprites.set(car.def, s); }
+    const colors = car.livery ?? car.def.colors;
+    const key = car.def.id + colors.body + colors.accent + colors.glow;
+    let s = sprites.get(key);
+    if (!s) { s = makeCarSprite(car.def, car.length, car.width, colors); sprites.set(key, s); }
     return s;
   }
 
@@ -106,6 +109,39 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
     }
 
     particles.draw(ctx, 1);
+
+    // Noms des pilotes au-dessus des voitures adverses
+    const fs = (11 * state.dpr) / pxPerUnit;
+    ctx.font = `700 ${fs}px Rajdhani, system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    for (const car of cars) {
+      if (car.isPlayer && cars.length > 1) {
+        // Marqueur au-dessus du joueur : un chevron cyan qui pulse doucement
+        const x = lerp(car.prevX, car.x, alpha);
+        const y = lerp(car.prevY, car.y, alpha) - 34;
+        const k = fs / 11;
+        const bob = Math.sin((scene.time || 0) * 5) * 2 * k;
+        ctx.fillStyle = '#00f0ff';
+        ctx.beginPath();
+        ctx.moveTo(x - 7 * k, y - 8 * k + bob);
+        ctx.lineTo(x + 7 * k, y - 8 * k + bob);
+        ctx.lineTo(x, y + bob);
+        ctx.closePath();
+        ctx.fill();
+        continue;
+      }
+      if (!car.name) continue;
+      const x = lerp(car.prevX, car.x, alpha);
+      const y = lerp(car.prevY, car.y, alpha) - 30;
+      if (x < view.x0 - 60 || x > view.x1 + 60 || y < view.y0 - 60 || y > view.y1 + 60) continue;
+      const colors = car.livery ?? car.def.colors;
+      ctx.fillStyle = 'rgba(7,4,26,0.6)';
+      const w = ctx.measureText(car.name).width + fs * 0.8;
+      ctx.fillRect(x - w / 2, y - fs * 1.15, w, fs * 1.25);
+      ctx.fillStyle = colors.glow;
+      ctx.fillText(car.name, x, y);
+    }
 
     // Effets d'écran
     ctx.setTransform(1, 0, 0, 1, 0, 0);

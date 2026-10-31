@@ -49,8 +49,8 @@ function rgba(hex, a) {
 }
 
 /** Crée le sprite d'une voiture. Retourne { canvas, scale, ox, oy }. */
-export function makeCarSprite(def, length = 46, width = 24) {
-  const { body, accent, glow } = def.colors;
+export function makeCarSprite(def, length = 46, width = 24, colors = def.colors) {
+  const { body, accent, glow } = colors;
   const shape = def.shape;
   const wpx = Math.ceil((length + PAD * 2) * S);
   const hpx = Math.ceil((width + PAD * 2) * S);

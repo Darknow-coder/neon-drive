@@ -48,7 +48,19 @@ tools/        tests automatiques sans affichage (node tools/xxx.js)
 node tools/physicsCheck.js   # un pilote auto fait des tours avec chaque voiture
 node tools/driftCheck.js     # vérifie que le drift reste contrôlable
 node tools/trackCheck.js     # vérifie la géométrie des circuits (chevauchements, virages, piliers)
+node tools/aiSolo.js         # un pilote IA seul : temps au tour, chocs (diagnostic)
+node tools/carBalance.js     # compare les voitures avec le même pilote IA
+node tools/aiRace.js 20      # 20 courses complètes entre IA : classements, dépassements, chocs
 ```
+
+## Intelligence artificielle
+
+- `src/ai/racingLine.js` calcule la trajectoire idéale de chaque circuit et, pour chaque
+  voiture, la vitesse cible en tout point (à partir de SA physique).
+- `src/ai/aiDriver.js` pilote : il ne produit que des commandes (direction, gaz, frein, boost),
+  exactement comme le joueur. Aucune triche possible : même physique pour tous.
+- `src/data/aiProfiles.js` : les 5 personnalités, les pilotes et le niveau par ligue
+  (fixé avant la course, jamais modifié pendant).
 
 ## Ajouter un circuit
 

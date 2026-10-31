@@ -9,9 +9,12 @@ export function createHud() {
   const el = {
     root: document.getElementById('hud'),
     lap: document.getElementById('hud-lap'),
+    laps: document.getElementById('hud-laps'),
+    pos: document.getElementById('hud-pos'),
+    total: document.getElementById('hud-total'),
+    msg: document.getElementById('hud-msg'),
     time: document.getElementById('hud-time'),
     best: document.getElementById('hud-best'),
-    last: document.getElementById('hud-last'),
     speed: document.getElementById('hud-speed'),
     boost: document.getElementById('hud-boost'),
     boostBtn: document.querySelector('.tbtn-boost'),
@@ -27,11 +30,15 @@ export function createHud() {
 
   return {
     show(v) { el.root.classList.toggle('hidden', !v); },
-    update({ car, lap, lapTime, bestLap, lastMsg }) {
+    update({ car, lap, laps, lapTime, bestLap, lastMsg, position, total, big }) {
       set('lap', el.lap, lap > 0 ? String(lap) : '–');
+      set('laps', el.laps, `/${laps}`);
+      set('pos', el.pos, String(position));
+      set('total', el.total, `/${total}`);
+      set('msg', el.msg, lastMsg || '');
+      if (cache.big !== !!big) { cache.big = !!big; el.msg.classList.toggle('big', !!big); }
       set('time', el.time, lap > 0 ? formatTime(lapTime) : '0:00.000');
       set('best', el.best, formatTime(bestLap));
-      set('last', el.last, lastMsg || '');
       set('speed', el.speed, String(Math.round(Math.max(0, car.vF) * SPEED_TO_KMH)));
       set('boost', el.boost, `${Math.round(car.boost * 100)}%`, 'width');
       const ready = car.boost > 0.15;

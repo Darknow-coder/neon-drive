@@ -327,7 +327,7 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
   // redessinées à chaque image. On ne modifie JAMAIS la grande image du
   // circuit pendant la course : sur téléphone, chaque modification oblige la
   // puce graphique à la recharger entièrement (cause de freezes).
-  const SKID_MAX = lowEnd ? 900 : 1600;
+  const SKID_MAX = lowEnd ? 1400 : 2600;
   const skid = new Float32Array(SKID_MAX * 5); // x1, y1, x2, y2, opacité
   let skidHead = 0;
   let skidCount = 0;
