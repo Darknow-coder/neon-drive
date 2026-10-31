@@ -127,14 +127,16 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
     if (blocker) {
       // Est-on retenu ? (on voudrait aller plus vite que la voiture devant)
       const heldUp = wanted - blocker.speed > 12 - profile.aggression * 10;
-      if (st.passLat === null && heldUp && st.passCooldown <= 0) {
+      // Voiture arrêtée ou presque (accident) : on la contourne, quoi qu'il arrive
+      const obstacle = blocker.speed < 120;
+      if (st.passLat === null && heldUp && (st.passCooldown <= 0 || obstacle)) {
         const hw = track.hw[i] - 40;
         const roomLeft = blocker.trackLateral + hw;
         const roomRight = hw - blocker.trackLateral;
         const need = 54 - profile.aggression * 8;
         // Les prudents ne tentent que s'il y a vraiment de la place
         const minRoom = need + 10 + profile.caution * 30;
-        if (Math.max(roomLeft, roomRight) > minRoom || profile.aggression > 0.8) {
+        if (Math.max(roomLeft, roomRight) > minRoom || profile.aggression > 0.8 || obstacle) {
           const side = roomRight > roomLeft ? 1 : -1;
           st.passLat = clamp(blocker.trackLateral + side * need, -hw, hw);
           st.passCar = blocker;
@@ -147,6 +149,8 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
       // (les agressifs collent davantage)
       if (blockerGap < followDist) {
         speedCap = blocker.speed + 15 - profile.caution * 30 * (1 - blockerGap / followDist);
+        // En train de déboîter : il faut avancer pour pouvoir tourner
+        if (st.passLat !== null) speedCap = Math.max(speedCap, 170);
       }
     }
     st.passCooldown = Math.max(0, (st.passCooldown || 0) - dt);

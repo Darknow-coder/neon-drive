@@ -11,22 +11,24 @@ import { createParticles } from '../render/particles.js';
 import { createCamera, computeBaseZoom, snapCamera, updateCamera } from '../render/camera.js';
 import { createCarFx, updateCarFx } from '../render/carFx.js';
 import { formatTime } from '../core/math.js';
+import { computeResults, randomGrid } from '../race/results.js';
 
 const PLAYER_COLORS = { body: '#00f0ff', accent: '#ff2bd6', glow: '#00f0ff' };
 
-export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', gridPos = 3 }) {
+export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', onFinish }) {
   const track = buildTrack(getTrackData(trackId));
   const trackRenderer = createTrackRenderer(track, { lowEnd });
   const particles = createParticles(lowEnd ? 320 : 520);
   const camera = createCamera();
 
-  // Grille : 5 IA + le joueur à la place `gridPos` (0 = pole position)
-  const entries = AI_DRIVERS.map((d) => ({
-    def: getCar(d.car), name: d.name, profile: d.profile, colors: d.colors,
-  }));
-  entries.splice(Math.min(gridPos, entries.length), 0, {
-    def: getCar(carId), name: 'TOI', isPlayer: true, colors: PLAYER_COLORS,
-  });
+  // Grille tirée au sort : le joueur part dans l'une des 3 dernières places
+  const entries = randomGrid(
+    AI_DRIVERS.map((d) => ({ def: getCar(d.car), name: d.name, profile: d.profile, colors: d.colors })),
+    { def: getCar(carId), name: 'TOI', isPlayer: true, colors: PLAYER_COLORS },
+    { backRows: 3 },
+  );
+  let endTimer = -1; // compte à rebours avant l'affichage des résultats
+  let resultsShown = false;
 
   let world = createRaceWorld({ track, entries, laps, league, countdown: 3 });
   let player = world.player;
@@ -48,6 +50,10 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
     if (!world.started || player.finished) return;
     world.respawn(player);
     input.reset();
+  }
+
+  function isFinished() {
+    return resultsShown;
   }
 
   function setCarDef(id) {
@@ -102,8 +108,27 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       scene.announced = true;
       message = `ARRIVÉE — ${player.position}${player.position === 1 ? 'ER' : 'E'} / ${world.cars.length}`;
       messageTimer = 9999;
+    } else if (!player.finished && world.playerPositionLocked() && !scene.lockedMsg) {
+      scene.lockedMsg = true;
+      message = 'TOUS LES ADVERSAIRES SONT ARRIVÉS';
+      messageTimer = 9999;
     }
     if (messageTimer > 0 && (messageTimer -= dt) <= 0) message = '';
+
+    // Fin de course : résultats quand tout le monde est arrivé, ou peu après
+    // l'arrivée du joueur, ou si le joueur ne peut plus changer de place.
+    if (!resultsShown) {
+      if (endTimer < 0) {
+        if (player.finished) endTimer = 5;
+        else if (world.playerPositionLocked()) endTimer = 4;
+      } else {
+        endTimer -= dt;
+        if (endTimer <= 0 || world.finished) {
+          resultsShown = true;
+          onFinish?.(computeResults(world));
+        }
+      }
+    }
   }
 
   function render(alpha) {
@@ -132,7 +157,8 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   }
 
   return {
-    update, render, resize, respawn, setCarDef, reloadGraphics, dispose,
+    update, render, resize, respawn, setCarDef, reloadGraphics, dispose, isFinished,
+    trackName: track.name,
     get car() { return player; },
     get world() { return world; },
     track,

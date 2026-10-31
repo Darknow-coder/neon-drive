@@ -129,6 +129,11 @@ export function createRaceWorld(opts) {
       if (!car.finished && car.laps.lap > laps) {
         car.finished = true;
         car.finishTime = world.time;
+        // Après l'arrivée, la voiture du joueur est conduite automatiquement
+        // (tour d'honneur) pendant que les autres terminent.
+        if (car.isPlayer && !car.ai) {
+          car.ai = createAiDriver(car, track, { profile: AI_PROFILES.cautious, rng: mulberry32(7) });
+        }
       }
     }
     rank();
@@ -157,6 +162,9 @@ export function createRaceWorld(opts) {
   }
 
   world.step = step;
+  /** Le joueur ne peut plus changer de place (tout le monde est arrivé sauf lui). */
+  world.playerPositionLocked = () =>
+    !!world.player && cars.every((c) => c.finished || c === world.player);
   world.respawn = respawn;
   return world;
 }

@@ -38,6 +38,7 @@
 
   <!-- Boutons système -->
   <div id="sys-buttons" class="sys-buttons hidden">
+    <button class="sys-btn" id="btn-pause" title="Pause (Échap / P)">❚❚</button>
     <button class="sys-btn" id="btn-reset" title="Replacer la voiture (R)">⟲</button>
     <button class="sys-btn" id="btn-tuning" title="Réglages de conduite (T)">⚙</button>
   </div>
@@ -55,13 +56,44 @@
     </div>
   </div>
 
+  <!-- Pause -->
+  <div id="pause" class="overlay hidden">
+    <div class="overlay-card">
+      <div class="overlay-title">PAUSE</div>
+      <button class="menu-btn primary" id="btn-resume">REPRENDRE</button>
+      <button class="menu-btn" id="btn-restart">RECOMMENCER</button>
+      <button class="menu-btn" id="btn-quit">QUITTER LA COURSE</button>
+    </div>
+  </div>
+
+  <!-- Résultats -->
+  <div id="results" class="overlay hidden">
+    <div class="overlay-card results-card">
+      <div class="results-head">
+        <div class="results-place" id="res-place">1<sup>er</sup></div>
+        <div>
+          <div class="overlay-title" id="res-title">VICTOIRE !</div>
+          <div class="results-track" id="res-track"></div>
+        </div>
+      </div>
+      <table class="results-table">
+        <thead><tr><th></th><th>PILOTE</th><th class="hide-narrow">VOITURE</th><th>TEMPS</th><th class="hide-narrow">MEILLEUR TOUR</th></tr></thead>
+        <tbody id="res-rows"></tbody>
+      </table>
+      <div class="results-actions">
+        <button class="menu-btn primary" id="btn-again">REJOUER</button>
+        <button class="menu-btn" id="btn-menu">MENU</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Panneau de réglage (outil de développement) -->
   <div id="tuning" class="tuning hidden"></div>
 
   <!-- Écran de démarrage -->
   <div id="start" class="start-screen">
     <div class="logo">NEON<span>//</span>DRIVE</div>
-    <div class="subtitle">ÉTAPE 3 — COURSE CONTRE 5 IA</div>
+    <div class="subtitle">ÉTAPE 4 — COURSE COMPLÈTE</div>
     <div class="track-pick" id="track-pick"></div>
     <button class="start-btn" id="btn-start">TOUCHER POUR ROULER</button>
     <div class="controls-help">

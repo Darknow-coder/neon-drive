@@ -25,6 +25,7 @@ npm run build    # crée la version publiable dans le dossier dist/
 | Drift | Freiner + tourner à vitesse élevée | FREIN + ◀/▶ |
 | Boost | Maj ou B | BOOST |
 | Replacer la voiture | R | ⟲ |
+| Pause | Échap ou P | ❚❚ |
 | Réglages de conduite | T | ⚙ |
 
 ## Organisation du code
@@ -51,6 +52,7 @@ node tools/trackCheck.js     # vérifie la géométrie des circuits (chevaucheme
 node tools/aiSolo.js         # un pilote IA seul : temps au tour, chocs (diagnostic)
 node tools/carBalance.js     # compare les voitures avec le même pilote IA
 node tools/aiRace.js 20      # 20 courses complètes entre IA : classements, dépassements, chocs
+node tools/blockCheck.js     # aucune IA ne reste bloquée derrière une voiture arrêtée
 ```
 
 ## Intelligence artificielle

@@ -1,12 +1,16 @@
-// Point d'entrée du jeu.
+// Point d'entrée du jeu : enchaîne les écrans (menu → course → résultats).
 
 import { createLoop } from './core/loop.js';
 import { createInput, isTouchDevice } from './core/input.js';
 import { createRenderer } from './render/renderer.js';
 import { createHud } from './ui/hud.js';
 import { createTuningPanel } from './ui/tuningPanel.js';
+import { showResults, hideResults } from './ui/resultsScreen.js';
 import { createRaceScene } from './scenes/raceScene.js';
 import { TRACKS } from './data/tracks/index.js';
+
+const $ = (id) => document.getElementById(id);
+const show = (id, v = true) => $(id).classList.toggle('hidden', !v);
 
 const touch = isTouchDevice();
 // Sur téléphone/tablette : résolution et mémoire allégées (fluidité avant tout).
@@ -14,38 +18,88 @@ const touch = isTouchDevice();
 const q = new URLSearchParams(location.search).get('quality');
 const lowEnd = q ? q === 'low' : touch;
 
-const canvas = document.getElementById('game');
+const canvas = $('game');
 const renderer = createRenderer(canvas, { lowEnd });
 const hud = createHud();
-const touchRoot = document.getElementById('touch');
+const touchRoot = $('touch');
 
 let session = null;
 let tuning = null;
+let state = 'menu'; // 'menu' | 'race' | 'pause' | 'results'
+let trackId = TRACKS[0].id;
+let carId = 'nova';
 
 const input = createInput({
   touchRoot,
   onAction(code) {
-    if (code === 'KeyR') session?.respawn();
+    if (code === 'KeyR' && state === 'race') session?.respawn();
     if (code === 'KeyT') tuning?.toggle();
+    if (code === 'Escape' || code === 'KeyP') {
+      if (state === 'race') pause();
+      else if (state === 'pause') resume();
+    }
   },
 });
 
-// Le circuit n'est construit qu'au lancement (et l'ancien est libéré) :
-// sur téléphone, garder plusieurs grands circuits en mémoire peut provoquer
-// un écran noir.
-let trackId = TRACKS[0].id;
-function loadTrack(id) {
-  const carId = session ? session.car.def.id : 'nova';
+// ---------------- Écrans ----------------
+function setRaceUi(visible) {
+  hud.show(visible);
+  show('sys-buttons', visible);
+  show('touch', visible && touch);
+}
+
+function startRace() {
+  // Le circuit n'est construit qu'au lancement (et l'ancien est libéré) :
+  // sur téléphone, garder plusieurs grands circuits en mémoire peut provoquer
+  // un écran noir.
+  if (session) carId = session.car.def.id;
   session?.dispose();
-  session = createRaceScene({ renderer, input, hud, lowEnd, trackId: id, carId });
+  session = createRaceScene({
+    renderer, input, hud, lowEnd, trackId, carId,
+    onFinish: (rows) => {
+      state = 'results';
+      setRaceUi(false);
+      showResults(rows, { trackName: session.trackName });
+    },
+  });
+  input.reset();
+  hideResults();
+  show('pause', false);
+  show('start', false);
+  setRaceUi(true);
+  state = 'race';
+  loop.start();
+}
+
+function pause() {
+  state = 'pause';
+  loop.stop();
+  input.reset();
+  show('pause', true);
+}
+
+function resume() {
+  show('pause', false);
+  state = 'race';
+  loop.start();
+}
+
+function backToMenu() {
+  loop.stop();
+  session?.dispose();
+  session = null;
+  hideResults();
+  show('pause', false);
+  setRaceUi(false);
+  show('start', true);
+  state = 'menu';
 }
 
 // Choix du circuit sur l'écran de départ (provisoire, avant le vrai menu)
-const pick = document.getElementById('track-pick');
+const pick = $('track-pick');
 for (const t of TRACKS) {
   const b = document.createElement('button');
   b.innerHTML = `${t.name}<small>${t.profile}</small>`;
-  b.dataset.id = t.id;
   b.addEventListener('click', () => {
     trackId = t.id;
     pick.querySelectorAll('button').forEach((x) => x.classList.toggle('selected', x === b));
@@ -54,9 +108,9 @@ for (const t of TRACKS) {
   pick.append(b);
 }
 
-tuning = createTuningPanel(document.getElementById('tuning'), {
-  getCar: () => session?.car ?? { def: { id: 'nova', stats: {} }, params: {} },
-  setCarDef: (id) => session?.setCarDef(id),
+tuning = createTuningPanel($('tuning'), {
+  getCar: () => session?.car ?? { def: { id: carId, stats: {} }, params: {} },
+  setCarDef: (id) => { carId = id; session?.setCarDef(id); },
   getFps: () => loop.fps,
   getPerf: () => perf,
 });
@@ -80,38 +134,43 @@ const loop = createLoop({
   },
 });
 
-window.addEventListener('resize', () => session?.resize());
-document.getElementById('btn-reset').addEventListener('click', () => session?.respawn());
+window.addEventListener('resize', () => {
+  session?.resize();
+  if (state !== 'race' && session) session.render(1);
+});
+$('btn-reset').addEventListener('click', () => state === 'race' && session?.respawn());
+$('btn-tuning').addEventListener('click', () => tuning.toggle());
+$('btn-pause').addEventListener('click', () => state === 'race' && pause());
+$('btn-resume').addEventListener('click', resume);
+$('btn-restart').addEventListener('click', startRace);
+$('btn-quit').addEventListener('click', backToMenu);
+$('btn-again').addEventListener('click', startRace);
+$('btn-menu').addEventListener('click', backToMenu);
 
 // Si Android efface le dessin du jeu (manque de mémoire graphique),
 // on reconstruit les images au lieu de rester sur un écran noir.
 canvas.addEventListener('contextlost', (e) => e.preventDefault());
 canvas.addEventListener('contextrestored', () => session?.reloadGraphics());
-document.getElementById('btn-tuning').addEventListener('click', () => tuning.toggle());
 
-
-document.getElementById('btn-start').addEventListener('click', async () => {
-  loadTrack(trackId);
-  document.getElementById('start').classList.add('hidden');
-  hud.show(true);
-  document.getElementById('sys-buttons').classList.remove('hidden');
+$('btn-start').addEventListener('click', async () => {
+  startRace();
   if (touch) {
-    touchRoot.classList.remove('hidden');
-    document.getElementById('rotate-hint').classList.add('enabled');
+    $('rotate-hint').classList.add('enabled');
     try {
       await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
       await screen.orientation?.lock?.('landscape');
     } catch { /* pas grave : certains navigateurs refusent */ }
     setTimeout(() => session?.resize(), 300);
   }
-  loop.start();
 });
 
-// Pause automatique quand l'onglet est caché
+// Pause automatique quand l'application passe en arrière-plan
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) loop.stop();
-  else if (document.getElementById('start').classList.contains('hidden')) loop.start();
+  if (document.hidden) {
+    if (state === 'race') pause();
+    else loop.stop();
+  } else if (state === 'results') loop.start();
 });
 
 // Accès pour les tests automatiques
-window.__ND = { session: () => session, loop: () => loop, perf };
+window.__ND = { session: () => session, loop: () => loop, perf, state: () => state };
