@@ -53,6 +53,7 @@ node tools/aiSolo.js         # un pilote IA seul : temps au tour, chocs (diagnos
 node tools/carBalance.js     # compare les voitures avec le même pilote IA
 node tools/aiRace.js 20      # 20 courses complètes entre IA : classements, dépassements, chocs
 node tools/blockCheck.js     # aucune IA ne reste bloquée derrière une voiture arrêtée
+node tools/trackFlow.js      # exigence de chaque circuit (vitesse moyenne, freinages, drift)
 ```
 
 ## Intelligence artificielle
@@ -76,7 +77,10 @@ node tools/blockCheck.js     # aucune IA ne reste bloquée derrière une voiture
 - `zones: [{ type: 'boost', at: 0.5, length: 110, offset: 0, width: 80 }]`
 - `zones: [{ type: 'slick', at: 0.7, length: 260 }]` (zone glissante)
 
-## Publication (Netlify)
+## Publication
 
-Le fichier `netlify.toml` est prêt : relier le dépôt GitHub à Netlify suffit
-(commande `npm run build`, dossier `dist`).
+**GitHub Pages** (gratuit, sans limite) : le fichier `.github/workflows/deploy.yml`
+vérifie les circuits, construit le jeu et le publie à chaque envoi sur `main`.
+Adresse : https://darknow-coder.github.io/neon-drive/
+
+(Le fichier `netlify.toml` reste disponible si l'on veut publier aussi sur Netlify.)
