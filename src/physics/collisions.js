@@ -9,15 +9,25 @@ import { queryTrack } from '../track/buildTrack.js';
 const q = {};
 const RESTITUTION = 0.25; // rebond sur les murs (0 = colle, 1 = super-balle)
 
+// Objets réutilisés : aucune création d'objet à chaque pas physique
+// (évite les micro-saccades du ramasse-miettes sur mobile).
+const circles = [{ x: 0, y: 0, ox: 0, oy: 0, r: 0 }, { x: 0, y: 0, ox: 0, oy: 0, r: 0 }];
+
 export function carCircles(car) {
   const fx = Math.cos(car.angle);
   const fy = Math.sin(car.angle);
   const off = car.length * 0.27;
   const r = car.width * 0.5 + 1;
-  return [
-    { x: car.x + fx * off, y: car.y + fy * off, ox: fx * off, oy: fy * off, r },
-    { x: car.x - fx * off, y: car.y - fy * off, ox: -fx * off, oy: -fy * off, r },
-  ];
+  for (let k = 0; k < 2; k++) {
+    const s = k === 0 ? 1 : -1;
+    const c = circles[k];
+    c.ox = fx * off * s;
+    c.oy = fy * off * s;
+    c.x = car.x + c.ox;
+    c.y = car.y + c.oy;
+    c.r = r;
+  }
+  return circles;
 }
 
 /** Garde la voiture dans le circuit. Retourne la force du choc (0 si aucun). */

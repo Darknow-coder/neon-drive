@@ -57,7 +57,6 @@ html, body {
   border: 1px solid rgba(0, 240, 255, 0.25);
   border-radius: 10px;
   padding: 6px 12px;
-  backdrop-filter: blur(4px);
   box-shadow: 0 0 18px rgba(138, 43, 255, 0.25);
 }
 .hud-label {

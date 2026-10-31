@@ -23,11 +23,11 @@ export function updateCarFx(fx, car, dt, particles, trackRenderer, impactThisSte
   // Traces de pneus
   fx.skidTimer += dt;
   if (sliding && car.speed > 80) {
-    if (fx.lastWheels && fx.skidTimer > 1 / 40) {
+    if (fx.lastWheels && fx.skidTimer > 1 / 30) {
       const a = Math.min(1, 0.35 + Math.abs(car.vR) / 400);
       const lw = fx.lastWheels;
-      trackRenderer.addSkid(lw[0], lw[1], wheels[0], wheels[1], a, glow);
-      trackRenderer.addSkid(lw[2], lw[3], wheels[2], wheels[3], a, glow);
+      trackRenderer.addSkid(lw[0], lw[1], wheels[0], wheels[1], a);
+      trackRenderer.addSkid(lw[2], lw[3], wheels[2], wheels[3], a);
       fx.lastWheels = wheels;
       fx.skidTimer = 0;
     } else if (!fx.lastWheels) {

@@ -30,7 +30,7 @@ const GLOBAL_SLIDERS = [
 
 const GLOBAL_DEFAULTS = { ...GLOBAL_TUNING };
 
-export function createTuningPanel(root, { getCar, setCarDef, getFps }) {
+export function createTuningPanel(root, { getCar, setCarDef, getFps, getPerf }) {
   let open = false;
 
   function row(obj, [key, label, min, max, step]) {
@@ -106,7 +106,11 @@ export function createTuningPanel(root, { getCar, setCarDef, getFps }) {
 
     // Les curseurs ne doivent pas déclencher les commandes du jeu
     root.addEventListener('keydown', (e) => e.stopPropagation());
-    root.updateFps = () => { fps.textContent = `${Math.round(getFps())} images/s`; };
+    root.updateFps = () => {
+      const p = getPerf?.();
+      fps.textContent = `${Math.round(getFps())} images/s` +
+        (p ? ` · physique ${p.update.toFixed(1)} ms · dessin ${p.render.toFixed(1)} ms · pire ${Math.round(p.worst)} ms` : '');
+    };
   }
 
   build();

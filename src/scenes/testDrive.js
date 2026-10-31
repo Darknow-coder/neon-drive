@@ -26,6 +26,7 @@ export function createTestDrive({ renderer, input, hud, lowEnd, trackId, carId }
   let time = 0;
   let message = '';
   let messageTimer = 0;
+  let lastVibrate = 0;
 
   const scene = { trackRenderer, cars: [car], particles, camera, player: car };
 
@@ -63,7 +64,10 @@ export function createTestDrive({ renderer, input, hud, lowEnd, trackId, carId }
     const intent = input.update(dt);
     stepCar(car, intent, dt);
     const hit = collideCarWithWalls(car, track);
-    if (hit > 260 && navigator.vibrate) navigator.vibrate(Math.min(60, hit / 10));
+    if (hit > 260 && time - lastVibrate > 0.25 && navigator.vibrate) {
+      navigator.vibrate(Math.min(60, hit / 10));
+      lastVibrate = time;
+    }
     updateCarFx(fx, car, dt, particles, trackRenderer, hit);
     particles.update(dt);
     updateCamera(camera, car, dt);

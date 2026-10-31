@@ -27,7 +27,7 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
   const oy = b.minY - DECOR_MARGIN;
   const ww = b.maxX - b.minX + DECOR_MARGIN * 2;
   const wh = b.maxY - b.minY + DECOR_MARGIN * 2;
-  const maxPx = lowEnd ? 4.5e6 : 9e6;
+  const maxPx = lowEnd ? 4e6 : 7e6;
   const scale = Math.min(1, Math.sqrt(maxPx / (ww * wh)), 4096 / ww, 4096 / wh);
 
   const cache = document.createElement('canvas');
@@ -254,20 +254,51 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
 
   buildCache();
 
-  // ---------- Traces de pneus (dessinées directement dans l'image du circuit) ----------
-  function addSkid(x1, y1, x2, y2, alpha, tint) {
-    worldTransform();
-    cctx.strokeStyle = `rgba(4,2,12,${alpha * 0.55})`;
-    cctx.lineWidth = 4.5;
-    cctx.lineCap = 'round';
-    cctx.beginPath();
-    cctx.moveTo(x1, y1);
-    cctx.lineTo(x2, y2);
-    cctx.stroke();
-    if (tint) {
-      cctx.strokeStyle = rgba(tint, alpha * 0.12);
-      cctx.lineWidth = 2;
-      cctx.stroke();
+  // ---------- Traces de pneus ----------
+  // Stockées dans un tableau circulaire (les plus anciennes disparaissent) et
+  // redessinées à chaque image. On ne modifie JAMAIS la grande image du
+  // circuit pendant la course : sur téléphone, chaque modification oblige la
+  // puce graphique à la recharger entièrement (cause de freezes).
+  const SKID_MAX = lowEnd ? 900 : 1600;
+  const skid = new Float32Array(SKID_MAX * 5); // x1, y1, x2, y2, opacité
+  let skidHead = 0;
+  let skidCount = 0;
+
+  function addSkid(x1, y1, x2, y2, alpha) {
+    const o = skidHead * 5;
+    skid[o] = x1; skid[o + 1] = y1; skid[o + 2] = x2; skid[o + 3] = y2; skid[o + 4] = alpha;
+    skidHead = (skidHead + 1) % SKID_MAX;
+    if (skidCount < SKID_MAX) skidCount++;
+  }
+
+  function clearSkids() {
+    skidHead = 0;
+    skidCount = 0;
+  }
+
+  const SKID_BUCKETS = 3; // 3 niveaux d'opacité : les traces anciennes s'estompent
+  function drawSkids(ctx, view) {
+    if (!skidCount) return;
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 4.5;
+    const m = 10;
+    for (let bkt = 0; bkt < SKID_BUCKETS; bkt++) {
+      ctx.strokeStyle = `rgba(3,1,10,${0.16 + bkt * 0.13})`;
+      ctx.beginPath();
+      let any = false;
+      const from = Math.floor((skidCount * bkt) / SKID_BUCKETS);
+      const to = Math.floor((skidCount * (bkt + 1)) / SKID_BUCKETS);
+      for (let k = from; k < to; k++) {
+        // k = 0 : la plus ancienne
+        const idx = (skidHead - skidCount + k + SKID_MAX) % SKID_MAX;
+        const o = idx * 5;
+        const x1 = skid[o], y1 = skid[o + 1];
+        if (x1 < view.x0 - m || x1 > view.x1 + m || y1 < view.y0 - m || y1 > view.y1 + m) continue;
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(skid[o + 2], skid[o + 3]);
+        any = true;
+      }
+      if (any) ctx.stroke();
     }
   }
 
@@ -300,6 +331,8 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
       ctx.drawImage(cache, sx, sy, sx1 - sx, sy1 - sy,
         ox + sx / scale, oy + sy / scale, (sx1 - sx) / scale, (sy1 - sy) / scale);
     }
+
+    drawSkids(ctx, view);
 
     // Bordures néon (nettes) — uniquement les portions visibles
     const m = 140;
@@ -340,7 +373,7 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
     }
   }
 
-  return { draw, addSkid, rebuild: buildCache, theme };
+  return { draw, addSkid, clearSkids, theme };
 }
 
 function noiseTile(rand) {

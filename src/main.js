@@ -8,7 +8,10 @@ import { createTuningPanel } from './ui/tuningPanel.js';
 import { createTestDrive } from './scenes/testDrive.js';
 
 const touch = isTouchDevice();
-const lowEnd = touch && (navigator.hardwareConcurrency || 8) <= 4;
+// Sur téléphone/tablette : résolution et mémoire allégées (fluidité avant tout).
+// Forçable pour les tests avec ?quality=low ou ?quality=high dans l'adresse.
+const q = new URLSearchParams(location.search).get('quality');
+const lowEnd = q ? q === 'low' : touch;
 
 const canvas = document.getElementById('game');
 const renderer = createRenderer(canvas, { lowEnd });
@@ -32,11 +35,26 @@ tuning = createTuningPanel(document.getElementById('tuning'), {
   getCar: () => session.car,
   setCarDef: (id) => session.setCarDef(id),
   getFps: () => loop.fps,
+  getPerf: () => perf,
 });
 
+// Mesure du temps de calcul (affichée dans le panneau ⚙)
+const perf = { update: 0, render: 0, worst: 0, frameUpdate: 0 };
 const loop = createLoop({
-  update: (dt) => session.update(dt),
-  render: (alpha) => session.render(alpha),
+  update: (dt) => {
+    const t = performance.now();
+    session.update(dt);
+    perf.frameUpdate += performance.now() - t;
+  },
+  render: (alpha) => {
+    const t = performance.now();
+    session.render(alpha);
+    const r = performance.now() - t;
+    perf.render += (r - perf.render) * 0.05;
+    perf.update += (perf.frameUpdate - perf.update) * 0.05;
+    perf.worst = Math.max(perf.worst * 0.995, r + perf.frameUpdate);
+    perf.frameUpdate = 0;
+  },
 });
 
 window.addEventListener('resize', () => session.resize());
@@ -69,4 +87,4 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Accès pour les tests automatiques
-window.__ND = { session: () => session, loop: () => loop };
+window.__ND = { session: () => session, loop: () => loop, perf };
