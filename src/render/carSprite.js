@@ -19,6 +19,8 @@ const SHAPES = {
   arrow: [[1.0, 0.02], [0.82, 0.16], [0.5, 0.3], [0.0, 0.38], [-0.6, 0.5], [-0.85, 0.52], [-1.0, 0.44]],
   // Blindée : massive et anguleuse
   tank: [[1.0, 0.42], [0.96, 0.5], [0.6, 0.52], [-0.8, 0.52], [-0.95, 0.5], [-1.0, 0.42]],
+  // Monoplace : coque étroite (les roues sont à l'extérieur)
+  formula: [[1.0, 0.07], [0.7, 0.13], [0.35, 0.2], [-0.1, 0.3], [-0.65, 0.32], [-1.0, 0.26]],
 };
 
 function bodyPath(ctx, shape, L, W) {
@@ -54,12 +56,30 @@ function rgba(hex, a) {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
 }
 
-/** Crée le sprite d'une voiture. Retourne { canvas, scale, ox, oy }. */
+// ---------------------------------------------------------------------------
+// DESIGN : chaque voiture combine des éléments visuels (voir `design` dans
+// src/data/cars.js). Les proportions (lm / wm) ne changent QUE l'affichage :
+// la taille utilisée pour les collisions reste identique pour toutes.
+// ---------------------------------------------------------------------------
+const DEFAULT_DESIGN = {
+  lm: 1, wm: 1,
+  cockpit: 'bubble',   // bubble | big | front | rear | slit | open
+  wheels: 'covered',   // covered | pods | exposed
+  livery: 'twin',      // twin | single | side | bolt | chevron | split | none
+  spoiler: 'bar',      // bar | wide | split | none
+  lights: 'dual',      // dual | bar | quad
+  extras: [],          // intakes | fins | blades | armor | bullbar | exhaust | ring | frontwing | skirts
+};
+
+/** Crée le sprite d'une voiture. Retourne { canvas, scale, ox, oy, w, h }. */
 export function makeCarSprite(def, length = 46, width = 24, colors = def.colors) {
   const { body, accent, glow } = colors;
   const shape = def.shape;
-  const wpx = Math.ceil((length + PAD * 2) * S);
-  const hpx = Math.ceil((width + PAD * 2) * S);
+  const d = { ...DEFAULT_DESIGN, ...(def.design ?? {}) };
+  const L = length * d.lm;
+  const Wd = width * d.wm;
+  const wpx = Math.ceil((L + PAD * 2) * S);
+  const hpx = Math.ceil((Wd + PAD * 2) * S);
   const cv = document.createElement('canvas');
   cv.width = wpx;
   cv.height = hpx;
@@ -67,11 +87,11 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
   ctx.translate(wpx / 2, hpx / 2);
   ctx.scale(S, S);
 
-  const hl = length / 2;
-  const hw = width / 2;
+  const hl = L / 2;
+  const hw = Wd / 2;
+  const ex = new Set(d.extras);
 
-  // Lueur au sol (néon sous la caisse)
-  // (dégradé radial étiré plutôt qu'un filtre de flou : compatible partout)
+  // ---- Lueur au sol (néon sous la caisse) ----
   ctx.save();
   const gr = hl + 14;
   ctx.scale(1, (hw + 12) / gr);
@@ -84,43 +104,73 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
   ctx.arc(0, 0, gr, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
-  // Ombre sombre sous la caisse (donne du volume)
+
+  // ---- Ombre sous la caisse ----
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.8)';
   ctx.shadowBlur = 2 * S;
   ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  bodyPath(ctx, shape, length + 2, width + 1);
+  bodyPath(ctx, shape, L + 2, Wd + 1);
   ctx.fill();
   ctx.restore();
 
-  // Roues
-  ctx.fillStyle = '#05030c';
-  ctx.strokeStyle = rgba(glow, 0.6);
-  ctx.lineWidth = 0.5;
-  const wheelX = hl * 0.6;
-  const wheelY = hw - 0.5;
-  for (const sx of [-1, 1]) {
+  // ---- Roues cachées / pontons (dessinés SOUS la carrosserie) ----
+  const tyre = (x, y, w, h) => {
+    ctx.fillStyle = '#05030c';
+    roundRect(ctx, x - w / 2, y - h / 2, w, h, 1.6);
+    ctx.fill();
+    ctx.strokeStyle = rgba(glow, 0.6);
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  };
+  if (d.wheels === 'covered') {
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) tyre(sx * hl * 0.6, sy * (hw - 0.5), 10, 5.2);
+  } else if (d.wheels === 'pods') {
     for (const sy of [-1, 1]) {
-      const wx = sx * wheelX;
-      const wy = sy * wheelY;
-      roundRect(ctx, wx - 5, wy - 2.6, 10, 5.2, 1.6);
+      ctx.fillStyle = shade(body, -0.45);
+      roundRect(ctx, -hl * 0.85, sy > 0 ? hw - 3 : -hw - 3, hl * 1.1, 6, 3);
       ctx.fill();
+      ctx.strokeStyle = rgba(accent, 0.7);
+      ctx.lineWidth = 0.6;
       ctx.stroke();
+      for (const sx of [-1, 1]) tyre(sx * hl * 0.6, sy * (hw + 0.3), 9, 4.6);
+    }
+  } else if (d.wheels === 'exposed') {
+    // Suspensions (bras) puis roues bien visibles, façon monoplace
+    ctx.strokeStyle = shade(body, -0.3);
+    ctx.lineWidth = 1;
+    for (const sx of [-1, 1]) {
+      for (const sy of [-1, 1]) {
+        const wx = sx * hl * 0.66, wy = sy * (hw + 3.2);
+        ctx.beginPath(); ctx.moveTo(wx - 2, sy * hw * 0.3); ctx.lineTo(wx, wy); ctx.moveTo(wx + 2, sy * hw * 0.3); ctx.lineTo(wx, wy); ctx.stroke();
+      }
     }
   }
 
-  // Carrosserie : dégradé latéral pour un effet de volume
+  // ---- Lames latérales (sous la carrosserie, dépassent sur les côtés) ----
+  if (ex.has('blades')) {
+    for (const sy of [-1, 1]) {
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.moveTo(hl * 0.45, sy * hw * 0.7);
+      ctx.lineTo(-hl * 0.85, sy * (hw + 2.4));
+      ctx.lineTo(-hl * 0.95, sy * (hw + 0.8));
+      ctx.lineTo(hl * 0.2, sy * hw * 0.6);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // ---- Carrosserie (dégradé latéral pour le volume) ----
   const grad = ctx.createLinearGradient(0, -hw, 0, hw);
   grad.addColorStop(0, shade(body, -0.55));
   grad.addColorStop(0.28, shade(body, -0.1));
   grad.addColorStop(0.5, shade(body, 0.25));
   grad.addColorStop(0.72, shade(body, -0.1));
   grad.addColorStop(1, shade(body, -0.55));
-  bodyPath(ctx, shape, length, width);
+  bodyPath(ctx, shape, L, Wd);
   ctx.fillStyle = grad;
   ctx.fill();
-
-  // Contour néon
   ctx.save();
   ctx.shadowColor = glow;
   ctx.shadowBlur = 4 * S;
@@ -129,27 +179,216 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
   ctx.stroke();
   ctx.restore();
 
-  // Bandes décoratives (couleur d'accent)
+  // ---- Décoration (dans la carrosserie) ----
   ctx.save();
-  bodyPath(ctx, shape, length, width);
+  bodyPath(ctx, shape, L, Wd);
   ctx.clip();
   ctx.fillStyle = accent;
+  ctx.strokeStyle = accent;
   ctx.globalAlpha = 0.9;
-  ctx.fillRect(-hl, -2.6, length, 1.3);
-  ctx.fillRect(-hl, 1.3, length, 1.3);
-  // Capot plus sombre à l'avant pour le relief
+  switch (d.livery) {
+    case 'twin':
+      ctx.fillRect(-hl, -2.6, L, 1.3);
+      ctx.fillRect(-hl, 1.3, L, 1.3);
+      break;
+    case 'single':
+      ctx.fillRect(-hl, -hw * 0.22, L, hw * 0.44);
+      ctx.fillStyle = shade(body, 0.5);
+      ctx.fillRect(-hl, -0.3, L, 0.6);
+      break;
+    case 'side':
+      ctx.fillRect(-hl, -hw * 0.82, L, hw * 0.2);
+      ctx.fillRect(-hl, hw * 0.62, L, hw * 0.2);
+      break;
+    case 'bolt': {
+      ctx.lineWidth = 1.6;
+      ctx.lineJoin = 'miter';
+      ctx.beginPath();
+      ctx.moveTo(hl, -1);
+      ctx.lineTo(hl * 0.35, 3);
+      ctx.lineTo(hl * 0.05, -3);
+      ctx.lineTo(-hl * 0.4, 3);
+      ctx.lineTo(-hl * 0.7, -2.5);
+      ctx.lineTo(-hl, 1);
+      ctx.stroke();
+      break;
+    }
+    case 'chevron':
+      ctx.lineWidth = 1.3;
+      for (let x = -hl * 0.8; x < hl * 0.9; x += hl * 0.32) {
+        ctx.beginPath(); ctx.moveTo(x - 3, -hw); ctx.lineTo(x + 2, 0); ctx.lineTo(x - 3, hw); ctx.stroke();
+      }
+      break;
+    case 'split':
+      ctx.globalAlpha = 0.75;
+      ctx.beginPath();
+      ctx.moveTo(hl, 0); ctx.lineTo(-hl, -hw * 0.2); ctx.lineTo(-hl, hw * 1.2); ctx.lineTo(hl, hw * 1.2);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    default:
+      break;
+  }
+  ctx.globalAlpha = 1;
+  // Plaques de blindage (lignes de panneaux + rivets)
+  if (ex.has('armor')) {
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    for (const x of [hl * 0.55, hl * 0.05, -hl * 0.5]) { ctx.moveTo(x, -hw); ctx.lineTo(x, hw); }
+    ctx.moveTo(-hl, -hw * 0.45); ctx.lineTo(hl, -hw * 0.45);
+    ctx.moveTo(-hl, hw * 0.45); ctx.lineTo(hl, hw * 0.45);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    for (const x of [hl * 0.7, hl * 0.3, -hl * 0.2, -hl * 0.7]) for (const y of [-hw * 0.7, hw * 0.7]) { ctx.beginPath(); ctx.arc(x, y, 0.45, 0, Math.PI * 2); ctx.fill(); }
+  }
+  // Jupes latérales
+  if (ex.has('skirts')) {
+    ctx.fillStyle = shade(body, -0.6);
+    ctx.fillRect(-hl, -hw, L, hw * 0.16);
+    ctx.fillRect(-hl, hw * 0.84, L, hw * 0.16);
+  }
+  // Reflet sur le capot
   const hood = ctx.createLinearGradient(hl, 0, hl * 0.2, 0);
   hood.addColorStop(0, 'rgba(255,255,255,0.25)');
   hood.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.globalAlpha = 1;
   ctx.fillStyle = hood;
-  ctx.fillRect(hl * 0.2, -hw, hl, width);
+  ctx.fillRect(hl * 0.2, -hw, hl, Wd);
   ctx.restore();
 
-  // Cockpit (verrière)
-  const cx0 = -hl * 0.18;
-  const cLen = hl * 0.62;
-  const cW = hw * 0.62;
+  // ---- Prises d'air ----
+  if (ex.has('intakes')) {
+    for (const sy of [-1, 1]) {
+      ctx.fillStyle = '#05030c';
+      ctx.beginPath();
+      ctx.ellipse(-hl * 0.25, sy * hw * 0.62, hl * 0.18, hw * 0.12, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+    }
+  }
+
+  // ---- Cockpit ----
+  drawCockpit(ctx, d.cockpit, hl, hw, accent, glow, ex.has('ring'));
+
+  // ---- Aileron avant (monoplace) ----
+  if (ex.has('frontwing')) {
+    ctx.fillStyle = shade(accent, -0.15);
+    roundRect(ctx, hl - 2.6, -hw - 3.5, 2.6, Wd + 7, 0.8);
+    ctx.fill();
+    ctx.strokeStyle = shade(accent, 0.4);
+    ctx.lineWidth = 0.4;
+    ctx.stroke();
+  }
+  // ---- Pare-buffle ----
+  if (ex.has('bullbar')) {
+    ctx.strokeStyle = '#cfd6ff';
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(hl - 1, -hw * 0.75);
+    ctx.lineTo(hl + 1.6, -hw * 0.45);
+    ctx.lineTo(hl + 1.6, hw * 0.45);
+    ctx.lineTo(hl - 1, hw * 0.75);
+    ctx.stroke();
+  }
+
+  // ---- Roues apparentes (par-dessus) ----
+  if (d.wheels === 'exposed') {
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) tyre(sx * hl * 0.66, sy * (hw + 3.2), sx > 0 ? 8.5 : 10, sx > 0 ? 4.6 : 5.6);
+  }
+
+  // ---- Ailerons arrière (dérives) ----
+  if (ex.has('fins')) {
+    ctx.fillStyle = accent;
+    for (const sy of [-1, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(-hl * 0.55, sy * hw * 0.55);
+      ctx.lineTo(-hl - 3, sy * (hw + 1.5));
+      ctx.lineTo(-hl * 0.85, sy * hw * 0.45);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // ---- Aileron arrière ----
+  ctx.fillStyle = shade(accent, -0.2);
+  ctx.strokeStyle = shade(accent, 0.4);
+  ctx.lineWidth = 0.5;
+  if (d.spoiler === 'bar') {
+    roundRect(ctx, -hl - 1.5, -hw + 0.5, 3.4, Wd - 1, 1);
+    ctx.fill(); ctx.stroke();
+  } else if (d.spoiler === 'wide') {
+    roundRect(ctx, -hl - 3, -hw - 2.5, 4, Wd + 5, 1);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = shade(accent, 0.3);
+    ctx.fillRect(-hl - 3.4, -hw - 2.5, 4.8, 1.2);
+    ctx.fillRect(-hl - 3.4, hw + 1.3, 4.8, 1.2);
+  } else if (d.spoiler === 'split') {
+    for (const sy of [-1, 1]) {
+      roundRect(ctx, -hl - 2, sy > 0 ? hw * 0.15 : -hw * 0.95, 3.4, hw * 0.8, 1);
+      ctx.fill(); ctx.stroke();
+    }
+  }
+
+  // ---- Phares avant ----
+  ctx.save();
+  ctx.shadowColor = '#bff8ff';
+  ctx.shadowBlur = 3 * S;
+  ctx.fillStyle = '#eaffff';
+  const nose = noseHalfWidth(shape, hw);
+  if (d.lights === 'bar') {
+    ctx.fillRect(hl * 0.8, -nose, 1.4, nose * 2);
+  } else if (d.lights === 'quad') {
+    for (const y of [-nose, -nose + 2.4, nose - 3.6, nose - 1.2]) ctx.fillRect(hl * 0.8, y, 2, 1.2);
+  } else {
+    ctx.fillRect(hl * 0.78, -nose - 0.2, 2.2, 1.6);
+    ctx.fillRect(hl * 0.78, nose - 1.4, 2.2, 1.6);
+  }
+  ctx.restore();
+
+  // ---- Feux arrière / échappements ----
+  ctx.save();
+  ctx.shadowColor = '#ff2b6a';
+  ctx.shadowBlur = 2 * S;
+  ctx.fillStyle = '#ff4d7d';
+  ctx.fillRect(-hl + 0.6, -hw + 1.5, 1.2, 3.2);
+  ctx.fillRect(-hl + 0.6, hw - 4.7, 1.2, 3.2);
+  if (ex.has('exhaust')) {
+    ctx.shadowColor = glow;
+    ctx.shadowBlur = 3 * S;
+    ctx.fillStyle = shade(glow, 0.5);
+    for (const sy of [-1, 1]) { ctx.beginPath(); ctx.arc(-hl - 0.5, sy * hw * 0.3, 1.3, 0, Math.PI * 2); ctx.fill(); }
+  }
+  ctx.restore();
+
+  return { canvas: cv, scale: S, ox: wpx / 2 / S, oy: hpx / 2 / S, w: wpx / S, h: hpx / S };
+}
+
+function drawCockpit(ctx, type, hl, hw, accent, glow, ring) {
+  // Paramètres : centre, longueur, largeur
+  const P = {
+    bubble: [-hl * 0.18, hl * 0.62, hw * 0.62],
+    big: [-hl * 0.08, hl * 0.78, hw * 0.78],
+    front: [hl * 0.2, hl * 0.48, hw * 0.55],
+    rear: [-hl * 0.42, hl * 0.5, hw * 0.68],
+    slit: [-hl * 0.05, hl * 0.85, hw * 0.34],
+  };
+  if (type === 'open') {
+    // Monoplace : habitacle ouvert, casque du pilote
+    ctx.fillStyle = '#05040f';
+    ctx.beginPath();
+    ctx.ellipse(-hl * 0.12, 0, hl * 0.3, hw * 0.45, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = accent;
+    ctx.beginPath();
+    ctx.arc(-hl * 0.15, 0, hw * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0a0a26';
+    ctx.fillRect(-hl * 0.15 + 0.4, -hw * 0.2, hw * 0.25, hw * 0.4);
+    return;
+  }
+  const [cx0, cLen, cW] = P[type] ?? P.bubble;
   ctx.beginPath();
   ctx.moveTo(cx0 + cLen, 0);
   ctx.bezierCurveTo(cx0 + cLen * 0.8, -cW, cx0 - cLen * 0.6, -cW, cx0 - cLen * 0.75, -cW * 0.6);
@@ -165,6 +404,16 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
   ctx.strokeStyle = 'rgba(0,0,0,0.6)';
   ctx.lineWidth = 0.6;
   ctx.stroke();
+  if (ring) {
+    // Anneau lumineux autour de la verrière (signature de HALO)
+    ctx.save();
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 10;
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  }
   // Reflet
   ctx.strokeStyle = 'rgba(160,240,255,0.7)';
   ctx.lineWidth = 0.7;
@@ -172,35 +421,6 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
   ctx.moveTo(cx0 + cLen * 0.7, -cW * 0.45);
   ctx.quadraticCurveTo(cx0 + cLen * 0.2, -cW * 0.85, cx0 - cLen * 0.3, -cW * 0.7);
   ctx.stroke();
-
-  // Aileron arrière
-  ctx.fillStyle = shade(accent, -0.2);
-  roundRect(ctx, -hl - 1.5, -hw + 0.5, 3.4, width - 1, 1);
-  ctx.fill();
-  ctx.strokeStyle = shade(accent, 0.4);
-  ctx.lineWidth = 0.5;
-  ctx.stroke();
-
-  // Phares avant
-  ctx.save();
-  ctx.shadowColor = '#bff8ff';
-  ctx.shadowBlur = 3 * S;
-  ctx.fillStyle = '#eaffff';
-  const nose = noseHalfWidth(shape, hw);
-  ctx.fillRect(hl * 0.78, -nose - 0.2, 2.2, 1.6);
-  ctx.fillRect(hl * 0.78, nose - 1.4, 2.2, 1.6);
-  ctx.restore();
-
-  // Feux arrière
-  ctx.save();
-  ctx.shadowColor = '#ff2b6a';
-  ctx.shadowBlur = 2 * S;
-  ctx.fillStyle = '#ff4d7d';
-  ctx.fillRect(-hl + 0.6, -hw + 1.5, 1.2, 3.2);
-  ctx.fillRect(-hl + 0.6, hw - 4.7, 1.2, 3.2);
-  ctx.restore();
-
-  return { canvas: cv, scale: S, ox: wpx / 2 / S, oy: hpx / 2 / S, w: wpx / S, h: hpx / S };
 }
 
 function noseHalfWidth(shape, hw) {

@@ -38,24 +38,29 @@ export function createGarage({ save, onSave, onClose }) {
     // Voiture qui tourne lentement
     angle += 0.006;
     const owned = isOwned(save, car().id);
-    const scale = 5.4;
+    const scale = 4.9;
     ctx.save();
     ctx.translate(W / 2, H * 0.55);
     ctx.rotate(angle);
     ctx.drawImage(sprite.canvas, -sprite.ox * scale, -sprite.oy * scale, sprite.w * scale, sprite.h * scale);
     if (!owned) {
-      // Silhouette pour une voiture verrouillée
+      // Voiture verrouillée : visible en couleurs, mais légèrement assombrie
       ctx.globalCompositeOperation = 'source-atop';
-      ctx.fillStyle = 'rgba(10,6,30,0.92)';
+      ctx.fillStyle = 'rgba(7,4,26,0.38)';
       ctx.fillRect(-sprite.ox * scale, -sprite.oy * scale, sprite.w * scale, sprite.h * scale);
       ctx.globalCompositeOperation = 'source-over';
     }
     ctx.restore();
     if (!owned) {
-      ctx.font = '700 64px system-ui, sans-serif';
+      // Badge cadenas dans le coin
+      ctx.fillStyle = 'rgba(14,8,40,0.9)';
+      ctx.strokeStyle = '#ffd34d';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(W - 46, 46, 30, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.font = '700 30px system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('🔒', W / 2, H * 0.55);
+      ctx.fillText('🔒', W - 46, 48);
     }
     raf = requestAnimationFrame(drawPreview);
   }
@@ -79,7 +84,38 @@ export function createGarage({ save, onSave, onClose }) {
     }
   }
 
+  // Miniatures de toutes les voitures (dessinées une fois, mises à jour au besoin)
+  const thumbs = $('garage-thumbs');
+  function renderThumbs() {
+    thumbs.innerHTML = '';
+    CARS.forEach((c, k) => {
+      const owned = isOwned(save, c.id);
+      const b = document.createElement('button');
+      b.className = 'thumb' + (k === index ? ' view' : '') + (save.selectedCar === c.id ? ' current' : '') + (owned ? '' : ' locked');
+      const cv = document.createElement('canvas');
+      cv.width = 136; cv.height = 104;
+      const tc = cv.getContext('2d');
+      const sp = makeCarSprite(c, 46, 24, liveryFor(save, c.id));
+      const sc = 1.45;
+      tc.translate(68, 52);
+      tc.rotate(-Math.PI / 2);
+      tc.drawImage(sp.canvas, -sp.ox * sc, -sp.oy * sc, sp.w * sc, sp.h * sc);
+      if (!owned) {
+        tc.globalCompositeOperation = 'source-atop';
+        tc.fillStyle = 'rgba(7,4,26,0.32)';
+        tc.fillRect(-200, -200, 400, 400);
+      }
+      b.append(cv);
+      b.append(document.createTextNode(c.name));
+      if (!owned) { const lk = document.createElement('span'); lk.className = 'lk'; lk.textContent = '🔒'; b.append(lk); }
+      b.addEventListener('click', () => { index = k; render(); });
+      thumbs.append(b);
+    });
+    thumbs.children[index]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+
   function render() {
+    renderThumbs();
     const c = car();
     const owned = isOwned(save, c.id);
     refreshSprite();
@@ -98,7 +134,7 @@ export function createGarage({ save, onSave, onClose }) {
     }
     $('garage-paint').classList.toggle('hidden', !owned);
     $('garage-lock').classList.toggle('hidden', owned);
-    $('garage-lock').textContent = owned ? '' : `🔒 ${unlockLabel(c)}`;
+    $('garage-lock').textContent = owned ? '' : `🔒 ${unlockLabel(c)} — aperçu`;
     const sel = $('garage-select');
     const isSelected = save.selectedCar === c.id;
     sel.disabled = !owned || isSelected;

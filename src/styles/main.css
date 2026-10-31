@@ -656,3 +656,17 @@ html, body {
 
 /* Pendant le tutoriel : HUD réduit (vitesse et boost seulement) */
 .hud.tuto .hud-pos, .hud.tuto .hud-lap, .hud.tuto .hud-times { display: none; }
+
+/* Miniatures du garage */
+.garage-thumbs { display: flex; gap: 6px; overflow-x: auto; padding: 4px 2px 2px; scrollbar-width: thin; touch-action: pan-x; }
+.thumb {
+  position: relative; flex: 0 0 auto; width: 74px; padding: 2px 2px 3px; border-radius: 10px;
+  border: 1px solid rgba(0, 240, 255, 0.2); background: rgba(14, 8, 40, 0.8); cursor: pointer;
+  color: var(--text); font-family: var(--font-ui); font-weight: 700; font-size: 11px; letter-spacing: 1px;
+}
+.thumb canvas { display: block; width: 68px; height: 52px; margin: 0 auto; }
+.thumb.view { border-color: var(--magenta); box-shadow: 0 0 10px rgba(255, 43, 214, 0.5); }
+.thumb.current::after { content: '✓'; position: absolute; top: 2px; left: 6px; color: #3dff9e; font-size: 13px; }
+.thumb.locked { color: var(--muted); }
+.thumb .lk { position: absolute; top: 2px; right: 5px; font-size: 12px; }
+@media (max-height: 520px) { .thumb { width: 62px; } .thumb canvas { width: 56px; height: 42px; } }
