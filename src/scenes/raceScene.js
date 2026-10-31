@@ -16,7 +16,7 @@ import { computeResults, randomGrid } from '../race/results.js';
 
 const PLAYER_COLORS = { body: '#00f0ff', accent: '#ff2bd6', glow: '#00f0ff' };
 
-export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, rival = false, playerLevel = 1, timeTrial = false, onRespawn = null, onFinish }) {
+export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, rival = false, playerLevel = 1, timeTrial = false, onRespawn = null, gridOrder = null, onFinish }) {
   const track = buildTrack(getTrackData(trackId));
   const trackRenderer = createTrackRenderer(track, { lowEnd });
   const particles = createParticles(lowEnd ? 320 : 520);
@@ -27,7 +27,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   const playerEntry = { def: getCar(carId), name: 'TOI', isPlayer: true, colors: playerColors, level: playerLevel };
   let aiEntries = AI_DRIVERS.map((d) => ({ def: getCar(d.car), name: d.name, profile: d.profile, colors: d.colors }));
   // Course classée : le rival de la ligue remplace un pilote habituel (au hasard)
-  const rivalData = rival ? rivalFor(league) : null;
+  const rivalData = rival || gridOrder ? rivalFor(league) : null;
   if (rivalData) {
     aiEntries.splice(Math.floor(Math.random() * aiEntries.length), 1);
     aiEntries.push({
@@ -35,7 +35,20 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       isRival: true, paceMul: rivalData.paceMul, mistakeMul: rivalData.mistakeMul, skill: rivalData.skill,
     });
   }
-  const entries = solo ? [playerEntry] : randomGrid(aiEntries, playerEntry, { backRows: 3 });
+  let entries = solo ? [playerEntry] : randomGrid(aiEntries, playerEntry, { backRows: 3 });
+  // Coupe : pilotes et ordre de départ imposés (noms, de la pole à la dernière place)
+  if (gridOrder) {
+    const rv = rivalFor(league);
+    entries = gridOrder.map((name) => {
+      if (name === 'TOI') return playerEntry;
+      if (rv && name === rv.name) {
+        return { def: getCar(rv.car), name: rv.name, profile: rv.profile, colors: rv.colors,
+          isRival: true, paceMul: rv.paceMul, mistakeMul: rv.mistakeMul, skill: rv.skill };
+      }
+      const d = AI_DRIVERS.find((x) => x.name === name);
+      return { def: getCar(d.car), name: d.name, profile: d.profile, colors: d.colors };
+    });
+  }
   let endTimer = -1; // compte à rebours avant l'affichage des résultats
   let resultsShown = false;
 
@@ -63,7 +76,8 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   function respawn() {
     if (!world.started || player.finished) return;
     world.respawn(player);
-    input.reset();
+    // Le joueur garde ses doigts posés (ex. pouce sur GAZ) : on ne remet que la direction à zéro
+    input.resetSteer();
     onRespawn?.();
   }
 

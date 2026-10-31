@@ -12,7 +12,7 @@
 
 const KEY = 'neondrive.save';
 const BACKUP_KEY = 'neondrive.save.backup';
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 export function defaultSave() {
   return {
@@ -44,6 +44,9 @@ export function defaultSave() {
     missions: { day: null, daily: [], bonusClaimed: false, week: null, weekly: null },
     // Contre-la-montre : meilleurs temps et médailles par circuit
     timeTrial: { best: {}, medals: {} },
+    // Coupe en cours (ou null) et palmarès
+    cup: null,
+    cupStats: { played: 0, podiums: 0, won: {} },
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
@@ -126,6 +129,23 @@ function sanitize(raw) {
         .map((o) => ({ ...o, bought: !!o.bought }));
     }
   }
+  // Coupe
+  const c = raw.cup;
+  if (c && typeof c === 'object' && Array.isArray(c.tracks) && c.tracks.length === 3 && c.points && typeof c.points === 'object'
+    && Number.isInteger(c.race) && c.race >= 0 && c.race < 3 && Object.values(c.points).every((v) => num(v, -1) >= 0)) {
+    s.cup = {
+      league: String(c.league), tracks: c.tracks.map(String), race: c.race,
+      drivers: Array.isArray(c.drivers) ? c.drivers.map(String) : [], rival: c.rival ? String(c.rival) : null,
+      points: { ...c.points }, last: c.last && typeof c.last === 'object' ? { ...c.last } : {},
+      history: Array.isArray(c.history) ? c.history : [],
+    };
+  }
+  const cs = raw.cupStats;
+  if (cs && typeof cs === 'object') {
+    s.cupStats.played = Math.floor(num(cs.played));
+    s.cupStats.podiums = Math.floor(num(cs.podiums));
+    for (const [k, v] of Object.entries(cs.won ?? {})) if (num(v, 0) > 0) s.cupStats.won[k] = Math.floor(v);
+  }
   // Contre-la-montre
   const tt = raw.timeTrial;
   if (tt && typeof tt === 'object') {
@@ -191,7 +211,13 @@ function migrate(raw) {
     raw.timeTrial ??= { best: {}, medals: {} };
     raw.version = 6;
   }
-  // Pour le futur : if (raw.version === 6) { …; raw.version = 7; }
+  // Version 6 → 7 : coupe
+  if (raw.version === 6) {
+    raw.cup ??= null;
+    raw.cupStats ??= { played: 0, podiums: 0, won: {} };
+    raw.version = 7;
+  }
+  // Pour le futur : if (raw.version === 7) { …; raw.version = 8; }
   return raw;
 }
 

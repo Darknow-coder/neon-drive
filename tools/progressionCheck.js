@@ -15,6 +15,8 @@ import { refreshMissions, applyMissionProgress, claimMission, claimDailyBonus, m
 import { DAILY_TEMPLATES } from '../src/data/missions.js';
 import { applyTimeTrialLap, medalFor, medalCounts, bestTime } from '../src/progression/timeTrial.js';
 import { medalTimes } from '../src/data/timeTrial.js';
+import { startCup, cupGrid, applyCupRace, standings, finishCup, cupReward, PLAYER } from '../src/progression/cup.js';
+import { CUP_POINTS } from '../src/data/cup.js';
 import { createRecorder, decodeGhost, ghostAt, ghostTimeAtDist } from '../src/race/ghost.js';
 
 let ok = 0, ko = 0;
@@ -122,7 +124,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 1, trophies: 120, stats: { races: 20, wins: 4, podiums: 9 }, selectedCar: 'nova' }));
   const l = createSaveStore(st).load();
-  check(l.status === 'ok' && l.data.version === 6 && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v3 sans perte');
+  check(l.status === 'ok' && l.data.version === 7 && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v3 sans perte');
   const fresh = syncUnlocks(l.data);
   check(fresh.map((c) => c.id).join() === 'volt,halo,razor', 'voitures des paliers déjà atteints rendues après migration');
   st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 5, garage: { owned: 'x', liveries: { nova: { body: 'rouge', accent: '#00ff00' } } } }));
@@ -203,7 +205,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 150, garage: { owned: ['nova', 'volt'] }, tutorialDone: true }));
   const d = createSaveStore(st).load().data;
-  check(d.version === 6 && d.credits === 0 && d.road.claimed.length === 0 && d.garage.owned.includes('volt'), 'migration v2 → v3 sans perte');
+  check(d.version === 7 && d.credits === 0 && d.road.claimed.length === 0 && d.garage.owned.includes('volt'), 'migration v2 → v3 sans perte');
   st.setItem('neondrive.save', JSON.stringify({ version: 3, credits: -50, cars: { levels: { nova: 99 }, fragments: { volt: 'x' } }, road: { claimed: [10, 10, 'a'] } }));
   const d2 = createSaveStore(st).load().data;
   check(d2.credits === 0 && d2.cars.levels.nova === 5 && !('volt' in d2.cars.fragments) && d2.road.claimed.join() === '10', 'économie abîmée réparée');
@@ -263,7 +265,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 3, trophies: 200, credits: 900, cars: { levels: { nova: 2 } }, road: { claimed: [10] } }));
   const d = createSaveStore(st).load().data;
-  check(d.version === 6 && d.credits === 900 && d.cars.levels.nova === 2 && d.shop.offers.length === 0 && d.cosmetics.finishes.length === 0, 'migration v3 → v4 sans perte');
+  check(d.version === 7 && d.credits === 900 && d.cars.levels.nova === 2 && d.shop.offers.length === 0 && d.cosmetics.finishes.length === 0, 'migration v3 → v4 sans perte');
   st.setItem('neondrive.save', JSON.stringify({ version: 4, shop: { day: 'hier', offers: [{ id: 'x', kind: 'triche', price: -5 }], giftStreak: -2 }, cosmetics: { finishes: ['gold', 'gold', 3] }, garage: { liveries: { nova: { finish: '<script>', motif: 'bolt' } } } }));
   const d2 = createSaveStore(st).load().data;
   check(d2.shop.day === null && d2.shop.offers.length === 0 && d2.shop.giftStreak === 0 && d2.cosmetics.finishes.join() === 'gold' && !d2.garage.liveries.nova.finish && d2.garage.liveries.nova.motif === 'bolt', 'boutique abîmée réparée');
@@ -336,7 +338,53 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 5, trophies: 50, credits: 10 }));
   const d = createSaveStore(st).load().data;
-  check(d.version === 6 && d.timeTrial && d.credits === 10, 'migration v5 → v6 sans perte');
+  check(d.version === 7 && d.timeTrial && d.credits === 10, 'migration v5 → v6 sans perte');
+}
+
+// --- Coupe ---
+{
+  const s = defaultSave(); s.trophies = 160; syncUnlocks(s);
+  const rng = mulberry32(9);
+  const cup = startCup(s, rng);
+  check(cup.tracks.length === 3 && new Set(cup.tracks).size === 3, '3 circuits différents');
+  check(cup.tracks.every((id) => tracksForLeague('argent').some((t) => t.id === id)), 'circuits de la ligue du joueur');
+  check(Object.keys(cup.points).length === 6 && 'VANTA' in cup.points && PLAYER in cup.points, '6 participants dont le rival');
+  const g1 = cupGrid(cup, rng);
+  check(g1.length === 6 && g1.indexOf(PLAYER) >= 3, 'course 1 : joueur dans les 3 dernières places');
+  const names = Object.keys(cup.points);
+  // Course 1 : le joueur gagne
+  const o1 = [PLAYER, ...names.filter((n) => n !== PLAYER)];
+  const r1 = applyCupRace(cup, o1);
+  check(r1.gained[PLAYER] === 10 && r1.standings[0].name === PLAYER && !r1.finished, 'points de la course 1');
+  const g2 = cupGrid(cup, rng);
+  check(g2[g2.length - 1] === PLAYER, 'course 2 : le leader part dernier');
+  // Course 2 : le joueur 6e, l'ancien 2e gagne
+  const o2 = [...names.filter((n) => n !== PLAYER), PLAYER];
+  const r2 = applyCupRace(cup, o2);
+  check(cup.points[PLAYER] === 11 && cup.points[o2[0]] === 17, 'cumul des points');
+  check(r2.standings.find((x) => x.name === PLAYER).move < 0, 'flèche de recul au classement');
+  // Égalité : départagée par la dernière course
+  const t = { points: { A: 10, B: 10 }, last: { A: 3, B: 1 } };
+  check(standings(t)[0].name === 'B', 'égalité départagée par la dernière course');
+  const o3 = [PLAYER, ...names.filter((n) => n !== PLAYER)];
+  const r3 = applyCupRace(cup, o3);
+  check(r3.finished, 'coupe terminée après 3 courses');
+  const t0 = s.trophies, c0 = s.credits;
+  const fin = finishCup(s, rng);
+  const exp = cupReward('argent', fin.rank);
+  check(s.trophies === t0 + exp.trophies && s.credits === c0 + exp.credits && s.cup === null, 'récompenses de fin de coupe');
+  check(s.cupStats.played === 1 && (fin.rank === 1 ? s.cupStats.won.argent === 1 : true), 'palmarès mis à jour');
+  check(cupReward('elite', 1).credits === 600 && cupReward('bronze', 6).trophies === 0, 'multiplicateur de ligue');
+  check(CUP_POINTS.reduce((a, b) => a + b) === 28, 'barème de points');
+}
+{
+  const st = memStorage();
+  const s = defaultSave(); s.trophies = 30; startCup(s, mulberry32(1)); applyCupRace(s.cup, Object.keys(s.cup.points));
+  st.setItem('neondrive.save', JSON.stringify(s));
+  const d = createSaveStore(st).load().data;
+  check(d.cup && d.cup.race === 1 && d.cup.tracks.length === 3, 'coupe en cours sauvegardée et reprise');
+  st.setItem('neondrive.save', JSON.stringify({ version: 7, cup: { tracks: ['a'], race: 9, points: 'x' } }));
+  check(createSaveStore(st).load().data.cup === null, 'coupe abîmée ignorée');
 }
 
 console.log(`${ok} vérifications réussies, ${ko} échec(s). Ligues : ${LEAGUES.map((l) => `${l.name} ≥ ${l.min}`).join(', ')}`);

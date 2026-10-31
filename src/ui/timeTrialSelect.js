@@ -11,7 +11,7 @@ const $ = (id) => document.getElementById(id);
 const minimaps = new Map();
 
 /** Petit plan du circuit (dessiné une fois). */
-function minimap(td) {
+export function minimap(td) {
   if (minimaps.has(td.id)) return minimaps.get(td.id);
   const t = buildTrack(td);
   const W = 380, H = 192;

@@ -118,6 +118,8 @@ export function createInput({ touchRoot, onAction } = {}) {
         boost: keys.has('boost') || touchState.boost,
       };
     },
+    /** Remet seulement la direction à zéro (les doigts / touches maintenus restent actifs). */
+    resetSteer() { steerSmooth = 0; },
     reset() {
       keys.clear();
       pointers.clear();

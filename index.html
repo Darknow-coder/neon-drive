@@ -77,6 +77,7 @@
       <button class="menu-btn" id="btn-restart">RECOMMENCER</button>
       <button class="menu-btn" id="btn-pause-settings">RÉGLAGES DU SON</button>
       <button class="menu-btn" id="btn-quit">QUITTER LA COURSE</button>
+      <div class="pause-note hidden" id="pause-note"></div>
     </div>
   </div>
 
@@ -164,7 +165,10 @@
     </div>
 
     <div class="menu-actions" id="menu-main">
-      <button class="start-btn" id="btn-start">COURSE</button>
+      <div class="row-btns main-row">
+        <button class="start-btn" id="btn-start">COURSE</button>
+        <button class="start-btn cup-start" id="btn-cup">COUPE<small id="cup-sub"></small></button>
+      </div>
       <div class="row-btns">
         <button class="menu-btn badge-host shop-btn" id="btn-shop">BOUTIQUE<span class="badge hidden" id="shop-badge">0</span></button>
         <button class="menu-btn badge-host" id="btn-missions">MISSIONS<span class="badge hidden" id="missions-badge">0</span></button>
@@ -236,6 +240,12 @@
       </div>
       <div class="garage-thumbs" id="garage-thumbs"></div>
     </div>
+  </div>
+
+  <!-- Coupe -->
+  <div id="cup" class="overlay cup-overlay hidden">
+    <canvas id="cup-fx"></canvas>
+    <div class="overlay-card cup-card" id="cup-card"></div>
   </div>
 
   <!-- Contre-la-montre : choix du circuit -->

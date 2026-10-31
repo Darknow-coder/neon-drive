@@ -27,6 +27,10 @@ import { showRewards } from './ui/packOpen.js';
 import { createMissions } from './ui/missions.js';
 import { createTimeTrial } from './scenes/timeTrial.js';
 import { createTimeTrialSelect } from './ui/timeTrialSelect.js';
+import { createCupScreens } from './ui/cup.js';
+import { startCup, cupGrid, applyCupRace, finishCup, abandonCup, PLAYER } from './progression/cup.js';
+import { computeResults } from './race/results.js';
+import { LEAGUES } from './data/progression.js';
 import { refreshMissions, applyMissionProgress } from './progression/missions.js';
 import { refreshShop } from './progression/shop.js';
 import { PACKS } from './data/economy.js';
@@ -134,6 +138,10 @@ applyControls();
 
 function refreshMenu() {
   renderMenu(save, saveStatus);
+  // Bouton COUPE : reprise d'une coupe en cours, ou ligue de la prochaine coupe
+  $('cup-sub').textContent = save.cup
+    ? `REPRENDRE · COURSE ${save.cup.race + 1}/3`
+    : LEAGUES.find((l) => l.id === leagueFor(save.trophies).id)?.name ?? '';
   $('menu-car').innerHTML = `Voiture : <b>${carName(selectedCar(save))}</b>`;
 }
 
@@ -207,11 +215,107 @@ function startRace() {
   loop.start();
 }
 
+// ---------------------------------------------------------------- COUPE
+const cupUi = createCupScreens({ save, sfx });
+
+function openCup() {
+  const resumed = !!save.cup;
+  if (!resumed) { startCup(save); persist(); }
+  show('start', false);
+  cupUi.showIntro(save.cup, {
+    resumed,
+    onStart: () => { enterFullscreenOnMobile(); startCupRace(); },
+    onAbandon: () => { abandonCup(save); persist(); backToMenu(); },
+  });
+}
+
+/** Lance la prochaine course de la coupe (pilotes et grille imposés). */
+function startCupRace() {
+  const cup = save.cup;
+  if (!cup) return backToMenu();
+  carId = selectedCar(save);
+  trackId = cup.tracks[cup.race];
+  training = false;
+  session?.dispose();
+  session = createRaceScene({
+    renderer, input, hud, lowEnd, trackId, carId, league: cup.league,
+    laps: getTrackData(trackId).laps ?? RACE_LAPS,
+    playerColors: liveryFor(save, carId), sfx, settings: save.settings,
+    playerLevel: carLevel(save, carId),
+    gridOrder: cupGrid(cup),
+    onFinish: (rows) => cupRaceDone(rows),
+  });
+  session.isCup = true;
+  input.reset();
+  hideResults();
+  show('pause', false);
+  show('start', false);
+  setRaceUi(true);
+  state = 'race';
+  updateMusic();
+  loop.start();
+}
+
+/** Fin d'une course de coupe (ou abandon : le joueur compte comme 6e). */
+function cupRaceDone(rows, abandoned = false) {
+  state = 'results';
+  setRaceUi(false);
+  sfx.stopCar();
+  const cup = save.cup;
+  let order = rows.map((r) => r.name);
+  let info = '';
+  if (abandoned) {
+    order = [...order.filter((n) => n !== PLAYER), PLAYER];
+    info = '<span>Course quittée : comptée comme une 6e place.</span>';
+  } else {
+    const me = rows.find((r) => r.isPlayer);
+    const rv = rows.find((r) => r.isRival);
+    const rivalBeaten = !!rv && me.position < rv.position;
+    const credits = raceCredits({
+      position: me.position, driftTime: me.stats.drift, overtakes: me.stats.overtakes,
+      clean: me.stats.wallHits === 0 && me.finished, rivalBeaten,
+    });
+    save.credits += credits.total;
+    refreshMissions(save);
+    const changes = applyMissionProgress(save, {
+      position: me.position, overtakes: me.stats.overtakes, clean: me.stats.wallHits === 0 && me.finished,
+      rivalBeaten, pads: me.stats.pads, trackId, carId, credits: credits.total,
+    });
+    info = `<span>Crédits de la course : <b>+${credits.total}</b></span>` +
+      changes.map((c) => `<span class="${c.done ? 'ok' : ''}">${c.mission.text} <b>${c.done ? '✓' : `${c.after}/${c.mission.target}`}</b></span>`).join('');
+  }
+  const res = applyCupRace(cup, order);
+  persist();
+  updateMusic();
+  cupUi.showStandings(cup, res, info, {
+    onNext: () => {
+      if (!res.finished) return startCupRace();
+      const fin = finishCup(save);
+      persist();
+      loop.stop();
+      session?.dispose();
+      session = null;
+      cupUi.showFinal(fin, {
+        onDone: () => {
+          backToMenu();
+          if (fin.gains.length) showRewards(save, [{ packId: fin.reward.pack, gains: fin.gains }], { sfx, onClose: refreshMenu });
+        },
+      });
+    },
+    onMenu: () => backToMenu(),
+  });
+}
+
 function pause() {
   state = 'pause';
   loop.stop();
   input.reset();
   sfx.stopCar();
+  // En coupe : pas de « recommencer », et quitter compte comme une 6e place
+  const cup = !!session?.isCup;
+  show('btn-restart', !cup);
+  show('pause-note', cup);
+  $('pause-note').textContent = cup ? 'Quitter la course compte comme une 6e place (la coupe continue).' : '';
   show('pause', true);
   updateMusic();
 }
@@ -392,7 +496,13 @@ $('btn-pause').addEventListener('click', () => state === 'race' && pause());
 $('btn-resume').addEventListener('click', resume);
 // « Recommencer » relance le même circuit (sans trophées pour la course abandonnée)
 $('btn-restart').addEventListener('click', () => (session?.isTutorial ? startTutorial() : session?.isTimeTrial ? startTimeTrial(session.trackId) : startRace()));
-$('btn-quit').addEventListener('click', backToMenu);
+$('btn-quit').addEventListener('click', () => {
+  if (session?.isCup && save.cup) {
+    show('pause', false);
+    cupRaceDone(computeResults(session.world), true);
+  } else backToMenu();
+});
+$('btn-cup').addEventListener('click', openCup);
 // « Rejouer » : nouvelle course classée (nouveau tirage) ou même circuit en entraînement
 $('btn-again').addEventListener('click', () => (training ? startTraining() : startRankedRace()));
 $('btn-training').addEventListener('click', () => showTrainingPicker(true));

@@ -117,6 +117,13 @@ et fonctionne hors ligne après une première visite.
   de l'IA ou d'un circuit, relancer `node tools/timeTrialTargets.js` pour recalculer les temps.
 - Sauvegarde version 6 (meilleurs temps et médailles).
 
+## Coupe
+
+- `src/data/cup.js` : barème de points, récompenses finales, multiplicateur par ligue.
+- `src/progression/cup.js` : création (3 circuits de la ligue, 5 adversaires dont le rival),
+  grille (tirage puis ordre inverse du classement), points, fin de coupe.
+- La coupe en cours est sauvegardée (version 7) : on peut la reprendre plus tard.
+
 ## Garage et voitures
 
 - `src/data/cars.js` : voitures (notes 1-10, silhouette, couleurs) et leur mode de déblocage
