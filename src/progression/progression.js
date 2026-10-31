@@ -8,7 +8,8 @@ import { syncUnlocks } from './garage.js';
 /** Circuits accessibles dans une ligue (ceux des ligues inférieures inclus). */
 export function tracksForLeague(leagueId) {
   const r = leagueRank(leagueId);
-  return TRACKS.filter((t) => leagueRank(t.league ?? 'bronze') <= r);
+  // (les circuits de test de l'éditeur ne sortent jamais en course classée)
+  return TRACKS.filter((t) => !t.custom && leagueRank(t.league ?? 'bronze') <= r);
 }
 
 /**

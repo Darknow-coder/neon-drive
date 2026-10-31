@@ -1,0 +1,66 @@
+:root {
+  --cyan: #00f0ff;
+  --magenta: #ff2bd6;
+  --violet: #8a2bff;
+  --bg: #07041a;
+  --panel: #120a30;
+  --text: #e8e6ff;
+  --muted: #8f88c4;
+  --ok: #3dff9e;
+  --err: #ff5c7a;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 14px/1.4 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
+body { display: grid; grid-template-columns: 1fr 320px; grid-template-rows: auto 1fr; height: 100vh; }
+.bar { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--panel); border-bottom: 1px solid rgba(0, 240, 255, 0.25); flex-wrap: wrap; }
+.brand { font-weight: 900; letter-spacing: 2px; margin-right: 8px; }
+.brand span { color: var(--magenta); }
+.brand small { font-weight: 600; color: var(--muted); letter-spacing: 1px; margin-left: 6px; }
+.spacer { flex: 1; }
+button, select, input { font: inherit; color: var(--text); }
+button { background: #1d1150; border: 1px solid rgba(0, 240, 255, 0.35); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+button:hover { border-color: var(--cyan); }
+button.primary { background: linear-gradient(90deg, rgba(0, 240, 255, 0.3), rgba(255, 43, 214, 0.3)); border-color: var(--cyan); }
+button.danger { border-color: var(--err); color: #ffb3c0; }
+button:disabled { opacity: 0.4; cursor: default; }
+select, input[type=text], input[type=number], input:not([type]) { background: #0b0724; border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 6px; padding: 4px 6px; }
+.tools { display: flex; gap: 4px; }
+.tools button.on { background: rgba(255, 43, 214, 0.3); border-color: var(--magenta); }
+main { position: relative; overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.hud-tip { position: absolute; left: 10px; bottom: 10px; right: 120px; font-size: 12px; color: var(--muted); pointer-events: none; }
+.zoom { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 4px; }
+.zoom button { width: 34px; height: 34px; padding: 0; font-size: 18px; }
+.side { overflow-y: auto; background: var(--panel); border-left: 1px solid rgba(0, 240, 255, 0.2); padding: 8px 12px 20px; }
+section { border-bottom: 1px solid rgba(138, 43, 255, 0.3); padding: 8px 0 12px; }
+h3 { margin: 4px 0 8px; font-size: 11px; letter-spacing: 3px; color: var(--cyan); }
+label { display: grid; grid-template-columns: 110px 1fr auto; align-items: center; gap: 6px; margin: 6px 0; font-size: 13px; }
+label output { color: var(--cyan); min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--magenta); }
+.colors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.colors label { grid-template-columns: 1fr; text-align: center; font-size: 11px; }
+.colors input { width: 100%; height: 28px; border: none; background: none; }
+.row { display: flex; gap: 6px; flex-wrap: wrap; }
+.status { font-weight: 800; padding: 6px 8px; border-radius: 8px; }
+.status.ok { color: var(--ok); background: rgba(61, 255, 158, 0.1); }
+.status.ko { color: var(--err); background: rgba(255, 92, 122, 0.1); }
+.problems { margin: 6px 0; padding-left: 18px; color: #ffb3c0; font-size: 13px; }
+.problems li { margin: 3px 0; }
+.stats { font-size: 13px; color: var(--muted); }
+.stats b { color: var(--text); }
+.features { list-style: none; padding: 0; margin: 0; }
+.features li { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; align-items: center; padding: 4px 0; border-bottom: 1px dashed rgba(138, 43, 255, 0.2); font-size: 13px; }
+.features li.sel { background: rgba(255, 43, 214, 0.12); }
+.features input { width: 60px; }
+.features .empty { color: var(--muted); display: block; }
+.hidden { display: none !important; }
+.modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 10; }
+.modal-card { width: min(760px, 94vw); background: var(--panel); border: 1px solid var(--cyan); border-radius: 12px; padding: 14px; }
+.modal-card p { color: var(--muted); margin: 4px 0 8px; }
+.modal-card textarea { width: 100%; height: 300px; background: #0b0724; color: var(--text); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 8px; font: 12px/1.4 ui-monospace, monospace; padding: 8px; }
+#ed-modal-msg { margin-top: 6px; font-size: 13px; }
+@media (max-width: 860px) {
+  body { grid-template-columns: 1fr; grid-template-rows: auto 60vh auto; overflow: auto; height: auto; }
+  html, body { overflow: auto; }
+  .side { border-left: none; }
+}

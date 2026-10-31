@@ -241,8 +241,29 @@ function showTrainingPicker(v) {
 }
 
 refreshMenu();
+// Lien vers l'éditeur de circuits (mode développeur)
+if (devMode) {
+  const a = document.createElement('a');
+  a.href = './editor.html';
+  a.textContent = "ÉDITEUR DE CIRCUITS";
+  a.className = 'menu-btn';
+  a.style.textDecoration = 'none';
+  $('menu-main').append(a);
+}
 
-// Choix du circuit sur l'écran de départ (provisoire, avant le vrai menu)
+// Circuit de test envoyé par l'éditeur (bouton « Essayer ») : disponible en entraînement
+const urlParams = new URLSearchParams(location.search);
+if (urlParams.has('custom')) {
+  try {
+    const d = JSON.parse(localStorage.getItem('neondrive.customTrack') || 'null');
+    if (d && Array.isArray(d.points) && d.points.length >= 4) {
+      TRACKS.push({ ...d, id: 'custom-test', name: `${d.name || 'TEST'} (TEST)`, profile: 'Éditeur', custom: true });
+      trainingTrackId = 'custom-test';
+    }
+  } catch { /* brouillon illisible : ignoré */ }
+}
+
+// Choix du circuit pour l'entraînement
 const pick = $('track-pick');
 for (const t of TRACKS) {
   const b = document.createElement('button');
@@ -254,6 +275,9 @@ for (const t of TRACKS) {
   if (t.id === trainingTrackId) b.classList.add('selected');
   pick.append(b);
 }
+
+// Arrivée depuis l'éditeur : on ouvre directement l'entraînement sur le circuit de test
+if (trainingTrackId === 'custom-test') showTrainingPicker(true);
 
 tuning = createTuningPanel($('tuning'), {
   getCar: () => session?.car ?? { def: { id: carId, stats: {} }, params: {} },

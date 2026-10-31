@@ -95,12 +95,17 @@ et fonctionne hors ligne après une première visite.
 - La sauvegarde (version 2) garde la liste des voitures possédées et leurs couleurs.
 - Outils de test (panneau ⚙ de réglage de la conduite) : ajouter `?dev` à l'adresse.
 
-## Ajouter un circuit
+## Créer un circuit : l'éditeur
 
-1. Copier un fichier de `src/data/tracks/` et changer `id`, `name`, `points`.
-2. L'ajouter dans `src/data/tracks/index.js`.
-3. Lancer `node tools/trackCheck.js` : il signale les portions de piste trop proches,
-   les virages trop serrés et les passages trop étroits à côté des piliers.
+Ouvrir **`editor.html`** (en ligne : https://darknow-coder.github.io/neon-drive/editor.html,
+ou http://localhost:5173/editor.html avec `npm run dev`).
+
+- Glisser les points pour dessiner le tracé ; double-clic sur la piste pour ajouter un point ;
+  Suppr pour en retirer un ; Ctrl+Z pour annuler. Le brouillon est enregistré automatiquement.
+- Outils Pilier / Boost / Glissant : cliquer sur la piste pour placer l'élément (puis le glisser).
+- La vérification est en direct (problèmes surlignés en rouge, mêmes règles que `tools/trackCheck.js`).
+- « Tour IA » : trois IA font un tour (temps, chocs). « Essayer » : ouvre le jeu sur ce circuit (entraînement).
+- « Exporter » : fichier à placer dans `src/data/tracks/` puis à ajouter dans `src/data/tracks/index.js`.
 
 Éléments spéciaux possibles (placés par position sur le tour, de 0 à 1) :
 - `obstacles: [{ type: 'pillar', at: 0.3, offset: 0, r: 26 }]`

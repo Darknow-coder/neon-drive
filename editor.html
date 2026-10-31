@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NEON//DRIVE — Éditeur de circuits</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/editor/editor.css" />
+</head>
+<body>
+  <header class="bar">
+    <div class="brand">NEON<span>//</span>DRIVE <small>ÉDITEUR DE CIRCUITS</small></div>
+    <select id="ed-load" title="Charger un circuit"></select>
+    <button id="ed-undo" title="Annuler (Ctrl+Z)">↶ Annuler</button>
+    <div class="tools" id="ed-tools">
+      <button data-tool="select" class="on" title="Déplacer les points (glisser) — double-clic sur la piste pour ajouter un point">✥ Points</button>
+      <button data-tool="pillar" title="Cliquer sur la piste pour placer un pilier">⬢ Pilier</button>
+      <button data-tool="boost" title="Cliquer sur la piste pour placer une plaque de boost">» Boost</button>
+      <button data-tool="slick" title="Cliquer sur la piste pour placer une zone glissante">≋ Glissant</button>
+    </div>
+    <div class="spacer"></div>
+    <button id="ed-ai" title="Un pilote IA fait un tour (temps, chocs)">🤖 Tour IA</button>
+    <button id="ed-play" class="primary" title="Essayer le circuit dans le jeu (nouvel onglet)">▶ Essayer</button>
+    <button id="ed-export" title="Obtenir le fichier du circuit">⤓ Exporter</button>
+  </header>
+
+  <main>
+    <canvas id="ed-canvas"></canvas>
+    <div class="hud-tip" id="ed-tip">Glisse un point pour le déplacer · double-clic sur la piste pour ajouter un point · molette / pincement pour zoomer · glisse le fond pour te déplacer</div>
+    <div class="zoom">
+      <button id="ed-zoom-in">+</button><button id="ed-zoom-out">−</button><button id="ed-fit" title="Tout afficher">⤢</button>
+    </div>
+  </main>
+
+  <aside class="side">
+    <section>
+      <h3>VÉRIFICATION</h3>
+      <div id="ed-status" class="status"></div>
+      <ul id="ed-problems" class="problems"></ul>
+      <div id="ed-stats" class="stats"></div>
+      <div id="ed-ai-result" class="stats"></div>
+    </section>
+
+    <section>
+      <h3>CIRCUIT</h3>
+      <label>Nom <input id="ed-name" maxlength="24" /></label>
+      <label>Identifiant <input id="ed-id" maxlength="32" /></label>
+      <label>Profil
+        <select id="ed-profile"><option>Fluide</option><option>Rapide</option><option>Technique</option><option>Mixte</option></select>
+      </label>
+      <label>Ligue d'accès <select id="ed-league"></select></label>
+      <label>Échelle <input id="ed-scale" type="range" min="0.8" max="2.2" step="0.05" /><output id="ed-scale-out"></output></label>
+      <label>Largeur de base <input id="ed-width" type="range" min="160" max="320" step="5" /><output id="ed-width-out"></output></label>
+      <div class="colors">
+        <label>Bord gauche <input type="color" id="ed-left" /></label>
+        <label>Bord droit <input type="color" id="ed-right" /></label>
+        <label>Vibreurs <input type="color" id="ed-kerb" /></label>
+      </div>
+      <button id="ed-new">Nouveau circuit</button>
+    </section>
+
+    <section id="ed-point-panel" class="hidden">
+      <h3>POINT SÉLECTIONNÉ <span id="ed-point-num"></span></h3>
+      <label><input type="checkbox" id="ed-point-wide" /> Largeur spécifique</label>
+      <label>Largeur <input id="ed-point-width" type="range" min="150" max="340" step="5" /><output id="ed-point-width-out"></output></label>
+      <div class="row">
+        <button id="ed-point-start" title="Faire partir la ligne de départ de ce point">Ligne de départ ici</button>
+        <button id="ed-point-del" class="danger">Supprimer</button>
+      </div>
+    </section>
+
+    <section>
+      <h3>ÉLÉMENTS SPÉCIAUX</h3>
+      <ul id="ed-features" class="features"></ul>
+    </section>
+  </aside>
+
+  <!-- Export -->
+  <div id="ed-modal" class="modal hidden">
+    <div class="modal-card">
+      <h3 id="ed-modal-title">EXPORTER</h3>
+      <p id="ed-modal-help"></p>
+      <textarea id="ed-modal-text" spellcheck="false"></textarea>
+      <div class="row">
+        <button id="ed-modal-copy" class="primary">Copier</button>
+        <button id="ed-modal-download">Télécharger le fichier</button>
+        <button id="ed-modal-import">Importer ce texte</button>
+        <button id="ed-modal-close">Fermer</button>
+      </div>
+      <div id="ed-modal-msg"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/editor/editor.js"></script>
+</body>
+</html>

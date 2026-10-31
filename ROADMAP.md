@@ -9,7 +9,7 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Options de commandes : gaucher, accélération automatique, taille des boutons
 - [x] Export / import de sauvegarde par code
 - [x] Tutoriel au premier lancement
-- [ ] Éditeur de circuits dans le navigateur (vérification en direct, essai, export)
+- [x] Éditeur de circuits dans le navigateur (vérification en direct, essai, export)
 - [ ] Réglages selon les retours (son, difficulté, conduite)
 
 ## Phase 2 — Contenu (en continu)
