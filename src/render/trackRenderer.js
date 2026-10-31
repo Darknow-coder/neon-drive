@@ -13,14 +13,22 @@ import { queryTrack } from '../track/buildTrack.js';
 
 const DECOR_MARGIN = 700;
 
+// Environnements visuels (choisis par chaque circuit avec theme.style)
+const STYLES = {
+  city: { ground: '#080522', asphalt: '#15112f', grid: 'rgba(138,43,255,0.13)' },
+  desert: { ground: '#160817', asphalt: '#1e1228', grid: 'rgba(255,122,61,0.10)' },
+  orbital: { ground: '#02010a', asphalt: '#161a2e', grid: 'rgba(90,150,255,0.10)' },
+};
+
 export function createTrackRenderer(track, { lowEnd = false } = {}) {
+  const style = STYLES[track.theme?.style] ? track.theme.style : 'city';
   const theme = {
     left: '#00f0ff',
     right: '#ff2bd6',
     kerb: '#ff2bd6',
-    ground: '#080522',
-    asphalt: '#15112f',
+    ...STYLES[style],
     ...track.theme,
+    style,
   };
   const b = track.bounds;
   const ox = b.minX - DECOR_MARGIN;
@@ -135,8 +143,120 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
     }
   }
 
-  // ----- Décor : blocs « urbains » vus du dessus, loin de la piste -----
+  // Distance libre entre un objet de décor (centre, rayon) et la piste
+  const dq = {};
+  function clearance(cx, cy, radius) {
+    queryTrack(track, cx, cy, -1, dq);
+    return Math.abs(dq.lateral) - dq.hw - radius;
+  }
+
   function drawDecor(rand) {
+    if (style === 'desert') return drawDesert(rand);
+    if (style === 'orbital') return drawOrbital(rand);
+    return drawCity(rand);
+  }
+
+  // ----- Désert néon : dunes, mesas rocheuses, pylônes lumineux -----
+  function drawDesert(rand) {
+    // Dunes (grandes taches dégradées)
+    const dunes = Math.round((ww * wh) / 900000);
+    for (let k = 0; k < dunes; k++) {
+      const x = ox + rand() * ww, y = oy + rand() * wh, r = 300 + rand() * 600;
+      const g = cctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, rand() < 0.5 ? 'rgba(120,40,90,0.35)' : 'rgba(160,70,40,0.25)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      cctx.fillStyle = g;
+      cctx.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    // Rides de sable
+    cctx.strokeStyle = 'rgba(255,140,80,0.07)';
+    cctx.lineWidth = 3;
+    for (let k = 0; k < dunes * 6; k++) {
+      const x = ox + rand() * ww, y = oy + rand() * wh, l = 120 + rand() * 260;
+      cctx.beginPath();
+      cctx.moveTo(x, y);
+      cctx.quadraticCurveTo(x + l / 2, y - 30 - rand() * 30, x + l, y);
+      cctx.stroke();
+    }
+    // Mesas (rochers plats à bord lumineux)
+    const rocks = Math.round((ww * wh) / 520000);
+    for (let k = 0; k < rocks; k++) {
+      const cx = ox + rand() * ww, cy = oy + rand() * wh, r = 90 + rand() * 170;
+      if (clearance(cx, cy, r) < 80) continue;
+      const n = 7 + Math.floor(rand() * 4);
+      cctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2;
+        const rr = r * (0.7 + rand() * 0.3);
+        cctx.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+      }
+      cctx.closePath();
+      cctx.fillStyle = '#1c0b1e';
+      cctx.fill();
+      cctx.strokeStyle = rgba('#ff8a3d', 0.45);
+      cctx.lineWidth = 3;
+      cctx.stroke();
+      cctx.fillStyle = 'rgba(255,138,61,0.06)';
+      cctx.beginPath(); cctx.arc(cx - r * 0.2, cy - r * 0.2, r * 0.45, 0, Math.PI * 2); cctx.fill();
+    }
+    // Pylônes lumineux
+    for (let k = 0; k < rocks * 2; k++) {
+      const cx = ox + rand() * ww, cy = oy + rand() * wh;
+      if (clearance(cx, cy, 30) < 60) continue;
+      const g = cctx.createRadialGradient(cx, cy, 0, cx, cy, 40);
+      g.addColorStop(0, 'rgba(255,200,120,0.7)');
+      g.addColorStop(1, 'rgba(255,90,60,0)');
+      cctx.fillStyle = g;
+      cctx.fillRect(cx - 40, cy - 40, 80, 80);
+    }
+  }
+
+  // ----- Station orbitale : étoiles, modules, planète -----
+  function drawOrbital(rand) {
+    // Planète lointaine
+    const px = ox + ww * (0.15 + rand() * 0.7), py = oy + wh * (0.15 + rand() * 0.7), pr = 900;
+    const pg = cctx.createRadialGradient(px - pr * 0.3, py - pr * 0.3, pr * 0.1, px, py, pr);
+    pg.addColorStop(0, 'rgba(70,40,160,0.35)');
+    pg.addColorStop(0.7, 'rgba(30,20,90,0.25)');
+    pg.addColorStop(1, 'rgba(0,0,0,0)');
+    cctx.fillStyle = pg;
+    cctx.fillRect(px - pr, py - pr, pr * 2, pr * 2);
+    // Étoiles
+    const stars = Math.round((ww * wh) / 9000);
+    for (let k = 0; k < stars; k++) {
+      const x = ox + rand() * ww, y = oy + rand() * wh;
+      const b = rand();
+      cctx.fillStyle = b > 0.97 ? 'rgba(180,220,255,0.95)' : `rgba(200,210,255,${0.15 + b * 0.35})`;
+      const sz = b > 0.97 ? 5 : 2.5;
+      cctx.fillRect(x, y, sz, sz);
+    }
+    // Modules de la station (plaques métalliques avec feux)
+    const mods = Math.round((ww * wh) / 420000);
+    for (let k = 0; k < mods; k++) {
+      const w = 160 + rand() * 300, h = 80 + rand() * 160;
+      const cx = ox + rand() * ww, cy = oy + rand() * wh;
+      if (clearance(cx, cy, Math.hypot(w, h) / 2) < 90) continue;
+      cctx.save();
+      cctx.translate(cx, cy);
+      cctx.rotate(Math.round(rand() * 3) * (Math.PI / 4));
+      cctx.fillStyle = '#10142a';
+      cctx.fillRect(-w / 2, -h / 2, w, h);
+      cctx.strokeStyle = 'rgba(90,150,255,0.35)';
+      cctx.lineWidth = 3;
+      cctx.strokeRect(-w / 2, -h / 2, w, h);
+      cctx.strokeStyle = 'rgba(90,150,255,0.12)';
+      cctx.lineWidth = 2;
+      for (let x = -w / 2 + 40; x < w / 2; x += 40) { cctx.beginPath(); cctx.moveTo(x, -h / 2); cctx.lineTo(x, h / 2); cctx.stroke(); }
+      for (const sx of [-1, 1]) {
+        cctx.fillStyle = rand() < 0.5 ? 'rgba(255,60,90,0.9)' : 'rgba(0,240,255,0.9)';
+        cctx.beginPath(); cctx.arc(sx * (w / 2 - 10), -h / 2 + 10, 5, 0, Math.PI * 2); cctx.fill();
+      }
+      cctx.restore();
+    }
+  }
+
+  // ----- Ville : blocs « urbains » vus du dessus, loin de la piste -----
+  function drawCity(rand) {
     const q = {};
     const blocks = Math.round((ww * wh) / 260000);
     for (let k = 0; k < blocks; k++) {
@@ -197,7 +317,7 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
     for (const [side, col] of [[-1, theme.left], [1, theme.right]]) {
       cctx.beginPath();
       tracePath(cctx, (i) => side * track.hw[i]);
-      cctx.strokeStyle = rgba(col, 0.1);
+      cctx.strokeStyle = rgba(col, track.weather === 'rain' ? 0.17 : 0.1); // piste mouillée : plus de reflets
       cctx.lineWidth = 70;
       cctx.stroke();
       cctx.strokeStyle = rgba(col, 0.1);
@@ -231,6 +351,18 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
   }
 
   function drawMarkings() {
+    // Station orbitale : la piste est un pont métallique fait de plaques
+    if (style === 'orbital') {
+      cctx.strokeStyle = 'rgba(120,170,255,0.10)';
+      cctx.lineWidth = 3;
+      const every = Math.round(110 / track.spacing);
+      cctx.beginPath();
+      for (let i = 0; i < track.count; i += every) {
+        cctx.moveTo(...edgePoint(i, -track.hw[i]));
+        cctx.lineTo(...edgePoint(i, track.hw[i]));
+      }
+      cctx.stroke();
+    }
     // Pointillés centraux discrets
     cctx.save();
     cctx.strokeStyle = 'rgba(200,190,255,0.10)';
@@ -432,7 +564,7 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
 
     // Quadrillage du sol (très important pour la sensation de vitesse)
     const G = 120;
-    ctx.strokeStyle = 'rgba(138,43,255,0.13)';
+    ctx.strokeStyle = theme.grid;
     ctx.lineWidth = Math.max(px, 1.2);
     ctx.beginPath();
     for (let gx = Math.floor(view.x0 / G) * G; gx <= view.x1; gx += G) {
@@ -504,7 +636,7 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
     cache.height = 0;
   }
 
-  return { draw, addSkid, clearSkids, rebuild: buildCache, dispose, theme };
+  return { draw, addSkid, clearSkids, rebuild: buildCache, dispose, theme, weather: track.weather };
 }
 
 /** Pilier vu du dessus : colonne sombre cerclée de néon (rayon de référence 26). */

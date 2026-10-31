@@ -107,6 +107,9 @@ ou http://localhost:5173/editor.html avec `npm run dev`).
 - « Tour IA » : trois IA font un tour (temps, chocs). « Essayer » : ouvre le jeu sur ce circuit (entraînement).
 - « Exporter » : fichier à placer dans `src/data/tracks/` puis à ajouter dans `src/data/tracks/index.js`.
 
+Options d'un circuit : `theme.style` (`'city'`, `'desert'`, `'orbital'`), `weather: 'rain'`
+(adhérence réduite pour tous), `laps` (nombre de tours, sinon 3).
+
 Éléments spéciaux possibles (placés par position sur le tour, de 0 à 1) :
 - `obstacles: [{ type: 'pillar', at: 0.3, offset: 0, r: 26 }]`
 - `zones: [{ type: 'boost', at: 0.5, length: 110, offset: 0, width: 80 }]`

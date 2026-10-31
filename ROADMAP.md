@@ -5,14 +5,19 @@ Menu, courses à 6, conduite inertie + drift, 3 circuits, 5 IA (sans triche), cl
 trophées, 5 ligues, garage (déblocages par paliers, peinture), sauvegarde sécurisée,
 son et musique générés par code, application installable et hors ligne.
 
-## Phase 1 — Consolider et s'outiller  ⏳ en cours
+## ✅ Phase 1 — Consolider et s'outiller
 - [x] Options de commandes : gaucher, accélération automatique, taille des boutons
 - [x] Export / import de sauvegarde par code
 - [x] Tutoriel au premier lancement
 - [x] Éditeur de circuits dans le navigateur (vérification en direct, essai, export)
-- [ ] Réglages selon les retours (son, difficulté, conduite)
+- [x] Réglages selon les retours (son, difficulté, conduite)
 
-## Phase 2 — Contenu (en continu)
+## Phase 2 — Contenu (en continu)  ⏳ en cours
+- [x] Environnements visuels : ville, désert néon, station orbitale
+- [x] Météo : pluie (adhérence réduite pour tous, effets visuels et sonores)
+- [x] 3 nouveaux circuits : RAINLINE (Argent), DUNE RUNNER (Or), ORBITAL RING (Diamant)
+- [x] 3 nouvelles voitures : SPECTRE (250), COMET (400), BASTION (600)
+- [ ] Rival « boss » par ligue, musiques supplémentaires, obstacles mobiles, circuit Élite
 - 10 à 12 circuits (2 par ligue), thèmes visuels, raccourcis, obstacles mobiles, pluie
 - 12 à 15 voitures avec raretés
 - Un rival « boss » par ligue

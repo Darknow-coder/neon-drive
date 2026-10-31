@@ -117,8 +117,26 @@ export function createSfx(audio) {
     s.stop(t + dur + 0.05);
   }
 
+  // Ambiance de pluie (bruit filtré en boucle)
+  let rain = null;
+  function setRain(on) {
+    if (!audio.ready) return;
+    if (!rain) {
+      const ctx = audio.ctx;
+      const src = ctx.createBufferSource(); src.buffer = audio.noise; src.loop = true;
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1800;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 7000;
+      const g = ctx.createGain(); g.gain.value = 0;
+      src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(audio.sfxBus);
+      src.start();
+      rain = g;
+    }
+    rain.gain.setTargetAtTime(on ? 0.05 : 0, audio.ctx.currentTime, 0.5);
+  }
+
   let lastHit = 0;
   return {
+    setRain,
     updateCar,
     /** Choc : volume selon la violence (limité à un son toutes les 90 ms). */
     hit(strength, isPlayer = true) {

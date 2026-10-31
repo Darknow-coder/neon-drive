@@ -52,6 +52,18 @@ export function updateCarFx(fx, car, dt, particles, trackRenderer, impactThisSte
     }
   }
 
+  // Pluie : gerbes d'eau derrière les voitures rapides
+  if (trackRenderer.weather === 'rain' && car.speed > 220) {
+    fx.sprayAcc = (fx.sprayAcc || 0) + dt * (car.speed / 22);
+    while (fx.sprayAcc >= 1) {
+      fx.sprayAcc -= 1;
+      const k = Math.random() < 0.5 ? 0 : 2;
+      particles.spawn(P_SMOKE, wheels[k], wheels[k + 1],
+        car.vx * 0.25 + (Math.random() - 0.5) * 80, car.vy * 0.25 + (Math.random() - 0.5) * 80,
+        0.35 + Math.random() * 0.25, 6, 30, '#a9b8ff');
+    }
+  }
+
   // Flammes du boost
   if (car.boosting) {
     const fxv = Math.cos(car.angle), fyv = Math.sin(car.angle);

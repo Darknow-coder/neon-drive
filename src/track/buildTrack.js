@@ -127,6 +127,9 @@ export function buildTrack(data) {
     bounds: { minX, minY, maxX, maxY },
     wallThickness: 10,
     theme: data.theme ?? {},
+    // Météo : la pluie réduit l'adhérence de TOUTES les voitures (IA comprises)
+    weather: data.weather ?? 'clear',
+    gripMul: data.weather === 'rain' ? 0.82 : 1,
     obstacles: [],
     zones: [],
   };

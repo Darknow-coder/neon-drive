@@ -7,7 +7,7 @@ import { createHud } from './ui/hud.js';
 import { createTuningPanel } from './ui/tuningPanel.js';
 import { showResults, hideResults } from './ui/resultsScreen.js';
 import { createRaceScene } from './scenes/raceScene.js';
-import { TRACKS } from './data/tracks/index.js';
+import { TRACKS, getTrackData } from './data/tracks/index.js';
 import { getCar } from './data/cars.js';
 import { leagueFor, RACE_LAPS } from './data/progression.js';
 import { createSaveStore } from './progression/save.js';
@@ -125,7 +125,7 @@ function startRace() {
   session?.dispose();
   const league = leagueFor(save.trophies).id; // niveau des IA fixé AVANT la course
   session = createRaceScene({
-    renderer, input, hud, lowEnd, trackId, carId, league, laps: RACE_LAPS,
+    renderer, input, hud, lowEnd, trackId, carId, league, laps: getTrackData(trackId).laps ?? RACE_LAPS,
     playerColors: liveryFor(save, carId),
     sfx,
     settings: save.settings,

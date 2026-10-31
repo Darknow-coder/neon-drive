@@ -13,7 +13,7 @@ const rows = CARS.map((c) => ({ car: c, times: [] }));
 for (const td of TRACKS) {
   const track = buildTrack(td);
   for (const r of rows) {
-    const w = createRaceWorld({ track, entries: [{ def: r.car, name: r.car.name, profile: 'balanced' }], laps: 2, seed: 3, countdown: 0.1 });
+    const w = createRaceWorld({ track, entries: [{ def: r.car, name: r.car.name, profile: 'balanced' }], laps: 2, seed: 3, countdown: 0.1, league: 'diamant' });
     while (!w.finished && w.time < 200) w.step(1 / 120);
     r.times.push(w.cars[0].laps.bestLap);
   }

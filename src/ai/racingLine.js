@@ -137,10 +137,10 @@ export function computeSpeedProfile(track, line, params, skill) {
   const vref = g.understeerRefSpeed;
 
   // Glisse : adhérence réduite dans les zones glissantes
-  const gripMulAt = new Float32Array(n).fill(1);
+  const gripMulAt = new Float32Array(n).fill(track.gripMul ?? 1);
   for (const z of track.zones) {
     if (z.type !== 'slick') continue;
-    for (let k = -8; k < z.count + 8; k++) gripMulAt[(z.start + k + n) % n] = 0.4;
+    for (let k = -8; k < z.count + 8; k++) gripMulAt[(z.start + k + n) % n] = 0.4 * (track.gripMul ?? 1);
   }
 
   for (let i = 0; i < n; i++) {

@@ -43,6 +43,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   let lastBoost = 0;
 
   const scene = { trackRenderer, cars: world.cars, particles, camera, player, time: 0 };
+  sfx?.setRain(track.weather === 'rain');
 
   function resize() {
     renderer.resize();
@@ -179,6 +180,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   function dispose() {
     trackRenderer.dispose();
     sfx?.stopCar();
+    sfx?.setRain(false);
   }
 
   return {

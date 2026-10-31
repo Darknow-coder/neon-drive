@@ -59,6 +59,33 @@ export const CARS = [
     colors: { body: '#36f5a6', accent: '#8a2bff', glow: '#36f5a6' },
     unlock: { type: 'trophies', min: 175 },
   },
+  {
+    id: 'spectre',
+    name: 'SPECTRE',
+    tagline: 'La reine du drift',
+    stats: { speed: 5, accel: 6, handling: 7, drift: 9, toughness: 3 },
+    shape: 'blade',
+    colors: { body: '#c08bff', accent: '#3dff9e', glow: '#b07aff' },
+    unlock: { type: 'trophies', min: 250 },
+  },
+  {
+    id: 'comet',
+    name: 'COMET',
+    tagline: 'Fusée en ligne droite',
+    stats: { speed: 8, accel: 7, handling: 4, drift: 5, toughness: 6 },
+    shape: 'arrow',
+    colors: { body: '#ffb000', accent: '#ff2bd6', glow: '#ffb000' },
+    unlock: { type: 'trophies', min: 400 },
+  },
+  {
+    id: 'bastion',
+    name: 'BASTION',
+    tagline: 'Blindée et précise',
+    stats: { speed: 6, accel: 5, handling: 7, drift: 3, toughness: 9 },
+    shape: 'tank',
+    colors: { body: '#dfe3ff', accent: '#ff3b5c', glow: '#ff6b8a' },
+    unlock: { type: 'trophies', min: 600 },
+  },
 ];
 
 export const getCar = (id) => CARS.find((c) => c.id === id) ?? CARS[0];
