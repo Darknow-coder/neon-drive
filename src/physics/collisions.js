@@ -88,3 +88,50 @@ export function collideCarWithWalls(car, track) {
   }
   return strongest;
 }
+
+/** Collisions avec les obstacles du circuit (piliers). */
+export function collideCarWithObstacles(car, track) {
+  let strongest = 0;
+  const near = 60; // on ne teste que les obstacles proches sur le tracé
+  for (const ob of track.obstacles) {
+    let d = Math.abs(ob.index - car.trackIndex);
+    d = Math.min(d, track.count - d);
+    if (d > near) continue;
+    for (const c of carCircles(car)) {
+      const dx = c.x - ob.x;
+      const dy = c.y - ob.y;
+      const dist = Math.hypot(dx, dy);
+      const min = ob.r + c.r;
+      if (dist >= min || dist < 1e-6) continue;
+      // Normale dirigée de la voiture vers le pilier
+      const wx = -dx / dist;
+      const wy = -dy / dist;
+      const over = min - dist;
+      car.x -= wx * over;
+      car.y -= wy * over;
+      const pvx = car.vx - car.yawRate * c.oy;
+      const pvy = car.vy + car.yawRate * c.ox;
+      const vn = pvx * wx + pvy * wy;
+      if (vn <= 0) continue;
+      const j = (1 + RESTITUTION) * vn;
+      car.vx -= wx * j;
+      car.vy -= wy * j;
+      const torque = (c.ox * wy - c.oy * wx) * j;
+      car.yawRate -= torque * 0.0006 / car.params.mass;
+      // Un pilier ralentit un peu plus qu'un mur (choc frontal fréquent)
+      const keep = car.params.wallRetain;
+      car.vx *= 0.5 + keep * 0.5;
+      car.vy *= 0.5 + keep * 0.5;
+      if (vn > strongest) {
+        strongest = vn;
+        car.impactX = c.x + wx * c.r;
+        car.impactY = c.y + wy * c.r;
+      }
+    }
+  }
+  if (strongest > 0) {
+    car.impact = Math.max(car.impact, strongest);
+    if (strongest > 120) car.drifting = false;
+  }
+  return strongest;
+}

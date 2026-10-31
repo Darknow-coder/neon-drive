@@ -6,6 +6,7 @@ import { createRenderer } from './render/renderer.js';
 import { createHud } from './ui/hud.js';
 import { createTuningPanel } from './ui/tuningPanel.js';
 import { createTestDrive } from './scenes/testDrive.js';
+import { TRACKS } from './data/tracks/index.js';
 
 const touch = isTouchDevice();
 // Sur téléphone/tablette : résolution et mémoire allégées (fluidité avant tout).
@@ -29,7 +30,28 @@ const input = createInput({
   },
 });
 
-session = createTestDrive({ renderer, input, hud, lowEnd, trackId: 'neon-boulevard', carId: 'nova' });
+let trackId = TRACKS[0].id;
+function loadTrack(id) {
+  trackId = id;
+  const carId = session ? session.car.def.id : 'nova';
+  session = createTestDrive({ renderer, input, hud, lowEnd, trackId, carId });
+  session.render(1);
+}
+loadTrack(trackId);
+
+// Choix du circuit sur l'écran de départ (provisoire, avant le vrai menu)
+const pick = document.getElementById('track-pick');
+for (const t of TRACKS) {
+  const b = document.createElement('button');
+  b.innerHTML = `${t.name}<small>${t.profile}</small>`;
+  b.dataset.id = t.id;
+  b.addEventListener('click', () => {
+    loadTrack(t.id);
+    pick.querySelectorAll('button').forEach((x) => x.classList.toggle('selected', x === b));
+  });
+  if (t.id === trackId) b.classList.add('selected');
+  pick.append(b);
+}
 
 tuning = createTuningPanel(document.getElementById('tuning'), {
   getCar: () => session.car,
@@ -61,8 +83,6 @@ window.addEventListener('resize', () => session.resize());
 document.getElementById('btn-reset').addEventListener('click', () => session.respawn());
 document.getElementById('btn-tuning').addEventListener('click', () => tuning.toggle());
 
-// Premier rendu derrière l'écran titre
-session.render(1);
 
 document.getElementById('btn-start').addEventListener('click', async () => {
   document.getElementById('start').classList.add('hidden');

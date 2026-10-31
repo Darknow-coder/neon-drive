@@ -37,6 +37,7 @@ export const GLOBAL_TUNING = {
   boostAccel: 650,
   boostDrain: 0.38,         // par seconde (≈ 2,6 s pour vider la jauge)
   boostGainBase: 0.32,      // gain de jauge par seconde de drift appuyé
+  padDuration: 0.9,         // durée de la poussée d'une plaque de boost (s)
 };
 
 /** Convertit les notes du garage (1-10) en paramètres physiques. */
@@ -75,6 +76,7 @@ export function createCar(def, { x = 0, y = 0, angle = 0 } = {}) {
     releaseTime: 0,
     boost: 0,
     boosting: false,
+    padTimer: 0,       // poussée restante d'une plaque de boost
     braking: false,
     throttle: 0,
     steer: 0,
@@ -88,6 +90,7 @@ export function createCar(def, { x = 0, y = 0, angle = 0 } = {}) {
 
 export function resetCarMotion(car) {
   car.vx = car.vy = car.yawRate = 0;
+  car.padTimer = 0;
   car.vF = car.vR = car.speed = car.slip = 0;
   car.drifting = false;
   car.driftBlend = 0;
@@ -128,9 +131,12 @@ export function stepCar(car, input, dt, surface = NO_SURFACE) {
   const speedRatio = Math.abs(vF) / p.maxSpeed;
   const slipAngle = vF > 30 ? Math.atan2(Math.abs(vR), vF) : 0;
 
-  // ---------- Boost ----------
-  car.boosting = !!input.boost && car.boost > 0.01 && vF > -10;
-  if (car.boosting) car.boost = Math.max(0, car.boost - g.boostDrain * dt);
+  // ---------- Boost (jauge du joueur ou plaque au sol) ----------
+  if (surface.pad) car.padTimer = g.padDuration;
+  else if (car.padTimer > 0) car.padTimer = Math.max(0, car.padTimer - dt);
+  const gaugeBoost = !!input.boost && car.boost > 0.01 && vF > -10;
+  if (gaugeBoost) car.boost = Math.max(0, car.boost - g.boostDrain * dt);
+  car.boosting = gaugeBoost || car.padTimer > 0;
   const vmax = p.maxSpeed * surface.speedMul * (car.boosting ? g.boostSpeedMul : 1);
 
   // ---------- Drift : entrée ----------
@@ -156,7 +162,8 @@ export function stepCar(car, input, dt, surface = NO_SURFACE) {
 
     // 1) La trajectoire tourne, plus ou moins selon la direction
     const authority = 1 - g.highSpeedUndersteer * 0.5 * clamp(speed / p.maxSpeed, 0, 1.3);
-    const turnV = car.driftDir * p.turnRate * p.driftTurnBoost * lerp(g.driftTurnMin, 1, k) * authority;
+    const turnV = car.driftDir * p.turnRate * p.driftTurnBoost * lerp(g.driftTurnMin, 1, k) * authority *
+      (0.5 + 0.5 * surface.gripMul); // sur sol glissant, le drift s'élargit
     const rot = turnV * dt;
     const c = Math.cos(rot), s = Math.sin(rot);
     const nvx = car.vx * c - car.vy * s;
@@ -184,7 +191,7 @@ export function stepCar(car, input, dt, surface = NO_SURFACE) {
     car.vy = nvy * sc;
 
     // 4) Jauge de boost
-    if (!car.boosting && speed > 0.3 * p.maxSpeed) {
+    if (!gaugeBoost && speed > 0.3 * p.maxSpeed) {
       const intensity = clamp(slipNow / 0.45, 0, 1);
       car.boost = Math.min(1, car.boost + g.boostGainBase * p.boostGain * intensity * dt);
     }

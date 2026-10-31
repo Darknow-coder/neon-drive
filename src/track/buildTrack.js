@@ -115,7 +115,7 @@ export function buildTrack(data) {
     minY = Math.min(minY, y[i] - m); maxY = Math.max(maxY, y[i] + m);
   }
 
-  return {
+  const track = {
     data,
     id: data.id,
     name: data.name,
@@ -127,7 +127,57 @@ export function buildTrack(data) {
     bounds: { minX, minY, maxX, maxY },
     wallThickness: 10,
     theme: data.theme ?? {},
+    obstacles: [],
+    zones: [],
   };
+  buildFeatures(track, data);
+  return track;
+}
+
+// ---------------------------------------------------------------------------
+// Éléments spéciaux d'un circuit.
+// Ils sont placés par rapport au tracé (et non en coordonnées x/y) :
+//   at     : position sur le tour, de 0 (ligne de départ) à 1
+//   offset : décalage latéral depuis le centre (négatif = à gauche)
+// Ainsi, si on modifie la forme du circuit, ils restent bien placés.
+//
+//   obstacles : { type: 'pillar', at, offset, r }
+//   zones     : { type: 'boost' | 'slick', at, length, offset, width }
+// ---------------------------------------------------------------------------
+function buildFeatures(track, data) {
+  const idxAt = (at) => ((Math.round(at * track.count) % track.count) + track.count) % track.count;
+  for (const o of data.obstacles ?? []) {
+    const i = idxAt(o.at);
+    const off = o.offset ?? 0;
+    track.obstacles.push({
+      type: o.type ?? 'pillar',
+      index: i,
+      x: track.x[i] + track.nx[i] * off,
+      y: track.y[i] + track.ny[i] * off,
+      r: o.r ?? 28,
+    });
+  }
+  for (const z of data.zones ?? []) {
+    const i0 = idxAt(z.at);
+    const n = Math.max(2, Math.round((z.length ?? 120) / track.spacing));
+    const width = z.width ?? (z.type === 'slick' ? track.hw[i0] * 2 : 80);
+    track.zones.push({
+      type: z.type,
+      start: i0,
+      count: n,
+      offset: z.offset ?? 0,
+      width,
+    });
+  }
+}
+
+/** Indique si une position (index sur le tracé + décalage latéral) est dans une zone. */
+export function zoneAt(track, index, lateral) {
+  for (const z of track.zones) {
+    const d = (index - z.start + track.count) % track.count;
+    if (d < z.count && Math.abs(lateral - z.offset) < z.width / 2) return z;
+  }
+  return null;
 }
 
 /**

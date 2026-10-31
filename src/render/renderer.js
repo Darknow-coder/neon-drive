@@ -50,7 +50,7 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
 
     const halfW = W / 2 / pxPerUnit;
     const halfH = H / 2 / pxPerUnit;
-    const view = { x0: camX - halfW, y0: camY - halfH, x1: camX + halfW, y1: camY + halfH, pxPerUnit };
+    const view = { x0: camX - halfW, y0: camY - halfH, x1: camX + halfW, y1: camY + halfH, pxPerUnit, time: scene.time || 0 };
 
     trackRenderer.draw(ctx, view);
     particles.draw(ctx, 0);

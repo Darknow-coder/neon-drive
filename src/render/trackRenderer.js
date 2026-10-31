@@ -63,8 +63,76 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
     drawDecor(rand);
     drawAsphalt(rand);
     drawKerbs();
+    drawSlickZones(rand);
     drawMarkings();
     drawLamps();
+    drawPillarBases();
+  }
+
+  // ----- Zones glissantes : effet « glitch » cyan/violet -----
+  function drawSlickZones(rand) {
+    for (const z of track.zones) {
+      if (z.type !== 'slick') continue;
+      const a = z.offset - z.width / 2;
+      const bOff = z.offset + z.width / 2;
+      cctx.save();
+      cctx.beginPath();
+      for (let k = 0; k <= z.count; k++) {
+        const i = (z.start + k) % track.count;
+        const off = Math.max(a, -track.hw[i]);
+        cctx.lineTo(...edgePoint(i, off));
+      }
+      for (let k = z.count; k >= 0; k--) {
+        const i = (z.start + k) % track.count;
+        const off = Math.min(bOff, track.hw[i]);
+        cctx.lineTo(...edgePoint(i, off));
+      }
+      cctx.closePath();
+      cctx.fillStyle = 'rgba(0,240,255,0.10)';
+      cctx.fill();
+      cctx.clip();
+      // Bandes horizontales décalées façon signal numérique brouillé
+      for (let k = 0; k < z.count; k += 2) {
+        const i = (z.start + k) % track.count;
+        if (rand() < 0.45) continue;
+        const off1 = a + rand() * (bOff - a);
+        const len = 20 + rand() * 70;
+        const [px, py] = edgePoint(i, off1);
+        cctx.fillStyle = rand() < 0.5 ? 'rgba(0,240,255,0.28)' : 'rgba(164,91,255,0.32)';
+        cctx.save();
+        cctx.translate(px, py);
+        cctx.rotate(Math.atan2(track.ny[i], track.nx[i]));
+        cctx.fillRect(0, -3, len, 5);
+        cctx.restore();
+      }
+      cctx.restore();
+      // Bordures pointillées de la zone
+      cctx.save();
+      cctx.setLineDash([10, 10]);
+      cctx.strokeStyle = 'rgba(0,240,255,0.55)';
+      cctx.lineWidth = 3;
+      for (const k of [0, z.count]) {
+        const i = (z.start + k) % track.count;
+        cctx.beginPath();
+        cctx.moveTo(...edgePoint(i, Math.max(a, -track.hw[i])));
+        cctx.lineTo(...edgePoint(i, Math.min(bOff, track.hw[i])));
+        cctx.stroke();
+      }
+      cctx.restore();
+    }
+  }
+
+  // ----- Ombres au pied des piliers (le pilier lui-même est dessiné en direct) -----
+  function drawPillarBases() {
+    for (const ob of track.obstacles) {
+      const g = cctx.createRadialGradient(ob.x + 6, ob.y + 8, ob.r * 0.6, ob.x + 6, ob.y + 8, ob.r * 1.9);
+      g.addColorStop(0, 'rgba(0,0,0,0.6)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      cctx.fillStyle = g;
+      cctx.beginPath();
+      cctx.arc(ob.x + 6, ob.y + 8, ob.r * 1.9, 0, Math.PI * 2);
+      cctx.fill();
+    }
   }
 
   // ----- Décor : blocs « urbains » vus du dessus, loin de la piste -----
@@ -302,6 +370,59 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
     }
   }
 
+  // ---------- Plaques de boost (géométrie pré-calculée) ----------
+  const pads = track.zones.filter((z) => z.type === 'boost').map((z) => {
+    const mid = (z.start + Math.floor(z.count / 2)) % track.count;
+    return {
+      x: track.x[mid] + track.nx[mid] * z.offset,
+      y: track.y[mid] + track.ny[mid] * z.offset,
+      angle: Math.atan2(track.ty[mid], track.tx[mid]),
+      len: z.count * track.spacing,
+      width: z.width,
+    };
+  });
+  const pillarSprite = makePillarSprite();
+
+  function drawFeatures(ctx, view) {
+    const t = view.time || 0;
+    const inView = (x, y, m) => x > view.x0 - m && x < view.x1 + m && y > view.y0 - m && y < view.y1 + m;
+    for (const p of pads) {
+      if (!inView(p.x, p.y, p.len)) continue;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle);
+      const hl = p.len / 2, hw = p.width / 2;
+      ctx.fillStyle = 'rgba(255,43,214,0.16)';
+      ctx.fillRect(-hl, -hw, p.len, p.width);
+      ctx.strokeStyle = 'rgba(255,43,214,0.8)';
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(-hl, -hw, p.len, p.width);
+      // Chevrons qui défilent dans le sens de la course
+      ctx.beginPath();
+      ctx.rect(-hl, -hw, p.len, p.width);
+      ctx.clip();
+      ctx.globalCompositeOperation = 'lighter';
+      const gap = 28;
+      const shift = (t * 140) % gap;
+      for (let x = -hl - gap + shift; x < hl + gap; x += gap) {
+        const k = 1 - Math.abs(x) / (hl + gap);
+        ctx.strokeStyle = `rgba(255,120,235,${0.25 + 0.6 * k})`;
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(x - 10, -hw * 0.65);
+        ctx.lineTo(x + 4, 0);
+        ctx.lineTo(x - 10, hw * 0.65);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    for (const ob of track.obstacles) {
+      if (!inView(ob.x, ob.y, ob.r * 3)) continue;
+      const s = (ob.r * 2 + 40) / 2;
+      ctx.drawImage(pillarSprite, ob.x - s * (ob.r / 26), ob.y - s * (ob.r / 26), s * 2 * (ob.r / 26), s * 2 * (ob.r / 26));
+    }
+  }
+
   // ---------- Rendu en direct ----------
   const visible = new Uint8Array(track.count);
 
@@ -333,6 +454,7 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
     }
 
     drawSkids(ctx, view);
+    drawFeatures(ctx, view);
 
     // Bordures néon (nettes) — uniquement les portions visibles
     const m = 140;
@@ -374,6 +496,51 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
   }
 
   return { draw, addSkid, clearSkids, theme };
+}
+
+/** Pilier vu du dessus : colonne sombre cerclée de néon (rayon de référence 26). */
+function makePillarSprite() {
+  const r = 26;
+  const S = 3;
+  const size = (r * 2 + 40) * S;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = size;
+  const c = cv.getContext('2d');
+  c.translate(size / 2, size / 2);
+  c.scale(S, S);
+  const glow = c.createRadialGradient(0, 0, r * 0.8, 0, 0, r + 20);
+  glow.addColorStop(0, 'rgba(255,225,77,0.45)');
+  glow.addColorStop(1, 'rgba(255,225,77,0)');
+  c.fillStyle = glow;
+  c.beginPath(); c.arc(0, 0, r + 20, 0, Math.PI * 2); c.fill();
+  // Hexagone (sommet de la colonne)
+  const hex = (rr) => {
+    c.beginPath();
+    for (let k = 0; k < 6; k++) {
+      const a = (k / 6) * Math.PI * 2 + Math.PI / 6;
+      c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+    }
+    c.closePath();
+  };
+  hex(r);
+  const body = c.createLinearGradient(-r, -r, r, r);
+  body.addColorStop(0, '#3a2a66');
+  body.addColorStop(1, '#0d0820');
+  c.fillStyle = body;
+  c.fill();
+  c.shadowColor = '#ffe14d';
+  c.shadowBlur = 6 * S;
+  c.strokeStyle = '#ffe14d';
+  c.lineWidth = 2.5;
+  c.stroke();
+  c.shadowBlur = 0;
+  hex(r * 0.55);
+  c.strokeStyle = 'rgba(255,43,214,0.8)';
+  c.lineWidth = 1.5;
+  c.stroke();
+  c.fillStyle = '#fff6c2';
+  c.beginPath(); c.arc(0, 0, 3, 0, Math.PI * 2); c.fill();
+  return cv;
 }
 
 function noiseTile(rand) {

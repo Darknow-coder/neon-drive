@@ -6,7 +6,8 @@ import { buildTrack, gridSlots, queryTrack } from '../track/buildTrack.js';
 import { getTrackData } from '../data/tracks/index.js';
 import { getCar } from '../data/cars.js';
 import { createCar, stepCar, resetCarMotion } from '../physics/carPhysics.js';
-import { collideCarWithWalls } from '../physics/collisions.js';
+import { collideCarWithWalls, collideCarWithObstacles } from '../physics/collisions.js';
+import { surfaceFor } from '../physics/surface.js';
 import { createTrackRenderer } from '../render/trackRenderer.js';
 import { createParticles } from '../render/particles.js';
 import { createCamera, computeBaseZoom, snapCamera, updateCamera } from '../render/camera.js';
@@ -59,11 +60,12 @@ export function createTestDrive({ renderer, input, hud, lowEnd, trackId, carId }
 
   function update(dt) {
     time += dt;
+    scene.time = time;
     camera.prevX = camera.x;
     camera.prevY = camera.y;
     const intent = input.update(dt);
-    stepCar(car, intent, dt);
-    const hit = collideCarWithWalls(car, track);
+    stepCar(car, intent, dt, surfaceFor(car, track));
+    const hit = Math.max(collideCarWithWalls(car, track), collideCarWithObstacles(car, track));
     if (hit > 260 && time - lastVibrate > 0.25 && navigator.vibrate) {
       navigator.vibrate(Math.min(60, hit / 10));
       lastVibrate = time;

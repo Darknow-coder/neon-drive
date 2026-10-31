@@ -47,7 +47,20 @@ tools/        tests automatiques sans affichage (node tools/xxx.js)
 ```bash
 node tools/physicsCheck.js   # un pilote auto fait des tours avec chaque voiture
 node tools/driftCheck.js     # vérifie que le drift reste contrôlable
+node tools/trackCheck.js     # vérifie la géométrie des circuits (chevauchements, virages, piliers)
 ```
+
+## Ajouter un circuit
+
+1. Copier un fichier de `src/data/tracks/` et changer `id`, `name`, `points`.
+2. L'ajouter dans `src/data/tracks/index.js`.
+3. Lancer `node tools/trackCheck.js` : il signale les portions de piste trop proches,
+   les virages trop serrés et les passages trop étroits à côté des piliers.
+
+Éléments spéciaux possibles (placés par position sur le tour, de 0 à 1) :
+- `obstacles: [{ type: 'pillar', at: 0.3, offset: 0, r: 26 }]`
+- `zones: [{ type: 'boost', at: 0.5, length: 110, offset: 0, width: 80 }]`
+- `zones: [{ type: 'slick', at: 0.7, length: 260 }]` (zone glissante)
 
 ## Publication (Netlify)
 

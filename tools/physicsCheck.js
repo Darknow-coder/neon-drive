@@ -5,7 +5,8 @@ import { buildTrack, gridSlots } from '../src/track/buildTrack.js';
 import { TRACKS } from '../src/data/tracks/index.js';
 import { CARS } from '../src/data/cars.js';
 import { createCar, stepCar } from '../src/physics/carPhysics.js';
-import { collideCarWithWalls } from '../src/physics/collisions.js';
+import { collideCarWithWalls, collideCarWithObstacles } from '../src/physics/collisions.js';
+import { surfaceFor } from '../src/physics/surface.js';
 import { createLapTracker, updateLapTracker } from '../src/race/lapTracker.js';
 import { wrapAngle, clamp } from '../src/core/math.js';
 
@@ -15,7 +16,17 @@ function autopilot(car, track) {
   const i = car.trackIndex;
   const look = Math.round((60 + car.speed * 0.35) / track.spacing);
   const j = (i + look) % track.count;
-  const ang = Math.atan2(track.y[j] - car.y, track.x[j] - car.x);
+  // Évitement simple des piliers : on vise le côté le plus large
+  let off = 0;
+  for (const ob of track.obstacles) {
+    const d = (ob.index - i + track.count) % track.count;
+    if (d > 0 && d * track.spacing < 350) {
+      const obOff = (ob.x - track.x[ob.index]) * track.nx[ob.index] + (ob.y - track.y[ob.index]) * track.ny[ob.index];
+      off = obOff > 0 ? obOff - ob.r - 45 : obOff + ob.r + 45;
+    }
+  }
+  const tx = track.x[j] + track.nx[j] * off, ty = track.y[j] + track.ny[j] * off;
+  const ang = Math.atan2(ty - car.y, tx - car.x);
   const err = wrapAngle(ang - car.angle);
   // Courbure maximale à venir → vitesse cible
   let maxC = 0;
@@ -44,8 +55,8 @@ for (const td of TRACKS) {
     const lt = createLapTracker(track);
     let t = 0, hits = 0, vmax = 0, driftT = 0;
     while (t < 240 && lt.lap < 4) {
-      stepCar(car, autopilot(car, track), DT);
-      const h = collideCarWithWalls(car, track);
+      stepCar(car, autopilot(car, track), DT, surfaceFor(car, track));
+      const h = Math.max(collideCarWithWalls(car, track), collideCarWithObstacles(car, track));
       if (h > 100) hits++;
       vmax = Math.max(vmax, car.speed);
       if (car.drifting) driftT += DT;

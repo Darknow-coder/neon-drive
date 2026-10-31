@@ -11,7 +11,7 @@ export default {
   name: 'NEON BOULEVARD',
   profile: 'Fluide',
   league: 'bronze',
-  scale: 1.25,
+  scale: 1.5,
   width: 250,
   theme: { left: '#00f0ff', right: '#ff2bd6', kerb: '#ff2bd6', ground: '#080522' },
   points: [
