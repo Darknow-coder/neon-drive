@@ -73,6 +73,14 @@ node tools/progressionCheck.js # trophées, ligues, tirage des circuits, sauvega
 - `src/progression/save.js` : sauvegarde locale versionnée, avec copie de secours et réparation automatique.
 - Chaque circuit indique sa ligue d'accès (`league` dans `src/data/tracks/*.js`).
 
+## Garage et voitures
+
+- `src/data/cars.js` : voitures (notes 1-10, silhouette, couleurs) et leur mode de déblocage
+  (`unlock: { type: 'trophies', min: 100 }` aujourd'hui ; boutique, fragments… prévus).
+- `src/progression/garage.js` : voitures possédées, déblocages, couleurs personnalisées.
+- La sauvegarde (version 2) garde la liste des voitures possédées et leurs couleurs.
+- Outils de test (panneau ⚙ de réglage de la conduite) : ajouter `?dev` à l'adresse.
+
 ## Ajouter un circuit
 
 1. Copier un fichier de `src/data/tracks/` et changer `id`, `name`, `points`.

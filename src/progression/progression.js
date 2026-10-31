@@ -3,6 +3,7 @@
 
 import { TROPHY_REWARDS, leagueFor, leagueRank } from '../data/progression.js';
 import { TRACKS } from '../data/tracks/index.js';
+import { syncUnlocks } from './garage.js';
 
 /** Circuits accessibles dans une ligue (ceux des ligues inférieures inclus). */
 export function tracksForLeague(leagueId) {
@@ -57,5 +58,7 @@ export function applyRaceResult(save, { position, trackId, carId, bestLap }) {
     ? tracksForLeague(newLeague.id).filter((t) => !tracksForLeague(oldLeague.id).includes(t))
     : [];
 
-  return { gained, before, after: save.trophies, oldLeague, newLeague, promoted, unlockedTracks, newRecord, previousRecord };
+  const unlockedCars = syncUnlocks(save);
+
+  return { gained, before, after: save.trophies, oldLeague, newLeague, promoted, unlockedTracks, unlockedCars, newRecord, previousRecord };
 }

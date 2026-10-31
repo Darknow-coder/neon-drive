@@ -15,7 +15,7 @@ import { computeResults, randomGrid } from '../race/results.js';
 
 const PLAYER_COLORS = { body: '#00f0ff', accent: '#ff2bd6', glow: '#00f0ff' };
 
-export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', onFinish }) {
+export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, onFinish }) {
   const track = buildTrack(getTrackData(trackId));
   const trackRenderer = createTrackRenderer(track, { lowEnd });
   const particles = createParticles(lowEnd ? 320 : 520);
@@ -24,7 +24,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   // Grille tirée au sort : le joueur part dans l'une des 3 dernières places
   const entries = randomGrid(
     AI_DRIVERS.map((d) => ({ def: getCar(d.car), name: d.name, profile: d.profile, colors: d.colors })),
-    { def: getCar(carId), name: 'TOI', isPlayer: true, colors: PLAYER_COLORS },
+    { def: getCar(carId), name: 'TOI', isPlayer: true, colors: playerColors },
     { backRows: 3 },
   );
   let endTimer = -1; // compte à rebours avant l'affichage des résultats

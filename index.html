@@ -84,6 +84,7 @@
         </div>
       </div>
       <div class="promo hidden" id="res-promo"></div>
+      <div class="promo hidden" id="res-cars"></div>
       <div class="record hidden" id="res-record"></div>
       <table class="results-table">
         <thead><tr><th></th><th>PILOTE</th><th class="hide-narrow">VOITURE</th><th>TEMPS</th><th class="hide-narrow">MEILLEUR TOUR</th></tr></thead>
@@ -115,7 +116,11 @@
 
     <div class="menu-actions" id="menu-main">
       <button class="start-btn" id="btn-start">COURSE</button>
-      <button class="menu-btn" id="btn-training">ENTRAÎNEMENT</button>
+      <div class="row-btns">
+        <button class="menu-btn" id="btn-garage">GARAGE</button>
+        <button class="menu-btn" id="btn-training">ENTRAÎNEMENT</button>
+      </div>
+      <div class="menu-car muted" id="menu-car"></div>
     </div>
     <div class="menu-actions hidden" id="menu-training">
       <div class="muted small">Choisis un circuit — l'entraînement ne rapporte pas de trophées</div>
@@ -131,6 +136,37 @@
     <div class="controls-help">
       <div class="help-kb"><b>Clavier :</b> ← → tourner · ↑ / Z accélérer · ↓ / S / Espace freiner · Freiner + tourner à grande vitesse = DRIFT · Maj / B boost · R replacer · Échap pause</div>
       <div class="help-touch"><b>Tactile :</b> pouce gauche ◀ ▶ · pouce droit GAZ, FREIN/DRIFT, BOOST — le drift remplit le boost</div>
+    </div>
+  </div>
+
+  <!-- Garage -->
+  <div id="garage" class="overlay hidden">
+    <div class="overlay-card garage-card">
+      <div class="garage-head">
+        <button class="menu-btn small-btn" id="garage-back">‹ MENU</button>
+        <div class="overlay-title">GARAGE</div>
+        <div class="muted garage-count" id="garage-count"></div>
+      </div>
+      <div class="garage-body">
+        <div class="garage-preview">
+          <button class="garage-nav" id="garage-prev" aria-label="Voiture précédente">‹</button>
+          <canvas id="garage-canvas" width="540" height="360"></canvas>
+          <button class="garage-nav" id="garage-next" aria-label="Voiture suivante">›</button>
+          <div class="garage-name" id="garage-name"></div>
+          <div class="garage-tagline muted" id="garage-tagline"></div>
+        </div>
+        <div class="garage-side">
+          <div class="garage-stats" id="garage-stats"></div>
+          <div class="garage-paint" id="garage-paint">
+            <div class="paint-label muted">Carrosserie</div>
+            <div class="swatches" id="paint-body"></div>
+            <div class="paint-label muted">Accent</div>
+            <div class="swatches" id="paint-accent"></div>
+          </div>
+          <div class="garage-lock hidden" id="garage-lock"></div>
+          <button class="menu-btn primary" id="garage-select">CHOISIR CETTE VOITURE</button>
+        </div>
+      </div>
     </div>
   </div>
 

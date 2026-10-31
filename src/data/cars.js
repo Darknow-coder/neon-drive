@@ -3,6 +3,15 @@
 // Ces notes sont converties en paramètres physiques par `statsToParams`
 // (voir physics/carPhysics.js). Règle d'équilibrage : le total des notes
 // reste proche de 30 pour qu'aucune voiture ne domine partout.
+//
+// DÉBLOCAGE (`unlock`) — comment le joueur obtient la voiture :
+//   { type: 'start' }                    possédée dès le début
+//   { type: 'trophies', min: 100 }       palier de trophées
+// Prévu pour plus tard (même format, sans changer le reste du code) :
+//   { type: 'shop', price: … }           boutique
+//   { type: 'fragments', count: … }      fragments
+//   { type: 'event', id: … }             événement / saison
+// Les adversaires IA peuvent utiliser toutes les voitures, débloquées ou non.
 
 export const CARS = [
   {
@@ -12,22 +21,7 @@ export const CARS = [
     stats: { speed: 6, accel: 6, handling: 6, drift: 6, toughness: 6 },
     shape: 'sleek',
     colors: { body: '#00f0ff', accent: '#ff2bd6', glow: '#00f0ff' },
-  },
-  {
-    id: 'razor',
-    name: 'RAZOR',
-    tagline: 'Très rapide, exigeante en virage',
-    stats: { speed: 9, accel: 6, handling: 4, drift: 5, toughness: 6 },
-    shape: 'wedge',
-    colors: { body: '#ff2bd6', accent: '#ffe14d', glow: '#ff2bd6' },
-  },
-  {
-    id: 'halo',
-    name: 'HALO',
-    tagline: 'Maniabilité exceptionnelle',
-    stats: { speed: 5, accel: 6, handling: 9, drift: 5, toughness: 5 },
-    shape: 'round',
-    colors: { body: '#8a2bff', accent: '#00f0ff', glow: '#a45bff' },
+    unlock: { type: 'start' },
   },
   {
     id: 'volt',
@@ -36,6 +30,25 @@ export const CARS = [
     stats: { speed: 5, accel: 9, handling: 6, drift: 6, toughness: 4 },
     shape: 'sleek',
     colors: { body: '#2b6bff', accent: '#00f0ff', glow: '#4d8bff' },
+    unlock: { type: 'trophies', min: 30 },
+  },
+  {
+    id: 'halo',
+    name: 'HALO',
+    tagline: 'Maniabilité exceptionnelle',
+    stats: { speed: 5, accel: 6, handling: 9, drift: 5, toughness: 5 },
+    shape: 'round',
+    colors: { body: '#8a2bff', accent: '#00f0ff', glow: '#a45bff' },
+    unlock: { type: 'trophies', min: 70 },
+  },
+  {
+    id: 'razor',
+    name: 'RAZOR',
+    tagline: 'Très rapide, exigeante en virage',
+    stats: { speed: 9, accel: 6, handling: 4, drift: 5, toughness: 6 },
+    shape: 'wedge',
+    colors: { body: '#ff2bd6', accent: '#ffe14d', glow: '#ff2bd6' },
+    unlock: { type: 'trophies', min: 100 },
   },
   {
     id: 'titan',
@@ -44,7 +57,23 @@ export const CARS = [
     stats: { speed: 7, accel: 4, handling: 6, drift: 4, toughness: 9 },
     shape: 'heavy',
     colors: { body: '#36f5a6', accent: '#8a2bff', glow: '#36f5a6' },
+    unlock: { type: 'trophies', min: 175 },
   },
 ];
 
 export const getCar = (id) => CARS.find((c) => c.id === id) ?? CARS[0];
+
+// Couleurs proposées dans le garage (carrosserie et accent).
+export const PAINT_COLORS = [
+  '#00f0ff', '#2b6bff', '#8a2bff', '#c08bff', '#ff2bd6', '#ff3b5c',
+  '#ffb000', '#ffe14d', '#3dff9e', '#36f5a6', '#dfe3ff', '#3a3f5c',
+];
+
+// Libellés des caractéristiques (garage)
+export const STAT_LABELS = {
+  speed: 'Vitesse max',
+  accel: 'Accélération',
+  handling: 'Maniabilité',
+  drift: 'Drift',
+  toughness: 'Robustesse',
+};

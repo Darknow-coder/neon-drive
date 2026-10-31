@@ -13,6 +13,8 @@ import { leagueFor, RACE_LAPS } from './data/progression.js';
 import { createSaveStore } from './progression/save.js';
 import { applyRaceResult, pickTrack, tracksForLeague } from './progression/progression.js';
 import { renderMenu, revealTrack } from './ui/menu.js';
+import { createGarage, carName } from './ui/garage.js';
+import { syncUnlocks, selectedCar, liveryFor } from './progression/garage.js';
 
 const $ = (id) => document.getElementById(id);
 const show = (id, v = true) => $(id).classList.toggle('hidden', !v);
@@ -22,6 +24,8 @@ const touch = isTouchDevice();
 // Forçable pour les tests avec ?quality=low ou ?quality=high dans l'adresse.
 const q = new URLSearchParams(location.search).get('quality');
 const lowEnd = q ? q === 'low' : touch;
+// Outils de développement (panneau ⚙) : uniquement avec ?dev dans l'adresse
+const devMode = new URLSearchParams(location.search).has('dev');
 
 const canvas = $('game');
 const renderer = createRenderer(canvas, { lowEnd });
@@ -36,6 +40,8 @@ let saveStatus = loaded.status;
 function persist() {
   if (!store.save(save) && store.available) saveStatus = 'failed';
 }
+// Voitures dont le palier est déjà atteint (ex. ancienne sauvegarde convertie)
+if (syncUnlocks(save).length) persist();
 
 let session = null;
 let tuning = null;
@@ -43,13 +49,13 @@ let state = 'menu'; // 'menu' | 'reveal' | 'race' | 'pause' | 'results'
 let trackId = TRACKS[0].id;
 let trainingTrackId = TRACKS[0].id;
 let training = false;
-let carId = getCar(save.selectedCar).id;
+let carId = getCar(selectedCar(save)).id;
 
 const input = createInput({
   touchRoot,
   onAction(code) {
     if (code === 'KeyR' && state === 'race') session?.respawn();
-    if (code === 'KeyT') tuning?.toggle();
+    if (code === 'KeyT' && devMode) tuning?.toggle();
     if (code === 'Escape' || code === 'KeyP') {
       if (state === 'race') pause();
       else if (state === 'pause') resume();
@@ -63,16 +69,25 @@ function setRaceUi(visible) {
   show('sys-buttons', visible);
   show('touch', visible && touch);
 }
+show('btn-tuning', devMode);
+
+function refreshMenu() {
+  renderMenu(save, saveStatus);
+  $('menu-car').innerHTML = `Voiture : <b>${carName(selectedCar(save))}</b>`;
+}
+
+const garage = createGarage({ save, onSave: persist, onClose: refreshMenu });
 
 function startRace() {
   // Le circuit n'est construit qu'au lancement (et l'ancien est libéré) :
   // sur téléphone, garder plusieurs grands circuits en mémoire peut provoquer
   // un écran noir.
-  if (session) carId = session.car.def.id;
+  carId = selectedCar(save);
   session?.dispose();
   const league = leagueFor(save.trophies).id; // niveau des IA fixé AVANT la course
   session = createRaceScene({
     renderer, input, hud, lowEnd, trackId, carId, league, laps: RACE_LAPS,
+    playerColors: liveryFor(save, carId),
     onFinish: (rows) => {
       state = 'results';
       setRaceUi(false);
@@ -115,7 +130,7 @@ function backToMenu() {
   show('pause', false);
   setRaceUi(false);
   showTrainingPicker(false);
-  renderMenu(save, saveStatus);
+  refreshMenu();
   show('start', true);
   state = 'menu';
 }
@@ -145,7 +160,7 @@ function showTrainingPicker(v) {
   show('menu-training', v);
 }
 
-renderMenu(save, saveStatus);
+refreshMenu();
 
 // Choix du circuit sur l'écran de départ (provisoire, avant le vrai menu)
 const pick = $('track-pick');
@@ -162,7 +177,7 @@ for (const t of TRACKS) {
 
 tuning = createTuningPanel($('tuning'), {
   getCar: () => session?.car ?? { def: { id: carId, stats: {} }, params: {} },
-  setCarDef: (id) => { carId = id; save.selectedCar = id; persist(); session?.setCarDef(id); },
+  setCarDef: (id) => { carId = id; session?.setCarDef(id); }, // outil de test : ne modifie pas la sauvegarde
   getFps: () => loop.fps,
   getPerf: () => perf,
 });
@@ -200,6 +215,7 @@ $('btn-quit').addEventListener('click', backToMenu);
 // « Rejouer » : nouvelle course classée (nouveau tirage) ou même circuit en entraînement
 $('btn-again').addEventListener('click', () => (training ? startTraining() : startRankedRace()));
 $('btn-training').addEventListener('click', () => showTrainingPicker(true));
+$('btn-garage').addEventListener('click', () => garage.open());
 $('btn-train-back').addEventListener('click', () => showTrainingPicker(false));
 $('btn-menu').addEventListener('click', backToMenu);
 

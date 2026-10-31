@@ -12,7 +12,7 @@
 
 const KEY = 'neondrive.save';
 const BACKUP_KEY = 'neondrive.save.backup';
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 export function defaultSave() {
   return {
@@ -23,8 +23,11 @@ export function defaultSave() {
     lastTrackId: null,
     bestLaps: {},            // { idCircuit: { idVoiture: temps } }
     history: [],             // 10 dernières courses
-    // Prévu pour plus tard (non utilisé pour l'instant) :
-    // garage (voitures possédées, personnalisation), fragments, améliorations, saisons…
+    garage: {
+      owned: ['nova'],       // voitures possédées (paliers, et plus tard boutique…)
+      liveries: {},          // { idVoiture: { body, accent } }
+    },
+    // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
 }
@@ -51,6 +54,22 @@ function sanitize(raw) {
     }
   }
   if (Array.isArray(raw.history)) s.history = raw.history.filter((h) => h && typeof h === 'object').slice(-10);
+  const isColor = (c) => typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c);
+  if (raw.garage && typeof raw.garage === 'object') {
+    if (Array.isArray(raw.garage.owned)) {
+      const owned = raw.garage.owned.filter((id) => typeof id === 'string');
+      s.garage.owned = [...new Set(['nova', ...owned])];
+    }
+    if (raw.garage.liveries && typeof raw.garage.liveries === 'object') {
+      for (const [id, l] of Object.entries(raw.garage.liveries)) {
+        if (!l || typeof l !== 'object') continue;
+        const clean = {};
+        if (isColor(l.body)) clean.body = l.body;
+        if (isColor(l.accent)) clean.accent = l.accent;
+        if (Object.keys(clean).length) s.garage.liveries[id] = clean;
+      }
+    }
+  }
   s.createdAt = num(raw.createdAt, Date.now());
   return s;
 }
@@ -58,8 +77,13 @@ function sanitize(raw) {
 /** Conversion des anciennes versions (aucune pour l'instant). */
 function migrate(raw) {
   if (!raw || typeof raw !== 'object') return raw;
-  // Exemple pour le futur :
-  // if (raw.version === 1) { raw.garage = {...}; raw.version = 2; }
+  // Version 1 → 2 : apparition du garage. Les voitures dont le palier de
+  // trophées est déjà atteint seront ajoutées par syncUnlocks au chargement.
+  if (raw.version === 1 && !raw.garage) {
+    raw.garage = { owned: ['nova'], liveries: {} };
+    raw.version = 2;
+  }
+  // Pour le futur : if (raw.version === 2) { …; raw.version = 3; }
   return raw;
 }
 

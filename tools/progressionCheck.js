@@ -4,6 +4,8 @@ import { TROPHY_REWARDS, LEAGUES, leagueFor, leagueProgress } from '../src/data/
 import { createSaveStore, defaultSave } from '../src/progression/save.js';
 import { applyRaceResult, pickTrack, tracksForLeague } from '../src/progression/progression.js';
 import { mulberry32 } from '../src/core/math.js';
+import { syncUnlocks, isOwned, liveryFor, setLivery, selectedCar, nextCarUnlock } from '../src/progression/garage.js';
+import { CARS } from '../src/data/cars.js';
 
 let ok = 0, ko = 0;
 const check = (cond, label) => { if (cond) ok++; else { ko++; console.log('  ✗ ' + label); } };
@@ -85,6 +87,37 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   check(store.load().status === 'unavailable' && store.save(defaultSave()) === false, 'stockage indisponible : le jeu continue');
   const full = { getItem: () => null, setItem: () => { throw new Error('QuotaExceededError'); }, removeItem() {} };
   check(createSaveStore(full).save(defaultSave()) === false, 'stockage plein : pas de plantage');
+}
+
+// --- Garage ---
+{
+  const s = defaultSave();
+  check(isOwned(s, 'nova') && s.garage.owned.length === 1, 'seule NOVA au départ');
+  check(nextCarUnlock(s)?.id === 'volt', 'prochaine voiture : VOLT');
+  s.trophies = 25;
+  let r = applyRaceResult(s, { position: 1, trackId: 'neon-boulevard', carId: 'nova', bestLap: 25 });
+  check(r.unlockedCars.map((c) => c.id).join() === 'volt', 'VOLT débloquée au palier de 30');
+  r = applyRaceResult(s, { position: 1, trackId: 'neon-boulevard', carId: 'nova', bestLap: 25 });
+  check(r.unlockedCars.length === 0, 'pas de double déblocage');
+  s.trophies = 1000; const all = syncUnlocks(s);
+  check(all.length === CARS.length - 2 && CARS.every((c) => isOwned(s, c.id)), 'toutes les voitures débloquées à 1000 trophées');
+  check(liveryFor(s, 'nova').body === CARS[0].colors.body, 'couleurs d\'origine par défaut');
+  setLivery(s, 'nova', 'body', '#ff3b5c');
+  check(liveryFor(s, 'nova').body === '#ff3b5c' && liveryFor(s, 'nova').glow === '#ff3b5c', 'couleur personnalisée');
+  const s2 = defaultSave(); s2.selectedCar = 'titan';
+  check(selectedCar(s2) === 'nova', 'impossible de rouler avec une voiture non débloquée');
+}
+{
+  // Migration d'une sauvegarde de version 1 (avant le garage)
+  const st = memStorage();
+  st.setItem('neondrive.save', JSON.stringify({ version: 1, trophies: 120, stats: { races: 20, wins: 4, podiums: 9 }, selectedCar: 'nova' }));
+  const l = createSaveStore(st).load();
+  check(l.status === 'ok' && l.data.version === 2 && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v2 sans perte');
+  const fresh = syncUnlocks(l.data);
+  check(fresh.map((c) => c.id).join() === 'volt,halo,razor', 'voitures des paliers déjà atteints rendues après migration');
+  st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 5, garage: { owned: 'x', liveries: { nova: { body: 'rouge', accent: '#00ff00' } } } }));
+  const l2 = createSaveStore(st).load().data;
+  check(l2.garage.owned.join() === 'nova' && !l2.garage.liveries.nova.body && l2.garage.liveries.nova.accent === '#00ff00', 'garage abîmé réparé');
 }
 
 console.log(`${ok} vérifications réussies, ${ko} échec(s). Ligues : ${LEAGUES.map((l) => `${l.name} ≥ ${l.min}`).join(', ')}`);

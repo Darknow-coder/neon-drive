@@ -34,6 +34,7 @@ export function showResults(rows, { trackName, reward = null, training = false }
   const box = el('res-reward');
   box.classList.toggle('hidden', !reward);
   el('res-promo').classList.add('hidden');
+  el('res-cars').classList.add('hidden');
   el('res-record').classList.add('hidden');
   if (training) {
     el('res-record').textContent = 'ENTRAÎNEMENT — PAS DE TROPHÉES';
@@ -56,6 +57,10 @@ export function showResults(rows, { trackName, reward = null, training = false }
       const unlocked = reward.unlockedTracks.map((t) => t.name).join(', ');
       el('res-promo').textContent = `NOUVELLE LIGUE : ${reward.newLeague.name} !${unlocked ? ` — circuit débloqué : ${unlocked}` : ''}`;
       el('res-promo').classList.remove('hidden');
+    }
+    if (reward.unlockedCars?.length) {
+      el('res-cars').textContent = `NOUVELLE VOITURE DÉBLOQUÉE : ${reward.unlockedCars.map((c) => c.name).join(', ')} — à essayer dans le garage !`;
+      el('res-cars').classList.remove('hidden');
     }
     if (reward.newRecord) {
       el('res-record').textContent = reward.previousRecord
