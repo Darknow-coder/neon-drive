@@ -76,6 +76,15 @@
           <div class="results-track" id="res-track"></div>
         </div>
       </div>
+      <div class="reward hidden" id="res-reward">
+        <div class="reward-gain"><span class="trophy-ico"></span><b id="res-gain">+0</b></div>
+        <div class="reward-league">
+          <div class="reward-line"><span id="res-league" class="league-tag">BRONZE</span><span class="muted" id="res-total">0 trophées</span></div>
+          <div class="league-bar"><div class="league-fill" id="res-fill"></div></div>
+        </div>
+      </div>
+      <div class="promo hidden" id="res-promo"></div>
+      <div class="record hidden" id="res-record"></div>
       <table class="results-table">
         <thead><tr><th></th><th>PILOTE</th><th class="hide-narrow">VOITURE</th><th>TEMPS</th><th class="hide-narrow">MEILLEUR TOUR</th></tr></thead>
         <tbody id="res-rows"></tbody>
@@ -91,16 +100,45 @@
   <div id="tuning" class="tuning hidden"></div>
 
   <!-- Écran de démarrage -->
+  <!-- Menu principal -->
   <div id="start" class="start-screen">
     <div class="logo">NEON<span>//</span>DRIVE</div>
-    <div class="subtitle">ÉTAPE 4 — COURSE COMPLÈTE</div>
-    <div class="track-pick" id="track-pick"></div>
-    <button class="start-btn" id="btn-start">TOUCHER POUR ROULER</button>
-    <div class="controls-help">
-      <div class="help-kb"><b>Clavier :</b> ← → tourner · ↑ / Z accélérer · ↓ / S / Espace freiner · Freiner + tourner à grande vitesse = DRIFT · Maj / B boost · R replacer · T réglages</div>
-      <div class="help-touch"><b>Tactile :</b> pouce gauche ◀ ▶ · pouce droit GAZ, FREIN/DRIFT, BOOST</div>
-      <div class="hint">Le drift remplit la jauge de boost.</div>
+
+    <div class="league-card" id="league-card">
+      <div class="league-badge" id="menu-league-badge">BRONZE</div>
+      <div class="league-info">
+        <div class="trophy-line"><span class="trophy-ico"></span><b id="menu-trophies">0</b> <span class="muted" id="menu-trophies-word">trophées</span></div>
+        <div class="league-bar"><div class="league-fill" id="menu-league-fill"></div></div>
+        <div class="league-next muted" id="menu-league-next">Prochaine ligue : ARGENT (100)</div>
+      </div>
     </div>
+
+    <div class="menu-actions" id="menu-main">
+      <button class="start-btn" id="btn-start">COURSE</button>
+      <button class="menu-btn" id="btn-training">ENTRAÎNEMENT</button>
+    </div>
+    <div class="menu-actions hidden" id="menu-training">
+      <div class="muted small">Choisis un circuit — l'entraînement ne rapporte pas de trophées</div>
+      <div class="track-pick" id="track-pick"></div>
+      <div class="row-btns">
+        <button class="menu-btn primary" id="btn-train-go">ROULER</button>
+        <button class="menu-btn" id="btn-train-back">RETOUR</button>
+      </div>
+    </div>
+
+    <div class="menu-stats muted" id="menu-stats"></div>
+    <div class="save-warning hidden" id="save-warning"></div>
+    <div class="controls-help">
+      <div class="help-kb"><b>Clavier :</b> ← → tourner · ↑ / Z accélérer · ↓ / S / Espace freiner · Freiner + tourner à grande vitesse = DRIFT · Maj / B boost · R replacer · Échap pause</div>
+      <div class="help-touch"><b>Tactile :</b> pouce gauche ◀ ▶ · pouce droit GAZ, FREIN/DRIFT, BOOST — le drift remplit le boost</div>
+    </div>
+  </div>
+
+  <!-- Tirage au sort du circuit -->
+  <div id="reveal" class="overlay reveal hidden">
+    <div class="reveal-label">CIRCUIT TIRÉ AU SORT</div>
+    <div class="reveal-name" id="reveal-name"></div>
+    <div class="reveal-profile" id="reveal-profile"></div>
   </div>
 
   <!-- Affichage des erreurs (pour pouvoir les signaler) -->

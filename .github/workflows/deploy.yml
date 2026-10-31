@@ -30,6 +30,7 @@ jobs:
         run: |
           node tools/trackCheck.js
           node tools/blockCheck.js
+          node tools/progressionCheck.js
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

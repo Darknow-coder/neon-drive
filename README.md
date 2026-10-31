@@ -54,6 +54,7 @@ node tools/carBalance.js     # compare les voitures avec le même pilote IA
 node tools/aiRace.js 20      # 20 courses complètes entre IA : classements, dépassements, chocs
 node tools/blockCheck.js     # aucune IA ne reste bloquée derrière une voiture arrêtée
 node tools/trackFlow.js      # exigence de chaque circuit (vitesse moyenne, freinages, drift)
+node tools/progressionCheck.js # trophées, ligues, tirage des circuits, sauvegarde (35 vérifications)
 ```
 
 ## Intelligence artificielle
@@ -64,6 +65,13 @@ node tools/trackFlow.js      # exigence de chaque circuit (vitesse moyenne, frei
   exactement comme le joueur. Aucune triche possible : même physique pour tous.
 - `src/data/aiProfiles.js` : les 5 personnalités, les pilotes et le niveau par ligue
   (fixé avant la course, jamais modifié pendant).
+
+## Progression
+
+- `src/data/progression.js` : trophées par place, seuils des ligues, nombre de tours — à modifier librement.
+- `src/progression/progression.js` : règles (trophées, montée de ligue, tirage du circuit sans répétition).
+- `src/progression/save.js` : sauvegarde locale versionnée, avec copie de secours et réparation automatique.
+- Chaque circuit indique sa ligue d'accès (`league` dans `src/data/tracks/*.js`).
 
 ## Ajouter un circuit
 

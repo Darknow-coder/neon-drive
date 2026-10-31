@@ -368,8 +368,6 @@ html, body {
   inset: 0;
   z-index: 30;
   display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 12px;
   background: rgba(7, 4, 26, 0.72);
   overflow-y: auto;
@@ -378,6 +376,7 @@ html, body {
 }
 @keyframes fadein { from { opacity: 0; } }
 .overlay-card {
+  margin: auto; /* centré, mais défilable si plus haut que l'écran */
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -459,3 +458,100 @@ html, body {
   .menu-btn { padding: 9px 14px; }
 }
 @media (max-width: 520px) { .hide-narrow { display: none; } }
+
+/* ---------- Menu principal ---------- */
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.trophy-ico {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  vertical-align: -3px;
+  margin-right: 5px;
+  background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffd34d' d='M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V17h3v3H8v-3h3v-2.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3V3zm0 4H6v1a2 2 0 0 0 1 1.7V7zm10 0v2.7A2 2 0 0 0 18 8V7h-1z'/%3E%3C/svg%3E");
+  filter: drop-shadow(0 0 4px rgba(255, 211, 77, 0.7));
+}
+.league-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: rgba(14, 8, 40, 0.75);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  min-width: min(420px, 92vw);
+}
+.league-badge {
+  --lc: #d4894a;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 2px;
+  padding: 16px 10px;
+  min-width: 96px;
+  text-align: center;
+  color: var(--lc);
+  border: 2px solid var(--lc);
+  clip-path: polygon(50% 0, 100% 22%, 100% 78%, 50% 100%, 0 78%, 0 22%);
+  background: color-mix(in srgb, var(--lc) 14%, transparent);
+  text-shadow: 0 0 8px var(--lc);
+}
+.league-info { flex: 1; text-align: left; }
+.trophy-line { font-size: 18px; }
+.trophy-line b { font-family: var(--font-ui); font-size: 24px; color: #ffd34d; }
+.league-bar { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); overflow: hidden; margin: 6px 0 4px; }
+.league-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--violet), var(--cyan)); box-shadow: 0 0 8px var(--cyan); transition: width 1.1s cubic-bezier(.2,.8,.2,1); }
+.league-next { font-size: 13px; }
+.menu-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.menu-actions .menu-btn { min-width: 220px; }
+.row-btns { display: flex; gap: 10px; }
+.row-btns .menu-btn { min-width: 140px; }
+.menu-stats { font-size: 14px; letter-spacing: 1px; }
+.save-warning { font-size: 13px; color: #ffb3ec; border: 1px solid var(--magenta); border-radius: 8px; padding: 4px 10px; }
+@media (max-height: 520px) {
+  .league-card { padding: 6px 12px; }
+  .league-badge { padding: 11px 8px; min-width: 80px; font-size: 11px; }
+  .trophy-line b { font-size: 20px; }
+  .menu-actions { gap: 7px; }
+  .controls-help { display: none; }
+}
+
+/* ---------- Tirage du circuit ---------- */
+.reveal { flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: rgba(7, 4, 26, 0.86); }
+.reveal-label { font-family: var(--font-display); letter-spacing: 4px; font-size: 12px; color: var(--muted); }
+.reveal-name {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(28px, 6vw, 56px);
+  letter-spacing: 3px;
+  color: #fff;
+  text-shadow: 0 0 12px var(--cyan), 0 0 32px var(--magenta);
+}
+.reveal-name.landed { animation: land 0.45s cubic-bezier(.2,1.6,.4,1); }
+@keyframes land { from { transform: scale(1.35); } }
+.reveal-profile { color: var(--magenta); letter-spacing: 3px; font-weight: 700; min-height: 1.2em; }
+
+/* ---------- Récompenses (écran de résultats) ---------- */
+.reward { display: flex; align-items: center; gap: 14px; padding: 6px 10px; border-radius: 10px; background: rgba(255, 211, 77, 0.06); border: 1px solid rgba(255, 211, 77, 0.25); }
+.reward-gain { font-size: 26px; white-space: nowrap; }
+.reward-gain b { color: #ffd34d; text-shadow: 0 0 10px rgba(255, 211, 77, 0.6); }
+.reward-gain .trophy-ico { width: 24px; height: 24px; }
+.reward-league { flex: 1; }
+.reward-line { display: flex; justify-content: space-between; font-size: 14px; }
+.league-tag { font-family: var(--font-display); font-weight: 900; letter-spacing: 2px; font-size: 12px; }
+.promo, .record { text-align: center; font-family: var(--font-display); font-weight: 700; letter-spacing: 2px; font-size: 13px; padding: 6px; border-radius: 8px; }
+.promo { color: #fff; background: linear-gradient(90deg, rgba(255, 43, 214, 0.3), rgba(0, 240, 255, 0.3)); animation: pulse 1.6s ease-in-out infinite; }
+.record { color: var(--magenta); border: 1px dashed rgba(255, 43, 214, 0.6); }
+
+@media (max-height: 420px) {
+  .results-card { gap: 6px; }
+  .results-head { gap: 10px; }
+  .results-place { font-size: 32px; }
+  .results-head .overlay-title { font-size: 17px; }
+  .reward { padding: 3px 10px; }
+  .reward-gain { font-size: 20px; }
+  .promo, .record { font-size: 11px; padding: 3px; }
+  .results-table th { display: none; }
+  .results-table td { padding: 2px 6px; font-size: 13px; }
+  .results-table .hide-narrow:nth-child(3) { display: none; }
+}

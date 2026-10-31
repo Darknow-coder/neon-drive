@@ -8,6 +8,11 @@ import { createTuningPanel } from './ui/tuningPanel.js';
 import { showResults, hideResults } from './ui/resultsScreen.js';
 import { createRaceScene } from './scenes/raceScene.js';
 import { TRACKS } from './data/tracks/index.js';
+import { getCar } from './data/cars.js';
+import { leagueFor, RACE_LAPS } from './data/progression.js';
+import { createSaveStore } from './progression/save.js';
+import { applyRaceResult, pickTrack, tracksForLeague } from './progression/progression.js';
+import { renderMenu, revealTrack } from './ui/menu.js';
 
 const $ = (id) => document.getElementById(id);
 const show = (id, v = true) => $(id).classList.toggle('hidden', !v);
@@ -23,11 +28,22 @@ const renderer = createRenderer(canvas, { lowEnd });
 const hud = createHud();
 const touchRoot = $('touch');
 
+// ---------------- Sauvegarde ----------------
+const store = createSaveStore();
+const loaded = store.load();
+const save = loaded.data;
+let saveStatus = loaded.status;
+function persist() {
+  if (!store.save(save) && store.available) saveStatus = 'failed';
+}
+
 let session = null;
 let tuning = null;
-let state = 'menu'; // 'menu' | 'race' | 'pause' | 'results'
+let state = 'menu'; // 'menu' | 'reveal' | 'race' | 'pause' | 'results'
 let trackId = TRACKS[0].id;
-let carId = 'nova';
+let trainingTrackId = TRACKS[0].id;
+let training = false;
+let carId = getCar(save.selectedCar).id;
 
 const input = createInput({
   touchRoot,
@@ -54,12 +70,19 @@ function startRace() {
   // un écran noir.
   if (session) carId = session.car.def.id;
   session?.dispose();
+  const league = leagueFor(save.trophies).id; // niveau des IA fixé AVANT la course
   session = createRaceScene({
-    renderer, input, hud, lowEnd, trackId, carId,
+    renderer, input, hud, lowEnd, trackId, carId, league, laps: RACE_LAPS,
     onFinish: (rows) => {
       state = 'results';
       setRaceUi(false);
-      showResults(rows, { trackName: session.trackName });
+      let reward = null;
+      if (!training) {
+        const me = rows.find((r) => r.isPlayer);
+        reward = applyRaceResult(save, { position: me.position, trackId, carId, bestLap: me.bestLap });
+        persist();
+      }
+      showResults(rows, { trackName: session.trackName, reward, training });
     },
   });
   input.reset();
@@ -91,9 +114,38 @@ function backToMenu() {
   hideResults();
   show('pause', false);
   setRaceUi(false);
+  showTrainingPicker(false);
+  renderMenu(save, saveStatus);
   show('start', true);
   state = 'menu';
 }
+
+/** Course classée : circuit tiré au sort parmi ceux de la ligue du joueur. */
+function startRankedRace() {
+  training = false;
+  const pool = tracksForLeague(leagueFor(save.trophies).id);
+  const chosen = pickTrack(save);
+  trackId = chosen.id;
+  state = 'reveal';
+  show('start', false);
+  hideResults();
+  show('pause', false);
+  setRaceUi(false);
+  revealTrack(pool, chosen, () => startRace());
+}
+
+function startTraining() {
+  training = true;
+  trackId = trainingTrackId;
+  startRace();
+}
+
+function showTrainingPicker(v) {
+  show('menu-main', !v);
+  show('menu-training', v);
+}
+
+renderMenu(save, saveStatus);
 
 // Choix du circuit sur l'écran de départ (provisoire, avant le vrai menu)
 const pick = $('track-pick');
@@ -101,16 +153,16 @@ for (const t of TRACKS) {
   const b = document.createElement('button');
   b.innerHTML = `${t.name}<small>${t.profile}</small>`;
   b.addEventListener('click', () => {
-    trackId = t.id;
+    trainingTrackId = t.id;
     pick.querySelectorAll('button').forEach((x) => x.classList.toggle('selected', x === b));
   });
-  if (t.id === trackId) b.classList.add('selected');
+  if (t.id === trainingTrackId) b.classList.add('selected');
   pick.append(b);
 }
 
 tuning = createTuningPanel($('tuning'), {
   getCar: () => session?.car ?? { def: { id: carId, stats: {} }, params: {} },
-  setCarDef: (id) => { carId = id; session?.setCarDef(id); },
+  setCarDef: (id) => { carId = id; save.selectedCar = id; persist(); session?.setCarDef(id); },
   getFps: () => loop.fps,
   getPerf: () => perf,
 });
@@ -142,9 +194,13 @@ $('btn-reset').addEventListener('click', () => state === 'race' && session?.resp
 $('btn-tuning').addEventListener('click', () => tuning.toggle());
 $('btn-pause').addEventListener('click', () => state === 'race' && pause());
 $('btn-resume').addEventListener('click', resume);
+// « Recommencer » relance le même circuit (sans trophées pour la course abandonnée)
 $('btn-restart').addEventListener('click', startRace);
 $('btn-quit').addEventListener('click', backToMenu);
-$('btn-again').addEventListener('click', startRace);
+// « Rejouer » : nouvelle course classée (nouveau tirage) ou même circuit en entraînement
+$('btn-again').addEventListener('click', () => (training ? startTraining() : startRankedRace()));
+$('btn-training').addEventListener('click', () => showTrainingPicker(true));
+$('btn-train-back').addEventListener('click', () => showTrainingPicker(false));
 $('btn-menu').addEventListener('click', backToMenu);
 
 // Si Android efface le dessin du jeu (manque de mémoire graphique),
@@ -152,8 +208,7 @@ $('btn-menu').addEventListener('click', backToMenu);
 canvas.addEventListener('contextlost', (e) => e.preventDefault());
 canvas.addEventListener('contextrestored', () => session?.reloadGraphics());
 
-$('btn-start').addEventListener('click', async () => {
-  startRace();
+async function enterFullscreenOnMobile() {
   if (touch) {
     $('rotate-hint').classList.add('enabled');
     try {
@@ -162,7 +217,9 @@ $('btn-start').addEventListener('click', async () => {
     } catch { /* pas grave : certains navigateurs refusent */ }
     setTimeout(() => session?.resize(), 300);
   }
-});
+}
+$('btn-start').addEventListener('click', () => { enterFullscreenOnMobile(); startRankedRace(); });
+$('btn-train-go').addEventListener('click', () => { enterFullscreenOnMobile(); startTraining(); });
 
 // Pause automatique quand l'application passe en arrière-plan
 document.addEventListener('visibilitychange', () => {
@@ -173,4 +230,4 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Accès pour les tests automatiques
-window.__ND = { session: () => session, loop: () => loop, perf, state: () => state };
+window.__ND = { session: () => session, loop: () => loop, perf, state: () => state, save: () => save };
