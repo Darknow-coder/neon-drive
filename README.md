@@ -103,6 +103,12 @@ et fonctionne hors ligne après une première visite.
 - Les cosmétiques (finitions, motifs) n'ont aucun effet sur les performances.
 - Sauvegarde version 4 (conversion automatique).
 
+## Missions
+
+- `src/data/missions.js` : modèles de missions du jour et de la semaine, récompenses, bonus.
+- `src/progression/missions.js` : génération (stable dans la journée / la semaine), progression, récompenses.
+- Sauvegarde version 5 (conversion automatique).
+
 ## Garage et voitures
 
 - `src/data/cars.js` : voitures (notes 1-10, silhouette, couleurs) et leur mode de déblocage

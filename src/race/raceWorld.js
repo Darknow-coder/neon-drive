@@ -45,7 +45,7 @@ export function createRaceWorld(opts) {
     car.position = k + 1;
     car.wallHits = 0;
     car.carHits = 0;
-    car.raceStats = { drift: 0, overtakes: 0, lastPos: k + 1 };
+    car.raceStats = { drift: 0, overtakes: 0, pads: 0, lastPos: k + 1 };
     car.isRival = !!e.isRival;
     if (!e.isPlayer) {
       const baseProfile = AI_PROFILES[e.profile ?? 'balanced'];
@@ -125,7 +125,11 @@ export function createRaceWorld(opts) {
       else if (car.finished && car.isPlayer) input = car.ai ? car.ai.update(dt, world) : coastIntent(car);
       else if (car.isPlayer) input = playerIntent ?? idle;
       else input = car.ai.update(dt, world);
-      stepCar(car, input, dt, surfaceFor(car, track));
+      const surf = surfaceFor(car, track);
+      // Plaques de boost utilisées (comptées une fois par passage)
+      if (surf.pad && !car.onPad && world.started && !car.finished) car.raceStats.pads++;
+      car.onPad = surf.pad;
+      stepCar(car, input, dt, surf);
     }
     collideCars(cars);
     for (const car of cars) {

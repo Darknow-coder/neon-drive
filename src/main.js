@@ -23,6 +23,8 @@ import { createTutorial } from './scenes/tutorial.js';
 import { raceCredits, carLevel, claimableCount } from './progression/economy.js';
 import { createRoad } from './ui/road.js';
 import { createShop } from './ui/shop.js';
+import { createMissions } from './ui/missions.js';
+import { refreshMissions, applyMissionProgress } from './progression/missions.js';
 import { refreshShop } from './progression/shop.js';
 import { PACKS } from './data/economy.js';
 import { FINISHES, MOTIFS } from './data/shop.js';
@@ -136,6 +138,7 @@ const shop = createShop({ save, onSave: persist, sfx, onClose: refreshMenu });
 const garage = createGarage({ save, onSave: persist, onClose: refreshMenu, sfx, openShop: (tab) => shop.open(tab) });
 // Offres du jour prêtes dès le lancement
 if (refreshShop(save)) persist();
+const missions = createMissions({ save, onSave: persist, sfx, onClose: refreshMenu });
 const road = createRoad({ save, onSave: persist, sfx, onClose: refreshMenu });
 
 function startRace() {
@@ -157,6 +160,7 @@ function startRace() {
       setRaceUi(false);
       let reward = null;
       let credits = null;
+      let missionChanges = [];
       if (!training) {
         const me = rows.find((r) => r.isPlayer);
         const rv = rows.find((r) => r.isRival);
@@ -176,9 +180,15 @@ function startRace() {
           .filter((o) => !o.bought && o.price <= save.credits)
           .sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || b.price - a.price)[0];
         if (affordable) credits.shopHint = offerLabel(affordable);
+        // Missions
+        refreshMissions(save);
+        missionChanges = applyMissionProgress(save, {
+          position: me.position, overtakes: me.stats.overtakes, clean: me.stats.wallHits === 0 && me.finished,
+          rivalBeaten, pads: me.stats.pads, trackId, carId, credits: credits.total,
+        });
         persist();
       }
-      showResults(rows, { trackName: session.trackName, reward, training, credits });
+      showResults(rows, { trackName: session.trackName, reward, training, credits, missions: missionChanges });
       sfx.stopCar();
       if (reward?.unlockedCars?.length || reward?.promoted) setTimeout(() => sfx.unlock(), 900);
       updateMusic();
@@ -362,6 +372,7 @@ $('btn-training').addEventListener('click', () => showTrainingPicker(true));
 $('btn-garage').addEventListener('click', () => garage.open());
 $('btn-road').addEventListener('click', () => road.open());
 $('btn-shop').addEventListener('click', () => shop.open());
+$('btn-missions').addEventListener('click', () => missions.open());
 const settingsScreen = createSettingsScreen({
   save,
   onChange: (commit) => { audio.applyVolumes(); applyControls(); if (commit) persist(); },

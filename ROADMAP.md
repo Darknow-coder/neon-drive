@@ -27,13 +27,13 @@ son et musique générés par code, application installable et hors ligne.
 - Un rival « boss » par ligue
 - 3 à 4 morceaux de musique
 
-## Phase 3 — Économie et progression  ⏳ en cours
+## ✅ Phase 3 — Économie et progression
 - [x] Crédits gagnés en course (place, drift, dépassements, course propre, rival)
 - [x] Route des trophées (récompenses par palier, rétroactive)
 - [x] Fragments et packs (déblocage anticipé des voitures)
 - [x] Améliorations des voitures (niveaux 1 à 5 ; voitures adverses au niveau de la ligue)
 - [x] Boutique : cadeau quotidien (cycle 7 jours), 6 offres du jour, packs, finitions et motifs (cosmétiques)
-- Missions quotidiennes / hebdomadaires
+- [x] Missions : 3 du jour (+ bonus), 1 de la semaine — aucune mission de drift
 
 ## Phase 4 — Modes de jeu
 - Contre-la-montre avec fantôme (enregistrement des commandes, rejouable à l'identique)

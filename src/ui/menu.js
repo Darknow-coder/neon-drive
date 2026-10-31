@@ -6,6 +6,7 @@ import { getCar } from '../data/cars.js';
 import { claimableCount } from '../progression/economy.js';
 import { credits as cr } from './icons.js';
 import { shopBadge } from '../progression/shop.js';
+import { missionsBadge, refreshMissions } from '../progression/missions.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -20,6 +21,10 @@ export function renderMenu(save, saveStatus) {
   const n = claimableCount(save);
   $('road-badge').textContent = String(n);
   $('road-badge').classList.toggle('hidden', n === 0);
+  refreshMissions(save);
+  const mb = missionsBadge(save);
+  $('missions-badge').textContent = String(mb);
+  $('missions-badge').classList.toggle('hidden', mb === 0);
   const sb = shopBadge(save);
   $('shop-badge').textContent = String(sb);
   $('shop-badge').classList.toggle('hidden', sb === 0);

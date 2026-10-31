@@ -6,7 +6,7 @@ import { ico } from './icons.js';
 
 const el = (id) => document.getElementById(id);
 
-export function showResults(rows, { trackName, reward = null, training = false, credits = null }) {
+export function showResults(rows, { trackName, reward = null, training = false, credits = null, missions = [] }) {
   const me = rows.find((r) => r.isPlayer);
   const p = me ? me.position : rows.length;
   el('res-place').innerHTML = `${p}<sup>${p === 1 ? 'er' : 'e'}</sup>`;
@@ -39,6 +39,15 @@ export function showResults(rows, { trackName, reward = null, training = false, 
     cb.innerHTML = `<span class="ct">${ico('credit', 'big')}+${credits.total}</span>` +
       credits.lines.map((l) => `<span class="cl">${l.label} <b>+${l.amount}</b></span>`).join('') +
       (credits.shopHint ? `<span class="shop-hint">De quoi t'offrir en boutique : <b>${credits.shopHint}</b></span>` : '');
+  }
+
+  // Missions qui ont progressé
+  const mb = el('res-missions');
+  mb.classList.toggle('hidden', !missions.length);
+  if (missions.length) {
+    const done = missions.filter((c) => c.done).length;
+    mb.innerHTML = `<div class="rt">${done ? `MISSION${done > 1 ? 'S' : ''} ACCOMPLIE${done > 1 ? 'S' : ''} ! RÉCUPÈRE TA RÉCOMPENSE DANS MISSIONS` : 'MISSIONS'}</div>` +
+      missions.map((c) => `<span class="${c.done ? 'ok' : ''}">${c.mission.text} <b>${c.done ? '✓' : `${c.after}/${c.mission.target}`}</b></span>`).join('');
   }
 
   // Trophées et ligue

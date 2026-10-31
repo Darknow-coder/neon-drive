@@ -10,6 +10,8 @@ import { raceCredits, upgradeCar, upgradeCost, carLevel, openPack, buyPack, clai
 import { TROPHY_ROAD, PACKS, UPGRADE_COST } from '../src/data/economy.js';
 import { dayKey, generateOffers, refreshShop, buyOffer, buyPackItem, buyStyle, equipStyle, claimGift, giftAvailable, shopBadge, ownsFinish, racesFor, msUntilMidnight } from '../src/progression/shop.js';
 import { DAILY_GIFTS } from '../src/data/shop.js';
+import { refreshMissions, applyMissionProgress, claimMission, claimDailyBonus, missionsBadge, allDailyDone, weekKey, generateDaily } from '../src/progression/missions.js';
+import { DAILY_TEMPLATES } from '../src/data/missions.js';
 
 let ok = 0, ko = 0;
 const check = (cond, label) => { if (cond) ok++; else { ko++; console.log('  ✗ ' + label); } };
@@ -116,7 +118,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 1, trophies: 120, stats: { races: 20, wins: 4, podiums: 9 }, selectedCar: 'nova' }));
   const l = createSaveStore(st).load();
-  check(l.status === 'ok' && l.data.version === 4 && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v3 sans perte');
+  check(l.status === 'ok' && l.data.version === 5 && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v3 sans perte');
   const fresh = syncUnlocks(l.data);
   check(fresh.map((c) => c.id).join() === 'volt,halo,razor', 'voitures des paliers déjà atteints rendues après migration');
   st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 5, garage: { owned: 'x', liveries: { nova: { body: 'rouge', accent: '#00ff00' } } } }));
@@ -197,7 +199,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 150, garage: { owned: ['nova', 'volt'] }, tutorialDone: true }));
   const d = createSaveStore(st).load().data;
-  check(d.version === 4 && d.credits === 0 && d.road.claimed.length === 0 && d.garage.owned.includes('volt'), 'migration v2 → v3 sans perte');
+  check(d.version === 5 && d.credits === 0 && d.road.claimed.length === 0 && d.garage.owned.includes('volt'), 'migration v2 → v3 sans perte');
   st.setItem('neondrive.save', JSON.stringify({ version: 3, credits: -50, cars: { levels: { nova: 99 }, fragments: { volt: 'x' } }, road: { claimed: [10, 10, 'a'] } }));
   const d2 = createSaveStore(st).load().data;
   check(d2.credits === 0 && d2.cars.levels.nova === 5 && !('volt' in d2.cars.fragments) && d2.road.claimed.join() === '10', 'économie abîmée réparée');
@@ -257,10 +259,48 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 3, trophies: 200, credits: 900, cars: { levels: { nova: 2 } }, road: { claimed: [10] } }));
   const d = createSaveStore(st).load().data;
-  check(d.version === 4 && d.credits === 900 && d.cars.levels.nova === 2 && d.shop.offers.length === 0 && d.cosmetics.finishes.length === 0, 'migration v3 → v4 sans perte');
+  check(d.version === 5 && d.credits === 900 && d.cars.levels.nova === 2 && d.shop.offers.length === 0 && d.cosmetics.finishes.length === 0, 'migration v3 → v4 sans perte');
   st.setItem('neondrive.save', JSON.stringify({ version: 4, shop: { day: 'hier', offers: [{ id: 'x', kind: 'triche', price: -5 }], giftStreak: -2 }, cosmetics: { finishes: ['gold', 'gold', 3] }, garage: { liveries: { nova: { finish: '<script>', motif: 'bolt' } } } }));
   const d2 = createSaveStore(st).load().data;
   check(d2.shop.day === null && d2.shop.offers.length === 0 && d2.shop.giftStreak === 0 && d2.cosmetics.finishes.join() === 'gold' && !d2.garage.liveries.nova.finish && d2.garage.liveries.nova.motif === 'bolt', 'boutique abîmée réparée');
+}
+
+// --- Missions ---
+{
+  const s = defaultSave(); s.trophies = 150; s.createdAt = 777; syncUnlocks(s);
+  const day1 = new Date(2026, 10, 4, 10); // mercredi
+  check(refreshMissions(s, day1) && s.missions.daily.length === 3 && s.missions.weekly, '3 missions du jour + 1 de la semaine');
+  check(s.missions.daily.every((m) => !/drift/i.test(m.text)) && DAILY_TEMPLATES.every((t) => !/drift/i.test(t.text)), 'aucune mission de drift');
+  check(new Set(s.missions.daily.map((m) => m.type)).size === 3, 'trois missions différentes');
+  check(!refreshMissions(s, new Date(2026, 10, 4, 22)), 'missions stables dans la journée');
+  check(weekKey(new Date(2026, 10, 4)) === weekKey(new Date(2026, 10, 8)) && weekKey(new Date(2026, 10, 9)) !== weekKey(new Date(2026, 10, 8)), 'la semaine commence le lundi');
+  // Course parfaite : fait progresser tous les types
+  const race = (o = {}) => ({ position: 1, overtakes: 6, clean: true, rivalBeaten: true, pads: 5, trackId: s.missions.daily.find((m) => m.trackId)?.trackId ?? 'x', carId: s.missions.daily.find((m) => m.carId)?.carId ?? 'nova', credits: 120, ...o });
+  let guard = 0;
+  while (!allDailyDone(s) && guard++ < 20) applyMissionProgress(s, race());
+  check(allDailyDone(s), 'missions du jour terminées');
+  check(missionsBadge(s) === 4, 'pastille : 3 missions + bonus');
+  const c0 = s.credits;
+  const g = claimMission(s, 'd0');
+  check(g && s.missions.daily[0].claimed && (s.credits > c0 || g.gains.length), 'récompense de mission récupérée');
+  check(claimMission(s, 'd0') === null, 'pas de double récompense');
+  claimMission(s, 'd1'); claimMission(s, 'd2');
+  check(claimDailyBonus(s) && claimDailyBonus(s) === null, 'bonus des 3 missions (une seule fois)');
+  // Mission en cours : pas de récompense
+  const s2 = defaultSave(); refreshMissions(s2, day1);
+  check(claimMission(s2, 'd0') === null && missionsBadge(s2) === 0, 'mission non terminée : rien à récupérer');
+  // Une mauvaise course ne fait progresser que ce qu'elle mérite
+  const w0 = s2.missions.weekly.progress;
+  applyMissionProgress(s2, { position: 6, overtakes: 0, clean: false, rivalBeaten: false, pads: 0, trackId: 'x', carId: 'x', credits: 10 });
+  const wType = s2.missions.weekly.type;
+  check(s2.missions.weekly.progress === w0 + (wType === 'races' ? 1 : 0), 'progression juste (6e place)');
+  // Nouveau jour : nouvelles missions, la semaine continue
+  const wk = s.missions.weekly.progress;
+  check(refreshMissions(s, new Date(2026, 10, 5, 9)) && !s.missions.bonusClaimed && s.missions.weekly.progress === wk, 'nouveau jour : nouvelles missions, la mission de la semaine continue');
+  // Voiture : jamais proposée avec une seule voiture
+  let carMission = false;
+  for (let k = 0; k < 60; k++) { const d = defaultSave(); d.createdAt = k; if (generateDaily(d, '2026-01-01').some((m) => m.type === 'car')) carMission = true; }
+  check(!carMission, 'pas de mission « voiture » avec une seule voiture');
 }
 
 console.log(`${ok} vérifications réussies, ${ko} échec(s). Ligues : ${LEAGUES.map((l) => `${l.name} ≥ ${l.min}`).join(', ')}`);

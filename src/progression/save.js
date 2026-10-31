@@ -12,7 +12,7 @@
 
 const KEY = 'neondrive.save';
 const BACKUP_KEY = 'neondrive.save.backup';
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 export function defaultSave() {
   return {
@@ -40,6 +40,8 @@ export function defaultSave() {
     shop: { day: null, offers: [], giftDay: null, giftStreak: 0, seenDay: null },
     // Cosmétiques possédés (utilisables sur toutes les voitures)
     cosmetics: { finishes: [], motifs: [] },
+    // Missions du jour et de la semaine
+    missions: { day: null, daily: [], bonusClaimed: false, week: null, weekly: null },
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
@@ -122,6 +124,17 @@ function sanitize(raw) {
         .map((o) => ({ ...o, bought: !!o.bought }));
     }
   }
+  // Missions
+  const ms = raw.missions;
+  if (ms && typeof ms === 'object') {
+    const isDay = (d) => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d);
+    const okM = (m) => m && typeof m === 'object' && typeof m.id === 'string' && typeof m.type === 'string'
+      && num(m.target, 0) > 0 && num(m.progress, -1) >= 0 && m.reward && typeof m.reward === 'object';
+    const clean = (m) => ({ ...m, progress: Math.min(m.target, Math.floor(m.progress)), claimed: !!m.claimed, text: String(m.text ?? '') });
+    if (isDay(ms.day) && Array.isArray(ms.daily)) { s.missions.day = ms.day; s.missions.daily = ms.daily.filter(okM).map(clean); }
+    s.missions.bonusClaimed = !!ms.bonusClaimed;
+    if (isDay(ms.week) && okM(ms.weekly)) { s.missions.week = ms.week; s.missions.weekly = clean(ms.weekly); }
+  }
   for (const key of ['finishes', 'motifs']) {
     const arr = raw.cosmetics?.[key];
     if (Array.isArray(arr)) s.cosmetics[key] = [...new Set(arr.filter((x) => typeof x === 'string' && /^[a-z]{2,16}$/.test(x)))];
@@ -158,7 +171,12 @@ function migrate(raw) {
     raw.cosmetics ??= { finishes: [], motifs: [] };
     raw.version = 4;
   }
-  // Pour le futur : if (raw.version === 4) { …; raw.version = 5; }
+  // Version 4 → 5 : missions
+  if (raw.version === 4) {
+    raw.missions ??= { day: null, daily: [], bonusClaimed: false, week: null, weekly: null };
+    raw.version = 5;
+  }
+  // Pour le futur : if (raw.version === 5) { …; raw.version = 6; }
   return raw;
 }
 
