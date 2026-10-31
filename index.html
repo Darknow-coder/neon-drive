@@ -164,8 +164,11 @@
     <div class="menu-actions" id="menu-main">
       <button class="start-btn" id="btn-start">COURSE</button>
       <div class="row-btns">
+        <button class="menu-btn badge-host shop-btn" id="btn-shop">BOUTIQUE<span class="badge hidden" id="shop-badge">0</span></button>
         <button class="menu-btn badge-host" id="btn-road">ROUTE<span class="badge hidden" id="road-badge">0</span></button>
         <button class="menu-btn" id="btn-garage">GARAGE</button>
+      </div>
+      <div class="row-btns small-row">
         <button class="menu-btn" id="btn-training">ENTRAÎNEMENT</button>
         <button class="menu-btn icon-btn" id="btn-settings" aria-label="Réglages">⚙</button>
       </div>
@@ -206,6 +209,11 @@
         </div>
         <div class="garage-side">
           <div class="garage-stats" id="garage-stats"></div>
+          <div class="paint-tabs" id="paint-tabs">
+            <button class="on" data-ptab="colors">COULEURS</button>
+            <button data-ptab="style">STYLE</button>
+          </div>
+          <div class="garage-style hidden" id="garage-style"></div>
           <div class="garage-paint" id="garage-paint">
             <div class="paint-label muted">Carrosserie</div>
             <div class="swatches" id="paint-body"></div>
@@ -223,6 +231,38 @@
         </div>
       </div>
       <div class="garage-thumbs" id="garage-thumbs"></div>
+    </div>
+  </div>
+
+  <!-- Boutique -->
+  <div id="shop" class="overlay hidden">
+    <div class="overlay-card shop-card">
+      <div class="garage-head">
+        <button class="menu-btn small-btn" id="shop-back">‹ MENU</button>
+        <div class="overlay-title">BOUTIQUE</div>
+        <div class="shop-wallet"><span class="credit-chip big" id="shop-credits"></span><span class="wallet-delta" id="shop-delta"></span></div>
+      </div>
+      <div class="shop-tabs">
+        <button data-tab="featured" class="on">À LA UNE</button>
+        <button data-tab="packs">PACKS</button>
+        <button data-tab="style">STYLE</button>
+        <div class="shop-timer" id="shop-timer"></div>
+      </div>
+      <div class="shop-body" id="shop-body"></div>
+    </div>
+  </div>
+  <div id="shop-confirm" class="overlay hidden">
+    <div class="overlay-card confirm-card">
+      <div class="confirm-visual" id="confirm-visual"></div>
+      <div class="confirm-info">
+        <div class="confirm-kind" id="confirm-kind"></div>
+        <div class="confirm-title" id="confirm-title"></div>
+        <div class="confirm-desc" id="confirm-desc"></div>
+        <div class="confirm-balance" id="confirm-balance"></div>
+        <button class="menu-btn primary buy-btn" id="confirm-buy"></button>
+        <button class="menu-btn" id="confirm-cancel">ANNULER</button>
+      </div>
+      <div class="confirm-stamp hidden" id="confirm-stamp">ACHETÉ !</div>
     </div>
   </div>
 

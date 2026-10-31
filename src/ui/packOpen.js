@@ -107,7 +107,9 @@ export function showRewards(save, results, { sfx, onClose } = {}) {
     timers.length = 0;
     const r = queue.shift();
     if (!r) { close(); return; }
-    if (r.packId) showPack(r); else showSimple(r);
+    if (r.packId) showPack(r);
+    else if (r.gains?.length) showDirect(r);
+    else showSimple(r);
   }
 
   function reset(color) {
@@ -223,6 +225,13 @@ export function showRewards(save, results, { sfx, onClose } = {}) {
       $('pack-hint').textContent = 'TOUCHE LES CARTES POUR LES RETOURNER';
       $('pack-flipall').classList.remove('hidden');
     }, 200 + cards.length * 180);
+  }
+
+  // ---------- Fragments sans pack (achat direct, cadeau) : cartes distribuées ----------
+  function showDirect(r) {
+    reset('#ffd34d');
+    $('pack-title').textContent = r.title ?? 'FRAGMENTS';
+    dealCards(r, null);
   }
 
   // ---------- Récompense simple ----------

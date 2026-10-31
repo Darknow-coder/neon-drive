@@ -73,9 +73,13 @@ const DEFAULT_DESIGN = {
 
 /** Crée le sprite d'une voiture. Retourne { canvas, scale, ox, oy, w, h }. */
 export function makeCarSprite(def, length = 46, width = 24, colors = def.colors) {
-  const { body, accent, glow } = colors;
+  const { body, accent } = colors;
+  const finish = colors.finish ?? 'standard';
+  const glow = finish === 'gold' ? '#ffd34d' : colors.glow;
   const shape = def.shape;
   const d = { ...DEFAULT_DESIGN, ...(def.design ?? {}) };
+  // Motif choisi par le joueur (boutique) : remplace la décoration d'origine
+  if (colors.motif && colors.motif !== 'origin') d.livery = colors.motif;
   const L = length * d.lm;
   const Wd = width * d.wm;
   const wpx = Math.ceil((L + PAD * 2) * S);
@@ -161,21 +165,23 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
     }
   }
 
-  // ---- Carrosserie (dégradé latéral pour le volume) ----
-  const grad = ctx.createLinearGradient(0, -hw, 0, hw);
-  grad.addColorStop(0, shade(body, -0.55));
-  grad.addColorStop(0.28, shade(body, -0.1));
-  grad.addColorStop(0.5, shade(body, 0.25));
-  grad.addColorStop(0.72, shade(body, -0.1));
-  grad.addColorStop(1, shade(body, -0.55));
+  // ---- Carrosserie (selon la finition choisie) ----
   bodyPath(ctx, shape, L, Wd);
-  ctx.fillStyle = grad;
+  ctx.fillStyle = bodyFill(ctx, finish, body, hl, hw);
   ctx.fill();
+  if (finish === 'carbon' || finish === 'holo' || finish === 'chrome' || finish === 'metal') {
+    ctx.save();
+    bodyPath(ctx, shape, L, Wd);
+    ctx.clip();
+    drawFinishOverlay(ctx, finish, body, hl, hw, L, Wd);
+    ctx.restore();
+  }
+  bodyPath(ctx, shape, L, Wd);
   ctx.save();
   ctx.shadowColor = glow;
   ctx.shadowBlur = 4 * S;
-  ctx.strokeStyle = shade(glow, 0.35);
-  ctx.lineWidth = 0.9;
+  ctx.strokeStyle = finish === 'carbon' ? body : shade(glow, 0.35);
+  ctx.lineWidth = finish === 'carbon' ? 1.3 : 0.9;
   ctx.stroke();
   ctx.restore();
 
@@ -226,6 +232,51 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
       ctx.closePath();
       ctx.fill();
       break;
+    case 'checker': {
+      // Bande à damier le long de l'axe
+      const sq = 2.4;
+      for (let x = -hl, i = 0; x < hl; x += sq, i++) {
+        for (let r = -2; r < 2; r++) if ((i + r) % 2 === 0) ctx.fillRect(x, r * sq, sq, sq);
+      }
+      break;
+    }
+    case 'circuit': {
+      // Pistes électroniques à angles droits, avec pastilles
+      ctx.lineWidth = 0.55;
+      ctx.globalAlpha = 0.95;
+      const paths = [
+        [[hl, -hw * 0.3], [hl * 0.4, -hw * 0.3], [hl * 0.2, -hw * 0.65], [-hl * 0.5, -hw * 0.65], [-hl * 0.7, -hw * 0.35], [-hl, -hw * 0.35]],
+        [[hl, hw * 0.3], [hl * 0.4, hw * 0.3], [hl * 0.2, hw * 0.65], [-hl * 0.5, hw * 0.65], [-hl * 0.7, hw * 0.35], [-hl, hw * 0.35]],
+        [[hl * 0.6, 0], [-hl * 0.9, 0]],
+      ];
+      for (const pts of paths) {
+        ctx.beginPath();
+        pts.forEach(([x, y], k) => (k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+        ctx.stroke();
+        for (const [x, y] of pts.slice(1, -1)) { ctx.beginPath(); ctx.arc(x, y, 0.75, 0, Math.PI * 2); ctx.fill(); }
+      }
+      break;
+    }
+    case 'flames': {
+      // Flammes qui partent du nez vers l'arrière, des deux côtés
+      const fg = ctx.createLinearGradient(hl, 0, -hl * 0.4, 0);
+      fg.addColorStop(0, '#fff3b0');
+      fg.addColorStop(0.35, accent);
+      fg.addColorStop(1, shade(accent, -0.3));
+      ctx.fillStyle = fg;
+      for (const sy of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(hl * 0.95, sy * hw * 0.15);
+        ctx.quadraticCurveTo(hl * 0.3, sy * hw * 0.2, hl * 0.05, sy * hw * 0.55);
+        ctx.quadraticCurveTo(hl * 0.0, sy * hw * 0.25, -hl * 0.25, sy * hw * 0.75);
+        ctx.quadraticCurveTo(-hl * 0.15, sy * hw * 0.35, -hl * 0.6, sy * hw * 0.95);
+        ctx.quadraticCurveTo(-hl * 0.3, sy * hw * 0.6, -hl * 0.05, sy * hw * 0.95);
+        ctx.quadraticCurveTo(hl * 0.2, sy * hw * 0.75, hl * 0.35, sy * hw * 1.0);
+        ctx.quadraticCurveTo(hl * 0.6, sy * hw * 0.55, hl * 0.95, sy * hw * 0.15);
+        ctx.fill();
+      }
+      break;
+    }
     default:
       break;
   }
@@ -248,8 +299,9 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
     ctx.fillRect(-hl, -hw, L, hw * 0.16);
     ctx.fillRect(-hl, hw * 0.84, L, hw * 0.16);
   }
-  // Reflet sur le capot
+  // Reflet sur le capot (aucun reflet sur une finition mate)
   const hood = ctx.createLinearGradient(hl, 0, hl * 0.2, 0);
+  if (finish === 'matte') hood.addColorStop(0, 'rgba(255,255,255,0)'); else
   hood.addColorStop(0, 'rgba(255,255,255,0.25)');
   hood.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = hood;
@@ -363,6 +415,79 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
   ctx.restore();
 
   return { canvas: cv, scale: S, ox: wpx / 2 / S, oy: hpx / 2 / S, w: wpx / S, h: hpx / S };
+}
+
+// ---------------------------------------------------------------------------
+// FINITIONS (cosmétiques de la boutique — aucun effet sur les performances)
+// ---------------------------------------------------------------------------
+function mix(hexA, hexB, t) {
+  const a = parseInt(hexA.slice(1), 16), b = parseInt(hexB.slice(1), 16);
+  const c = (sh) => Math.round(((a >> sh) & 255) * (1 - t) + ((b >> sh) & 255) * t);
+  return `rgb(${c(16)},${c(8)},${c(0)})`;
+}
+
+function bodyFill(ctx, finish, body, hl, hw) {
+  const g = ctx.createLinearGradient(0, -hw, 0, hw);
+  const stops = {
+    standard: [[0, shade(body, -0.55)], [0.28, shade(body, -0.1)], [0.5, shade(body, 0.25)], [0.72, shade(body, -0.1)], [1, shade(body, -0.55)]],
+    metal: [[0, shade(body, -0.65)], [0.2, shade(body, 0.05)], [0.38, shade(body, 0.55)], [0.5, shade(body, 0.1)], [0.66, shade(body, 0.45)], [0.85, shade(body, -0.2)], [1, shade(body, -0.65)]],
+    matte: [[0, shade(body, -0.7)], [0.25, shade(body, -0.42)], [0.75, shade(body, -0.42)], [1, shade(body, -0.7)]],
+    chrome: [[0, '#1d1f2c'], [0.18, mix(body, '#ffffff', 0.75)], [0.32, mix(body, '#3a3d55', 0.6)], [0.48, '#ffffff'], [0.62, mix(body, '#5a5f78', 0.5)], [0.8, mix(body, '#ffffff', 0.6)], [1, '#1d1f2c']],
+    carbon: [[0, '#07070c'], [0.5, '#1b1b26'], [1, '#07070c']],
+    holo: [[0, '#2b6bff'], [1, '#2b6bff']],
+    gold: [[0, '#5a3300'], [0.2, '#c88a10'], [0.4, '#fff1a8'], [0.52, '#ffd34d'], [0.7, '#fff6c8'], [0.85, '#b47a08'], [1, '#5a3300']],
+  }[finish] ?? null;
+  for (const [o, c] of stops ?? []) g.addColorStop(o, c);
+  return stops ? g : body;
+}
+
+function drawFinishOverlay(ctx, finish, body, hl, hw, L, Wd) {
+  if (finish === 'carbon') {
+    // Tissage de fibre de carbone
+    const c = 1.6;
+    for (let x = -hl; x < hl; x += c) {
+      for (let y = -hw; y < hw; y += c) {
+        const odd = (Math.round((x + hl) / c) + Math.round((y + hw) / c)) % 2;
+        ctx.fillStyle = odd ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.25)';
+        ctx.fillRect(x, y, c, c);
+      }
+    }
+    const g = ctx.createLinearGradient(-hl, -hw, hl, hw);
+    g.addColorStop(0.4, 'rgba(255,255,255,0)');
+    g.addColorStop(0.5, 'rgba(255,255,255,0.12)');
+    g.addColorStop(0.6, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(-hl, -hw, L, Wd);
+  } else if (finish === 'holo') {
+    // Arc-en-ciel holographique (en diagonale) + reflet
+    const g = ctx.createLinearGradient(-hl, -hw, hl, hw);
+    ['#ff2bd6', '#ffb000', '#3dff9e', '#00f0ff', '#8a2bff', '#ff2bd6'].forEach((c, i, a) => g.addColorStop(i / (a.length - 1), c));
+    ctx.fillStyle = g;
+    ctx.globalAlpha = 0.9;
+    ctx.fillRect(-hl, -hw, L, Wd);
+    ctx.globalAlpha = 1;
+    const v = ctx.createLinearGradient(0, -hw, 0, hw);
+    v.addColorStop(0, 'rgba(0,0,0,0.45)');
+    v.addColorStop(0.45, 'rgba(255,255,255,0.35)');
+    v.addColorStop(1, 'rgba(0,0,0,0.45)');
+    ctx.fillStyle = v;
+    ctx.fillRect(-hl, -hw, L, Wd);
+  } else if (finish === 'chrome' || finish === 'metal') {
+    // Reflet diagonal brillant
+    const g = ctx.createLinearGradient(-hl, -hw, hl * 0.4, hw);
+    g.addColorStop(0.45, 'rgba(255,255,255,0)');
+    g.addColorStop(0.52, `rgba(255,255,255,${finish === 'chrome' ? 0.6 : 0.3})`);
+    g.addColorStop(0.6, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(-hl, -hw, L, Wd);
+    if (finish === 'metal') {
+      // Paillettes métalliques
+      for (let k = 0; k < 40; k++) {
+        ctx.fillStyle = `rgba(255,255,255,${0.15 + ((k * 37) % 10) / 30})`;
+        ctx.fillRect(-hl + ((k * 53) % 100) / 100 * L, -hw + ((k * 71) % 100) / 100 * Wd, 0.35, 0.35);
+      }
+    }
+  }
 }
 
 function drawCockpit(ctx, type, hl, hw, accent, glow, ring) {

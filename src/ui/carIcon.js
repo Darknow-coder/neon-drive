@@ -7,7 +7,10 @@ export function carIcon(def, colors = def.colors, w = 112, h = 68, { dim = false
   cv.height = h;
   const c = cv.getContext('2d');
   const sp = makeCarSprite(def, 46, 24, colors);
-  const sc = Math.min(w / sp.w, h / sp.h) * 1.35;
+  // La voiture est tournée (nez vers le haut) : sa longueur devient la hauteur.
+  // On cadre sur la carrosserie (sprite sans sa marge de lueur) pour ne rien couper.
+  const carL = sp.w - 44, carW = sp.h - 44;
+  const sc = Math.min((w * 0.9) / carW, (h * 0.8) / carL);
   c.translate(w / 2, h / 2);
   c.rotate(-Math.PI / 2);
   c.drawImage(sp.canvas, -sp.ox * sc, -sp.oy * sc, sp.w * sc, sp.h * sc);

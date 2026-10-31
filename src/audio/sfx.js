@@ -165,6 +165,11 @@ export function createSfx(audio) {
     boostPad() { tone({ freq: 300, type: 'sawtooth', dur: 0.35, vol: 0.08, slide: 3 }); },
     boostReady() { tone({ freq: 1318, type: 'sine', dur: 0.12, vol: 0.06 }); tone({ freq: 1760, type: 'sine', dur: 0.15, vol: 0.05, delay: 0.07 }); },
     click() { tone({ freq: 1200, type: 'square', dur: 0.04, vol: 0.05 }); },
+    // Achat : pièces qui tintent
+    purchase() {
+      [1568, 2093, 2637].forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.18, vol: 0.08, delay: i * 0.06, reverb: 0.3 }));
+      noiseHit({ vol: 0.05, dur: 0.12, freq: 6000, q: 2, delay: 0.02 });
+    },
     // Ouverture de pack : la charge monte, puis l'explosion
     packCharge() {
       if (!audio.ready) return;

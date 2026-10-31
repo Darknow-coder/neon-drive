@@ -12,7 +12,7 @@
 
 const KEY = 'neondrive.save';
 const BACKUP_KEY = 'neondrive.save.backup';
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export function defaultSave() {
   return {
@@ -25,7 +25,7 @@ export function defaultSave() {
     history: [],             // 10 dernières courses
     garage: {
       owned: ['nova'],       // voitures possédées (paliers, et plus tard boutique…)
-      liveries: {},          // { idVoiture: { body, accent } }
+      liveries: {},          // { idVoiture: { body, accent, finish, motif } }
     },
     settings: {
       music: 0.7, sfx: 0.85, vibration: true,
@@ -36,6 +36,10 @@ export function defaultSave() {
     credits: 0,              // monnaie gagnée en course (crédits NEON)
     cars: { levels: {}, fragments: {} }, // niveaux d'amélioration et fragments par voiture
     road: { claimed: [] },   // paliers de la route des trophées déjà récupérés
+    // Boutique : offres du jour, cadeau quotidien
+    shop: { day: null, offers: [], giftDay: null, giftStreak: 0, seenDay: null },
+    // Cosmétiques possédés (utilisables sur toutes les voitures)
+    cosmetics: { finishes: [], motifs: [] },
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
@@ -87,6 +91,8 @@ function sanitize(raw) {
         const clean = {};
         if (isColor(l.body)) clean.body = l.body;
         if (isColor(l.accent)) clean.accent = l.accent;
+        if (typeof l.finish === 'string' && /^[a-z]{2,16}$/.test(l.finish)) clean.finish = l.finish;
+        if (typeof l.motif === 'string' && /^[a-z]{2,16}$/.test(l.motif)) clean.motif = l.motif;
         if (Object.keys(clean).length) s.garage.liveries[id] = clean;
       }
     }
@@ -102,6 +108,23 @@ function sanitize(raw) {
         s.cars[key][id] = key === 'levels' ? Math.max(1, Math.min(5, Math.floor(v))) : Math.floor(v);
       }
     }
+  }
+  // Boutique
+  const sh = raw.shop;
+  if (sh && typeof sh === 'object') {
+    const isDay = (d) => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d);
+    if (isDay(sh.day)) s.shop.day = sh.day;
+    if (isDay(sh.giftDay)) s.shop.giftDay = sh.giftDay;
+    if (isDay(sh.seenDay)) s.shop.seenDay = sh.seenDay;
+    s.shop.giftStreak = Math.floor(num(sh.giftStreak));
+    if (Array.isArray(sh.offers)) {
+      s.shop.offers = sh.offers.filter((o) => o && typeof o.id === 'string' && ['fragments', 'pack', 'finish', 'motif'].includes(o.kind) && num(o.price, -1) >= 0)
+        .map((o) => ({ ...o, bought: !!o.bought }));
+    }
+  }
+  for (const key of ['finishes', 'motifs']) {
+    const arr = raw.cosmetics?.[key];
+    if (Array.isArray(arr)) s.cosmetics[key] = [...new Set(arr.filter((x) => typeof x === 'string' && /^[a-z]{2,16}$/.test(x)))];
   }
   if (Array.isArray(raw.road?.claimed)) s.road.claimed = [...new Set(raw.road.claimed.filter((v) => num(v, -1) > 0))];
   if (raw.rivalsBeaten && typeof raw.rivalsBeaten === 'object') {
@@ -129,7 +152,13 @@ function migrate(raw) {
     raw.road ??= { claimed: [] };
     raw.version = 3;
   }
-  // Pour le futur : if (raw.version === 3) { …; raw.version = 4; }
+  // Version 3 → 4 : boutique et cosmétiques
+  if (raw.version === 3) {
+    raw.shop ??= { day: null, offers: [], giftDay: null, giftStreak: 0, seenDay: null };
+    raw.cosmetics ??= { finishes: [], motifs: [] };
+    raw.version = 4;
+  }
+  // Pour le futur : if (raw.version === 4) { …; raw.version = 5; }
   return raw;
 }
 

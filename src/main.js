@@ -22,6 +22,18 @@ import { createSettingsScreen } from './ui/settings.js';
 import { createTutorial } from './scenes/tutorial.js';
 import { raceCredits, carLevel, claimableCount } from './progression/economy.js';
 import { createRoad } from './ui/road.js';
+import { createShop } from './ui/shop.js';
+import { refreshShop } from './progression/shop.js';
+import { PACKS } from './data/economy.js';
+import { FINISHES, MOTIFS } from './data/shop.js';
+
+/** Nom court d'une offre de la boutique (pour l'écran de résultats). */
+function offerLabel(o) {
+  if (o.kind === 'fragments') return `${getCar(o.carId).name} ×${o.amount} fragments (${o.price})`;
+  if (o.kind === 'pack') return `${PACKS[o.packId].name} (${o.price})`;
+  const it = (o.kind === 'finish' ? FINISHES : MOTIFS).find((x) => x.id === o.itemId);
+  return `${o.kind === 'finish' ? 'finition' : 'motif'} ${it?.name ?? ''} (${o.price})`;
+}
 import { rivalFor } from './data/rivals.js';
 
 const $ = (id) => document.getElementById(id);
@@ -120,7 +132,10 @@ function refreshMenu() {
   $('menu-car').innerHTML = `Voiture : <b>${carName(selectedCar(save))}</b>`;
 }
 
-const garage = createGarage({ save, onSave: persist, onClose: refreshMenu, sfx });
+const shop = createShop({ save, onSave: persist, sfx, onClose: refreshMenu });
+const garage = createGarage({ save, onSave: persist, onClose: refreshMenu, sfx, openShop: (tab) => shop.open(tab) });
+// Offres du jour prêtes dès le lancement
+if (refreshShop(save)) persist();
 const road = createRoad({ save, onSave: persist, sfx, onClose: refreshMenu });
 
 function startRace() {
@@ -155,6 +170,12 @@ function startRace() {
           clean: me.stats.wallHits === 0 && me.finished, rivalBeaten,
         });
         save.credits += credits.total;
+        // Incitation : une offre du jour qu'on peut maintenant s'offrir
+        refreshShop(save);
+        const affordable = save.shop.offers
+          .filter((o) => !o.bought && o.price <= save.credits)
+          .sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || b.price - a.price)[0];
+        if (affordable) credits.shopHint = offerLabel(affordable);
         persist();
       }
       showResults(rows, { trackName: session.trackName, reward, training, credits });
@@ -340,6 +361,7 @@ $('btn-again').addEventListener('click', () => (training ? startTraining() : sta
 $('btn-training').addEventListener('click', () => showTrainingPicker(true));
 $('btn-garage').addEventListener('click', () => garage.open());
 $('btn-road').addEventListener('click', () => road.open());
+$('btn-shop').addEventListener('click', () => shop.open());
 const settingsScreen = createSettingsScreen({
   save,
   onChange: (commit) => { audio.applyVolumes(); applyControls(); if (commit) persist(); },

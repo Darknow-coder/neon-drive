@@ -32,7 +32,7 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Route des trophées (récompenses par palier, rétroactive)
 - [x] Fragments et packs (déblocage anticipé des voitures)
 - [x] Améliorations des voitures (niveaux 1 à 5 ; voitures adverses au niveau de la ligue)
-- Boutique (offres quotidiennes : voitures, peintures, décalcomanies, traînées)
+- [x] Boutique : cadeau quotidien (cycle 7 jours), 6 offres du jour, packs, finitions et motifs (cosmétiques)
 - Missions quotidiennes / hebdomadaires
 
 ## Phase 4 — Modes de jeu

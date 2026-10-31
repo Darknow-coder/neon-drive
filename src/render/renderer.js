@@ -39,7 +39,7 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
   // Un sprite par combinaison voiture + livrée
   function spriteFor(car) {
     const colors = car.livery ?? car.def.colors;
-    const key = car.def.id + colors.body + colors.accent + colors.glow;
+    const key = car.def.id + colors.body + colors.accent + colors.glow + (colors.finish ?? '') + (colors.motif ?? '');
     let s = sprites.get(key);
     if (!s) { s = makeCarSprite(car.def, car.length, car.width, colors); sprites.set(key, s); }
     return s;

@@ -47,8 +47,11 @@ export function nextCarUnlock(save) {
 export function liveryFor(save, carId) {
   const base = getCar(carId).colors;
   const l = save.garage.liveries[carId];
-  if (!l) return { ...base };
-  return { body: l.body ?? base.body, accent: l.accent ?? base.accent, glow: l.body ?? base.glow };
+  if (!l) return { ...base, finish: 'standard', motif: 'origin' };
+  return {
+    body: l.body ?? base.body, accent: l.accent ?? base.accent, glow: l.body ?? base.glow,
+    finish: l.finish ?? 'standard', motif: l.motif ?? 'origin',
+  };
 }
 
 export function setLivery(save, carId, part, color) {

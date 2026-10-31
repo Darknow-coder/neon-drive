@@ -37,7 +37,8 @@ export function showResults(rows, { trackName, reward = null, training = false, 
   cb.classList.toggle('hidden', !credits);
   if (credits) {
     cb.innerHTML = `<span class="ct">${ico('credit', 'big')}+${credits.total}</span>` +
-      credits.lines.map((l) => `<span class="cl">${l.label} <b>+${l.amount}</b></span>`).join('');
+      credits.lines.map((l) => `<span class="cl">${l.label} <b>+${l.amount}</b></span>`).join('') +
+      (credits.shopHint ? `<span class="shop-hint">De quoi t'offrir en boutique : <b>${credits.shopHint}</b></span>` : '');
   }
 
   // Trophées et ligue

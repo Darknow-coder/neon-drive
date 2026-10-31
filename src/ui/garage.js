@@ -6,10 +6,12 @@ import { makeCarSprite } from '../render/carSprite.js';
 import { carLevel, fragmentsOf, upgradeCost, upgradeCar, unlockFragments, unlockWithFragments } from '../progression/economy.js';
 import { MAX_LEVEL } from '../data/economy.js';
 import { ico, credits as cr, iconImage } from './icons.js';
+import { FINISHES, MOTIFS } from '../data/shop.js';
+import { ownsFinish, ownsMotif, equipStyle } from '../progression/shop.js';
 
 const $ = (id) => document.getElementById(id);
 
-export function createGarage({ save, onSave, onClose, sfx }) {
+export function createGarage({ save, onSave, onClose, sfx, openShop }) {
   let index = Math.max(0, CARS.findIndex((c) => c.id === save.selectedCar));
   let raf = 0;
   let angle = -Math.PI / 2;
@@ -116,6 +118,35 @@ export function createGarage({ save, onSave, onClose, sfx }) {
     thumbs.children[index]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
 
+  // Onglets COULEURS / STYLE
+  let ptab = 'colors';
+  document.querySelectorAll('#paint-tabs button').forEach((b) => b.addEventListener('click', () => { ptab = b.dataset.ptab; render(); }));
+  function renderStyleTab() {
+    const c = car();
+    const cur = liveryFor(save, c.id);
+    const box = $('garage-style');
+    box.innerHTML = '';
+    for (const [kind, list, label] of [['finish', FINISHES, 'Finition'], ['motif', MOTIFS, 'Motif']]) {
+      const owned = list.filter((x) => (kind === 'finish' ? ownsFinish : ownsMotif)(save, x.id));
+      const row = document.createElement('div');
+      row.className = 'style-chips';
+      row.insertAdjacentHTML('beforeend', `<span class="chip-label">${label}</span>`);
+      for (const it of owned) {
+        const b = document.createElement('button');
+        b.textContent = it.name;
+        if (cur[kind] === it.id) b.className = 'on';
+        b.addEventListener('click', () => { equipStyle(save, c.id, kind, it.id); onSave(); sfx?.click(); render(); });
+        row.append(b);
+      }
+      box.append(row);
+    }
+    const more = document.createElement('button');
+    more.className = 'style-more';
+    more.textContent = `${FINISHES.length + MOTIFS.length - save.cosmetics.finishes.length - save.cosmetics.motifs.length - 3} styles de plus dans la BOUTIQUE ›`;
+    more.addEventListener('click', () => { close(); openShop?.('style'); });
+    box.append(more);
+  }
+
   function render() {
     renderThumbs();
     const c = car();
@@ -176,7 +207,12 @@ export function createGarage({ save, onSave, onClose, sfx }) {
       row.innerHTML = `<span>${label}</span><div class="stat-bar">${bars}</div><b>${v}</b>`;
       stats.append(row);
     }
-    $('garage-paint').classList.toggle('hidden', !owned);
+    $('paint-tabs').classList.toggle('hidden', !owned);
+    document.querySelectorAll('#paint-tabs button').forEach((b) => b.classList.toggle('on', b.dataset.ptab === ptab));
+    $('garage-paint').classList.toggle('hidden', !owned || ptab !== 'colors');
+    $('garage-style').classList.toggle('hidden', !owned || ptab !== 'style');
+    document.querySelector('.garage-card').classList.toggle('styling', owned && ptab === 'style');
+    if (owned && ptab === 'style') renderStyleTab();
     $('garage-lock').classList.toggle('hidden', owned);
     $('garage-lock').innerHTML = owned ? '' : `${ico('lock')} ${unlockLabel(c)} — aperçu`;
     const sel = $('garage-select');

@@ -8,6 +8,8 @@ import { syncUnlocks, isOwned, liveryFor, setLivery, selectedCar, nextCarUnlock 
 import { CARS } from '../src/data/cars.js';
 import { raceCredits, upgradeCar, upgradeCost, carLevel, openPack, buyPack, claimMilestone, claimableCount, unlockWithFragments, fragmentsOf } from '../src/progression/economy.js';
 import { TROPHY_ROAD, PACKS, UPGRADE_COST } from '../src/data/economy.js';
+import { dayKey, generateOffers, refreshShop, buyOffer, buyPackItem, buyStyle, equipStyle, claimGift, giftAvailable, shopBadge, ownsFinish, racesFor, msUntilMidnight } from '../src/progression/shop.js';
+import { DAILY_GIFTS } from '../src/data/shop.js';
 
 let ok = 0, ko = 0;
 const check = (cond, label) => { if (cond) ok++; else { ko++; console.log('  ✗ ' + label); } };
@@ -114,7 +116,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 1, trophies: 120, stats: { races: 20, wins: 4, podiums: 9 }, selectedCar: 'nova' }));
   const l = createSaveStore(st).load();
-  check(l.status === 'ok' && l.data.version === 3 && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v3 sans perte');
+  check(l.status === 'ok' && l.data.version === 4 && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v3 sans perte');
   const fresh = syncUnlocks(l.data);
   check(fresh.map((c) => c.id).join() === 'volt,halo,razor', 'voitures des paliers déjà atteints rendues après migration');
   st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 5, garage: { owned: 'x', liveries: { nova: { body: 'rouge', accent: '#00ff00' } } } }));
@@ -195,10 +197,67 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 150, garage: { owned: ['nova', 'volt'] }, tutorialDone: true }));
   const d = createSaveStore(st).load().data;
-  check(d.version === 3 && d.credits === 0 && d.road.claimed.length === 0 && d.garage.owned.includes('volt'), 'migration v2 → v3 sans perte');
+  check(d.version === 4 && d.credits === 0 && d.road.claimed.length === 0 && d.garage.owned.includes('volt'), 'migration v2 → v3 sans perte');
   st.setItem('neondrive.save', JSON.stringify({ version: 3, credits: -50, cars: { levels: { nova: 99 }, fragments: { volt: 'x' } }, road: { claimed: [10, 10, 'a'] } }));
   const d2 = createSaveStore(st).load().data;
   check(d2.credits === 0 && d2.cars.levels.nova === 5 && !('volt' in d2.cars.fragments) && d2.road.claimed.join() === '10', 'économie abîmée réparée');
+}
+
+// --- Boutique ---
+{
+  const s = defaultSave(); s.trophies = 160; syncUnlocks(s);
+  const d1 = '2026-10-31', d2 = '2026-11-01';
+  check(refreshShop(s, d1) && s.shop.offers.length === 6, 'offres du jour générées (6)');
+  const snap = JSON.stringify(s.shop.offers);
+  check(!refreshShop(s, d1) && JSON.stringify(s.shop.offers) === snap, 'offres stables dans la journée');
+  check(JSON.stringify(generateOffers(s, d1)) === snap, 'offres reproductibles (même jour, même joueur)');
+  const f = s.shop.offers.find((o) => o.featured);
+  check(f && f.price < f.oldPrice && f.kind === 'fragments', 'offre spéciale en promotion');
+  const ids = s.shop.offers.filter((o) => o.kind === 'fragments').map((o) => o.carId);
+  check(new Set(ids).size === ids.length, 'pas deux fois la même voiture dans les offres');
+  check(refreshShop(s, d2) && JSON.stringify(s.shop.offers) !== snap, 'nouvelles offres le lendemain');
+  // Achats
+  s.credits = 0;
+  const r0 = buyOffer(s, 'frag0');
+  check(!r0.ok && r0.reason === 'credits' && r0.missing === s.shop.offers.find((o) => o.id === 'frag0').price, 'achat refusé : il manque X crédits');
+  s.credits = 5000;
+  const o = s.shop.offers.find((x) => x.id === 'frag1'); const before = fragmentsOf(s, o.carId);
+  check(buyOffer(s, 'frag1').ok && fragmentsOf(s, o.carId) === before + o.amount && s.credits === 5000 - o.price, 'achat de fragments');
+  check(buyOffer(s, 'frag1').reason === 'bought', 'une offre ne s\'achète qu\'une fois');
+  const rp = buyOffer(s, 'pack');
+  check(rp.ok && rp.gains.reduce((a, g) => a + g.amount, 0) === PACKS[rp.packId].fragments, 'pack du jour acheté et ouvert');
+  const st = s.shop.offers.find((x) => x.id === 'style');
+  if (st) check(buyOffer(s, 'style').ok && (st.kind === 'finish' ? ownsFinish(s, st.itemId) : s.cosmetics.motifs.includes(st.itemId)), 'cosmétique du jour acheté');
+  // Onglets PACKS / STYLE
+  const c0 = s.credits;
+  check(buyPackItem(s, 'small').ok && s.credits === c0 - PACKS.small.price, 'pack acheté au prix normal');
+  check(buyStyle(s, 'finish', 'chrome').ok && ownsFinish(s, 'chrome'), 'finition achetée');
+  check(buyStyle(s, 'finish', 'chrome').reason === 'owned', 'pas de double achat de cosmétique');
+  check(equipStyle(s, 'nova', 'finish', 'chrome') && liveryFor(s, 'nova').finish === 'chrome', 'finition équipée sur une voiture');
+  check(!equipStyle(s, 'nova', 'finish', 'gold'), 'impossible d\'équiper une finition non possédée');
+  check(racesFor(130) === 2 && racesFor(1) === 1, 'estimation du nombre de courses');
+  check(msUntilMidnight(new Date(2026, 9, 31, 23, 0, 0)) === 3600000, 'compte à rebours jusqu\'à minuit');
+}
+{
+  // Cadeau quotidien
+  const s = defaultSave();
+  check(giftAvailable(s, 'D1') && shopBadge(s, '2026-01-01') === 2, 'cadeau disponible + offres nouvelles');
+  const g1 = claimGift(s, '2026-01-01');
+  check(g1.credits === DAILY_GIFTS[0].credits && s.credits === g1.credits, 'cadeau jour 1');
+  check(claimGift(s, '2026-01-01') === null, 'un seul cadeau par jour');
+  for (let k = 2; k <= 7; k++) claimGift(s, `2026-01-0${k}`);
+  check(s.shop.giftStreak === 7, 'cycle de 7 jours');
+  const g8 = claimGift(s, '2026-01-15'); // jours ratés : on reprend là où on en était
+  check(g8.index === 0, 'jours ratés : pas de perte, le cycle reprend');
+}
+{
+  const st = memStorage();
+  st.setItem('neondrive.save', JSON.stringify({ version: 3, trophies: 200, credits: 900, cars: { levels: { nova: 2 } }, road: { claimed: [10] } }));
+  const d = createSaveStore(st).load().data;
+  check(d.version === 4 && d.credits === 900 && d.cars.levels.nova === 2 && d.shop.offers.length === 0 && d.cosmetics.finishes.length === 0, 'migration v3 → v4 sans perte');
+  st.setItem('neondrive.save', JSON.stringify({ version: 4, shop: { day: 'hier', offers: [{ id: 'x', kind: 'triche', price: -5 }], giftStreak: -2 }, cosmetics: { finishes: ['gold', 'gold', 3] }, garage: { liveries: { nova: { finish: '<script>', motif: 'bolt' } } } }));
+  const d2 = createSaveStore(st).load().data;
+  check(d2.shop.day === null && d2.shop.offers.length === 0 && d2.shop.giftStreak === 0 && d2.cosmetics.finishes.join() === 'gold' && !d2.garage.liveries.nova.finish && d2.garage.liveries.nova.motif === 'bolt', 'boutique abîmée réparée');
 }
 
 console.log(`${ok} vérifications réussies, ${ko} échec(s). Ligues : ${LEAGUES.map((l) => `${l.name} ≥ ${l.min}`).join(', ')}`);

@@ -95,6 +95,14 @@ et fonctionne hors ligne après une première visite.
 - `src/progression/economy.js` : règles (crédits, améliorations, packs, déblocage par fragments, route).
 - Sauvegarde version 3 (conversion automatique des anciennes sauvegardes).
 
+## Boutique
+
+- `src/data/shop.js` : cadeau quotidien, finitions, motifs, réglages des offres du jour.
+- `src/progression/shop.js` : génération des offres (stables dans la journée, nouvelles à minuit),
+  achats, cadeau quotidien, équipement des cosmétiques.
+- Les cosmétiques (finitions, motifs) n'ont aucun effet sur les performances.
+- Sauvegarde version 4 (conversion automatique).
+
 ## Garage et voitures
 
 - `src/data/cars.js` : voitures (notes 1-10, silhouette, couleurs) et leur mode de déblocage

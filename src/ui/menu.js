@@ -5,6 +5,7 @@ import { rivalFor } from '../data/rivals.js';
 import { getCar } from '../data/cars.js';
 import { claimableCount } from '../progression/economy.js';
 import { credits as cr } from './icons.js';
+import { shopBadge } from '../progression/shop.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -19,6 +20,9 @@ export function renderMenu(save, saveStatus) {
   const n = claimableCount(save);
   $('road-badge').textContent = String(n);
   $('road-badge').classList.toggle('hidden', n === 0);
+  const sb = shopBadge(save);
+  $('shop-badge').textContent = String(sb);
+  $('shop-badge').classList.toggle('hidden', sb === 0);
   $('menu-trophies-word').textContent = save.trophies > 1 ? 'trophées' : 'trophée';
   $('menu-league-fill').style.width = `${Math.round(leagueProgress(save.trophies) * 100)}%`;
   $('menu-league-next').textContent = next
