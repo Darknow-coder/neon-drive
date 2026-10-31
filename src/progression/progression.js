@@ -28,10 +28,10 @@ export function pickTrack(save, rng = Math.random) {
  * Applique le résultat d'une course à la sauvegarde (la modifie) et
  * retourne un résumé pour l'écran de résultats.
  */
-export function applyRaceResult(save, { position, trackId, carId, bestLap, rivalId = null, rivalBeaten = false }) {
+export function applyRaceResult(save, { position, trackId, carId, bestLap, rivalId = null, rivalBeaten = false, trophyTable = TROPHY_REWARDS }) {
   const before = save.trophies;
   const oldLeague = leagueFor(before);
-  const base = TROPHY_REWARDS[position - 1] ?? 0;
+  const base = trophyTable[position - 1] ?? 0;
   // Bonus pour avoir fini devant le rival de la ligue
   const rivalBonus = rivalId && rivalBeaten ? RIVAL_BONUS : 0;
   const gained = base + rivalBonus;

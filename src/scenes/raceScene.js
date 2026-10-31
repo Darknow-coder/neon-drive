@@ -16,7 +16,7 @@ import { computeResults, randomGrid } from '../race/results.js';
 
 const PLAYER_COLORS = { body: '#00f0ff', accent: '#ff2bd6', glow: '#00f0ff' };
 
-export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, rival = false, playerLevel = 1, timeTrial = false, onRespawn = null, gridOrder = null, onFinish }) {
+export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, rival = false, playerLevel = 1, timeTrial = false, onRespawn = null, gridOrder = null, quietLaps = false, onFinish }) {
   const track = buildTrack(getTrackData(trackId));
   const trackRenderer = createTrackRenderer(track, { lowEnd });
   const particles = createParticles(lowEnd ? 320 : 520);
@@ -145,7 +145,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       message = 'GO !';
       messageTimer = 0.1;
     }
-    if (!timeTrial && player.laps.lap > lapBefore && lapBefore >= 1 && !player.finished) {
+    if (!timeTrial && !quietLaps && player.laps.lap > lapBefore && lapBefore >= 1 && !player.finished) {
       const isBest = player.laps.lastLap <= player.laps.bestLap;
       message = player.laps.lap === laps ? 'DERNIER TOUR !' : `${isBest ? 'MEILLEUR TOUR ' : 'Tour '}${formatTime(player.laps.lastLap)}`;
       messageTimer = 2.5;
@@ -184,7 +184,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
     hud.update({
       car: player,
       lap: Math.min(player.laps.lap, laps),
-      laps,
+      laps: quietLaps ? 0 : laps,
       lapTime: player.laps.lapTime,
       bestLap: player.laps.bestLap,
       lastMsg: message,
@@ -194,6 +194,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       rival: rivalCar ? { name: rivalCar.name, position: rivalCar.position } : null,
       timeTrial,
       delta: scene.delta ?? null,
+      elim: scene.elim ?? null,
     });
   }
 

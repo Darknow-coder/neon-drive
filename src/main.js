@@ -28,6 +28,8 @@ import { createMissions } from './ui/missions.js';
 import { createTimeTrial } from './scenes/timeTrial.js';
 import { createTimeTrialSelect } from './ui/timeTrialSelect.js';
 import { createCupScreens } from './ui/cup.js';
+import { createElimination } from './scenes/elimination.js';
+import { ELIM_TROPHIES } from './data/elimination.js';
 import { startCup, cupGrid, applyCupRace, finishCup, abandonCup, PLAYER } from './progression/cup.js';
 import { computeResults } from './race/results.js';
 import { LEAGUES } from './data/progression.js';
@@ -166,44 +168,7 @@ function startRace() {
     settings: save.settings,
     rival: !training, // le rival de la ligue est présent en course classée
     playerLevel: carLevel(save, carId),
-    onFinish: (rows) => {
-      state = 'results';
-      setRaceUi(false);
-      let reward = null;
-      let credits = null;
-      let missionChanges = [];
-      if (!training) {
-        const me = rows.find((r) => r.isPlayer);
-        const rv = rows.find((r) => r.isRival);
-        const rivalBeaten = !!rv && me.position < rv.position;
-        reward = applyRaceResult(save, {
-          position: me.position, trackId, carId, bestLap: me.bestLap,
-          rivalId: session.rival?.id ?? null, rivalBeaten,
-        });
-        credits = raceCredits({
-          position: me.position, driftTime: me.stats.drift, overtakes: me.stats.overtakes,
-          clean: me.stats.wallHits === 0 && me.finished, rivalBeaten,
-        });
-        save.credits += credits.total;
-        // Incitation : une offre du jour qu'on peut maintenant s'offrir
-        refreshShop(save);
-        const affordable = save.shop.offers
-          .filter((o) => !o.bought && o.price <= save.credits)
-          .sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || b.price - a.price)[0];
-        if (affordable) credits.shopHint = offerLabel(affordable);
-        // Missions
-        refreshMissions(save);
-        missionChanges = applyMissionProgress(save, {
-          position: me.position, overtakes: me.stats.overtakes, clean: me.stats.wallHits === 0 && me.finished,
-          rivalBeaten, pads: me.stats.pads, trackId, carId, credits: credits.total,
-        });
-        persist();
-      }
-      showResults(rows, { trackName: session.trackName, reward, training, credits, missions: missionChanges });
-      sfx.stopCar();
-      if (reward?.unlockedCars?.length || reward?.promoted) setTimeout(() => sfx.unlock(), 900);
-      updateMusic();
-    },
+    onFinish: (rows) => handleRaceFinish(rows),
   });
   input.reset();
   hideResults();
@@ -306,6 +271,47 @@ function cupRaceDone(rows, abandoned = false) {
   });
 }
 
+/** Fin d'une course classée (ou d'élimination) : trophées, crédits, missions, résultats. */
+function handleRaceFinish(rows, { trophyTable } = {}) {
+  state = 'results';
+  setRaceUi(false);
+  let reward = null;
+  let credits = null;
+  let missionChanges = [];
+  if (!training) {
+    const me = rows.find((r) => r.isPlayer);
+    const rv = rows.find((r) => r.isRival);
+    const rivalBeaten = !!rv && me.position < rv.position;
+    reward = applyRaceResult(save, {
+      position: me.position, trackId, carId, bestLap: me.bestLap,
+      rivalId: session.rival?.id ?? null, rivalBeaten, ...(trophyTable ? { trophyTable } : {}),
+    });
+    credits = raceCredits({
+      position: me.position, driftTime: me.stats.drift, overtakes: me.stats.overtakes,
+      clean: me.stats.wallHits === 0 && me.finished, rivalBeaten,
+    });
+    save.credits += credits.total;
+    // Incitation : une offre du jour qu'on peut maintenant s'offrir
+    refreshShop(save);
+    const affordable = save.shop.offers
+      .filter((o) => !o.bought && o.price <= save.credits)
+      .sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || b.price - a.price)[0];
+    if (affordable) credits.shopHint = offerLabel(affordable);
+    // Missions
+    refreshMissions(save);
+    missionChanges = applyMissionProgress(save, {
+      position: me.position, overtakes: me.stats.overtakes, clean: me.stats.wallHits === 0 && me.finished,
+      rivalBeaten, pads: me.stats.pads, trackId, carId, credits: credits.total,
+    });
+    persist();
+  }
+  showResults(rows, { trackName: session.trackName, reward, training, credits, missions: missionChanges });
+  sfx.stopCar();
+  if (reward?.unlockedCars?.length || reward?.promoted) setTimeout(() => sfx.unlock(), 900);
+  updateMusic();
+
+}
+
 function pause() {
   state = 'pause';
   loop.stop();
@@ -391,6 +397,40 @@ function startTimeTrial(id) {
   state = 'race';
   updateMusic();
   loop.start();
+}
+
+/** Mode Élimination : circuit tiré au sort dans la ligue, rival présent. */
+function startElimination(withReveal = true) {
+  if (!save.tutorialDone) { startTutorial(); return; }
+  training = false;
+  const league = leagueFor(save.trophies).id;
+  const go = () => {
+    carId = selectedCar(save);
+    session?.dispose();
+    session = createElimination({
+      renderer, input, hud, lowEnd, trackId, carId, league,
+      playerColors: liveryFor(save, carId), sfx, settings: save.settings,
+      playerLevel: carLevel(save, carId),
+      onFinish: (rows) => handleRaceFinish(rows, { trophyTable: ELIM_TROPHIES }),
+    });
+    input.reset();
+    hideResults();
+    show('pause', false);
+    show('start', false);
+    setRaceUi(true);
+    state = 'race';
+    updateMusic();
+    loop.start();
+  };
+  trackId = pickTrack(save).id;
+  if (!withReveal) return go();
+  state = 'reveal';
+  show('start', false);
+  hideResults();
+  show('pause', false);
+  setRaceUi(false);
+  updateMusic();
+  revealTrack(tracksForLeague(league), getTrackData(trackId), go, rivalFor(league), 'ÉLIMINATION');
 }
 
 /** Course classée : circuit tiré au sort parmi ceux de la ligue du joueur. */
@@ -495,7 +535,7 @@ $('btn-tuning').addEventListener('click', () => tuning.toggle());
 $('btn-pause').addEventListener('click', () => state === 'race' && pause());
 $('btn-resume').addEventListener('click', resume);
 // « Recommencer » relance le même circuit (sans trophées pour la course abandonnée)
-$('btn-restart').addEventListener('click', () => (session?.isTutorial ? startTutorial() : session?.isTimeTrial ? startTimeTrial(session.trackId) : startRace()));
+$('btn-restart').addEventListener('click', () => (session?.isTutorial ? startTutorial() : session?.isTimeTrial ? startTimeTrial(session.trackId) : session?.isElimination ? startElimination(false) : startRace()));
 $('btn-quit').addEventListener('click', () => {
   if (session?.isCup && save.cup) {
     show('pause', false);
@@ -503,8 +543,9 @@ $('btn-quit').addEventListener('click', () => {
   } else backToMenu();
 });
 $('btn-cup').addEventListener('click', openCup);
+$('btn-elim').addEventListener('click', () => { enterFullscreenOnMobile(); startElimination(); });
 // « Rejouer » : nouvelle course classée (nouveau tirage) ou même circuit en entraînement
-$('btn-again').addEventListener('click', () => (training ? startTraining() : startRankedRace()));
+$('btn-again').addEventListener('click', () => (session?.isElimination ? startElimination() : training ? startTraining() : startRankedRace()));
 $('btn-training').addEventListener('click', () => showTrainingPicker(true));
 $('btn-garage').addEventListener('click', () => garage.open());
 $('btn-road').addEventListener('click', () => road.open());

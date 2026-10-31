@@ -190,6 +190,16 @@ export function createRaceWorld(opts) {
   }
 
   world.step = step;
+  /** Retire une voiture de la course (mode Élimination). */
+  world.eliminate = (car) => {
+    car.eliminated = true;
+    car.eliminatedAt = world.time;
+    const i = cars.indexOf(car);
+    if (i >= 0) cars.splice(i, 1);
+    const j = world.order.indexOf(car);
+    if (j >= 0) world.order.splice(j, 1);
+    rank();
+  };
   /** Le joueur ne peut plus changer de place (tout le monde est arrivé sauf lui). */
   world.playerPositionLocked = () =>
     !!world.player && cars.every((c) => c.finished || c === world.player);

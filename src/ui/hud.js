@@ -15,6 +15,9 @@ export function createHud() {
     msg: document.getElementById('hud-msg'),
     rival: document.getElementById('hud-rival'),
     delta: document.getElementById('hud-delta'),
+    elimLine: document.getElementById('hud-elim'),
+    danger: document.getElementById('hud-danger'),
+    count: document.getElementById('hud-count'),
     time: document.getElementById('hud-time'),
     best: document.getElementById('hud-best'),
     speed: document.getElementById('hud-speed'),
@@ -32,9 +35,21 @@ export function createHud() {
 
   return {
     show(v) { el.root.classList.toggle('hidden', !v); },
-    update({ car, lap, laps, lapTime, bestLap, lastMsg, position, total, big, rival = null, timeTrial = false, delta = null }) {
+    update({ car, lap, laps, lapTime, bestLap, lastMsg, position, total, big, rival = null, timeTrial = false, delta = null, elim = null }) {
       set('lap', el.lap, lap > 0 ? String(lap) : '–');
-      set('laps', el.laps, timeTrial ? '' : `/${laps}`);
+      set('laps', el.laps, timeTrial || !laps ? '' : `/${laps}`);
+      // Mode Élimination
+      const eTxt = elim ? `ÉLIMINATION ${elim.round}/${elim.rounds} · ${elim.left} EN PISTE` : '';
+      if (cache.eTxt !== eTxt) { cache.eTxt = eTxt; el.elimLine.textContent = eTxt; el.elimLine.classList.toggle('hidden', !eTxt); }
+      const dg = !!elim?.danger;
+      if (cache.dg !== dg) { cache.dg = dg; el.danger.classList.toggle('hidden', !dg); }
+      const cTxt = elim?.countdown ? String(elim.countdown) : '';
+      if (cache.cTxt !== cTxt) {
+        cache.cTxt = cTxt;
+        el.count.textContent = cTxt ? `ÉLIMINATION DANS ${cTxt}` : '';
+        el.count.classList.toggle('hidden', !cTxt);
+        el.count.classList.toggle('me', dg);
+      }
       if (cache.tt !== timeTrial) { cache.tt = timeTrial; el.root.classList.toggle('tt', timeTrial); }
       // Écart avec le fantôme (contre-la-montre)
       const dTxt = delta === null ? '' : `${delta.label} ${delta.value < 0 ? '−' : '+'}${Math.abs(delta.value).toFixed(2)} s`;

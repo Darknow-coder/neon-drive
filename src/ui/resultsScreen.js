@@ -22,13 +22,13 @@ export function showResults(rows, { trackName, reward = null, training = false, 
     if (r.isPlayer) tr.className = 'me';
     else if (r.isRival) tr.className = 'rival';
     // Encore en piste : temps estimé s'il est proche de l'arrivée, sinon « non terminé »
-    const far = r.estimated && r.gap > 15;
+    const far = r.estimated && r.gap > 15 && !r.label;
     const time = far ? 'NON TERMINÉ' : r.position === 1 ? formatTime(r.time) : `+${r.gap.toFixed(2)} s`;
     tr.innerHTML = `
       <td class="pos">${r.position}</td>
       <td class="name"><i style="background:${r.colors.body};box-shadow:0 0 6px ${r.colors.glow}"></i>${r.isPlayer ? 'TOI' : r.isRival ? `★ ${r.name}` : r.name}</td>
       <td class="hide-narrow">${r.car}</td>
-      <td class="${r.estimated ? 'est' : ''}">${time}${r.estimated && !far ? ' ~' : ''}</td>
+      <td class="${r.estimated ? 'est' : ''}">${r.label ?? `${time}${r.estimated && !far ? ' ~' : ''}`}</td>
       <td class="hide-narrow ${r.bestLap === bestOfRace ? 'best' : ''}">${formatTime(r.bestLap)}</td>`;
     tbody.append(tr);
   }

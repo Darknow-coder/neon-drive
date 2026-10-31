@@ -129,6 +129,22 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     for (const car of cars) {
+      // Mode Élimination : la voiture menacée est signalée en rouge
+      if (car.danger) {
+        const x = lerp(car.prevX, car.x, alpha);
+        const y = lerp(car.prevY, car.y, alpha);
+        const pulse = 0.55 + 0.45 * Math.sin((scene.time || 0) * 12);
+        ctx.strokeStyle = `rgba(255,43,90,${pulse})`;
+        ctx.lineWidth = fs * 0.25;
+        ctx.beginPath(); ctx.arc(x, y, 34, 0, Math.PI * 2); ctx.stroke();
+        const label = car.isPlayer ? 'DANGER !' : `DANGER · ${car.name}`;
+        const w = ctx.measureText(label).width + fs * 0.8;
+        ctx.fillStyle = `rgba(255,43,90,${0.75 + 0.25 * pulse})`;
+        ctx.fillRect(x - w / 2, y - 30 - fs * 1.15, w, fs * 1.25);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(label, x, y - 30);
+        continue;
+      }
       if (car.isPlayer && cars.length > 1) {
         // Marqueur au-dessus du joueur : un chevron cyan qui pulse doucement
         const x = lerp(car.prevX, car.x, alpha);

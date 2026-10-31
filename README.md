@@ -124,6 +124,13 @@ et fonctionne hors ligne après une première visite.
   grille (tirage puis ordre inverse du classement), points, fin de coupe.
 - La coupe en cours est sauvegardée (version 7) : on peut la reprendre plus tard.
 
+## Élimination
+
+- `src/scenes/eliminator.js` : la règle (à chaque tour du leader, la dernière voiture sort).
+- `src/scenes/elimination.js` : la scène (alerte DANGER, compte à rebours, explosion, fin de course).
+- `src/data/elimination.js` : trophées par place et délais d'alerte.
+- `node tools/eliminationCheck.js` : vérifie la règle sur chaque circuit.
+
 ## Garage et voitures
 
 - `src/data/cars.js` : voitures (notes 1-10, silhouette, couleurs) et leur mode de déblocage

@@ -38,7 +38,8 @@ son et musique générés par code, application installable et hors ligne.
 ## Phase 4 — Modes de jeu  ⏳ en cours
 - [x] Contre-la-montre avec fantôme (record + fantôme NEON), 4 médailles par circuit
 - [x] Coupe : 3 courses, mêmes adversaires, points, grille inversée, podium et récompenses
-- [ ] Élimination, Événements hebdomadaires
+- [x] Élimination : le dernier sort à chaque tour du leader, alerte DANGER, compte à rebours
+- [ ] Événements hebdomadaires
 
 ## Phase 5 — Saisons
 - Saisons de ~4 semaines, récompenses de fin de saison, passe de saison gratuit, thème par saison

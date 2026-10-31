@@ -165,6 +165,18 @@ export function createSfx(audio) {
     boostPad() { tone({ freq: 300, type: 'sawtooth', dur: 0.35, vol: 0.08, slide: 3 }); },
     boostReady() { tone({ freq: 1318, type: 'sine', dur: 0.12, vol: 0.06 }); tone({ freq: 1760, type: 'sine', dur: 0.15, vol: 0.05, delay: 0.07 }); },
     click() { tone({ freq: 1200, type: 'square', dur: 0.04, vol: 0.05 }); },
+    // Élimination : explosion grave + chute
+    eliminate() {
+      noiseHit({ vol: 0.45, dur: 0.7, freq: 500, q: 0.4 });
+      tone({ freq: 160, type: 'sawtooth', dur: 0.8, vol: 0.12, slide: 0.25, reverb: 0.5 });
+      tone({ freq: 60, type: 'sine', dur: 0.6, vol: 0.5, slide: 0.5 });
+    },
+    // Alerte quand le joueur est dernier (plus aigu à mesure que l'élimination approche)
+    dangerBeep(n) {
+      const f = n <= 1 ? 1320 : n === 2 ? 1100 : 880;
+      tone({ freq: f, type: 'square', dur: 0.12, vol: 0.09 });
+      tone({ freq: f * 1.5, type: 'square', dur: 0.12, vol: 0.05, delay: 0.13 });
+    },
     // Achat : pièces qui tintent
     purchase() {
       [1568, 2093, 2637].forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.18, vol: 0.08, delay: i * 0.06, reverb: 0.3 }));

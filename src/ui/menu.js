@@ -55,7 +55,7 @@ export function renderMenu(save, saveStatus) {
 }
 
 /** Animation de tirage au sort du circuit. Appelle `done` à la fin. */
-export function revealTrack(pool, chosen, done, rival = null) {
+export function revealTrack(pool, chosen, done, rival = null, mode = null) {
   const el = $('reveal');
   const name = $('reveal-name');
   const prof = $('reveal-profile');
@@ -63,6 +63,7 @@ export function revealTrack(pool, chosen, done, rival = null) {
   prof.textContent = '';
   name.classList.remove('landed');
   const rvEl = $('reveal-rival');
+  document.querySelector('.reveal-label').textContent = mode ? `${mode} — CIRCUIT TIRÉ AU SORT` : 'CIRCUIT TIRÉ AU SORT';
   rvEl.classList.add('hidden');
   let k = 0;
   const steps = 12;
