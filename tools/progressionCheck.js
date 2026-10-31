@@ -205,7 +205,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
 
 // --- Boutique ---
 {
-  const s = defaultSave(); s.trophies = 160; syncUnlocks(s);
+  const s = defaultSave(); s.trophies = 160; s.createdAt = 12345; syncUnlocks(s);
   const d1 = '2026-10-31', d2 = '2026-11-01';
   check(refreshShop(s, d1) && s.shop.offers.length === 6, 'offres du jour générées (6)');
   const snap = JSON.stringify(s.shop.offers);
@@ -231,10 +231,13 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   // Onglets PACKS / STYLE
   const c0 = s.credits;
   check(buyPackItem(s, 'small').ok && s.credits === c0 - PACKS.small.price, 'pack acheté au prix normal');
-  check(buyStyle(s, 'finish', 'chrome').ok && ownsFinish(s, 'chrome'), 'finition achetée');
-  check(buyStyle(s, 'finish', 'chrome').reason === 'owned', 'pas de double achat de cosmétique');
-  check(equipStyle(s, 'nova', 'finish', 'chrome') && liveryFor(s, 'nova').finish === 'chrome', 'finition équipée sur une voiture');
-  check(!equipStyle(s, 'nova', 'finish', 'gold'), 'impossible d\'équiper une finition non possédée');
+  // (on prend une finition pas encore possédée : l'offre du jour a pu en donner une)
+  const fin = ['chrome', 'carbon', 'matte'].find((id) => !ownsFinish(s, id));
+  check(buyStyle(s, 'finish', fin).ok && ownsFinish(s, fin), 'finition achetée');
+  check(buyStyle(s, 'finish', fin).reason === 'owned', 'pas de double achat de cosmétique');
+  check(equipStyle(s, 'nova', 'finish', fin) && liveryFor(s, 'nova').finish === fin, 'finition équipée sur une voiture');
+  const notOwned = ['gold', 'holo', 'carbon', 'metal'].find((id) => !ownsFinish(s, id));
+  check(!equipStyle(s, 'nova', 'finish', notOwned), 'impossible d\'équiper une finition non possédée');
   check(racesFor(130) === 2 && racesFor(1) === 1, 'estimation du nombre de courses');
   check(msUntilMidnight(new Date(2026, 9, 31, 23, 0, 0)) === 3600000, 'compte à rebours jusqu\'à minuit');
 }
