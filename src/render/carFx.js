@@ -1,0 +1,84 @@
+// Effets visuels produits par une voiture : traces de pneus, fumée de drift,
+// flammes du boost, étincelles lors des chocs. Appelé à chaque pas physique.
+
+import { P_SMOKE, P_SPARK, P_FLAME } from './particles.js';
+
+export function createCarFx() {
+  return { skidTimer: 0, lastWheels: null, smokeAcc: 0, flameAcc: 0 };
+}
+
+function rearWheels(car) {
+  const fx = Math.cos(car.angle), fy = Math.sin(car.angle);
+  const bx = car.x - fx * car.length * 0.3;
+  const by = car.y - fy * car.length * 0.3;
+  const w = car.width * 0.42;
+  return [bx - fy * w, by + fx * w, bx + fy * w, by - fx * w];
+}
+
+export function updateCarFx(fx, car, dt, particles, trackRenderer, impactThisStep) {
+  const glow = car.def.colors.glow;
+  const sliding = car.drifting || Math.abs(car.vR) > 140 || (car.braking && car.speed > 260);
+  const wheels = rearWheels(car);
+
+  // Traces de pneus
+  fx.skidTimer += dt;
+  if (sliding && car.speed > 80) {
+    if (fx.lastWheels && fx.skidTimer > 1 / 40) {
+      const a = Math.min(1, 0.35 + Math.abs(car.vR) / 400);
+      const lw = fx.lastWheels;
+      trackRenderer.addSkid(lw[0], lw[1], wheels[0], wheels[1], a, glow);
+      trackRenderer.addSkid(lw[2], lw[3], wheels[2], wheels[3], a, glow);
+      fx.lastWheels = wheels;
+      fx.skidTimer = 0;
+    } else if (!fx.lastWheels) {
+      fx.lastWheels = wheels;
+      fx.skidTimer = 0;
+    }
+  } else {
+    fx.lastWheels = null;
+  }
+
+  // Fumée de drift (teintée de la couleur de la voiture)
+  if (car.drifting && car.speed > 150) {
+    fx.smokeAcc += dt * (30 + Math.abs(car.vR) * 0.08);
+    while (fx.smokeAcc >= 1) {
+      fx.smokeAcc -= 1;
+      const k = Math.random() < 0.5 ? 0 : 2;
+      const col = Math.random() < 0.5 ? glow : '#b9a8ff';
+      particles.spawn(P_SMOKE,
+        wheels[k] + (Math.random() - 0.5) * 6, wheels[k + 1] + (Math.random() - 0.5) * 6,
+        car.vx * 0.15 + (Math.random() - 0.5) * 50, car.vy * 0.15 + (Math.random() - 0.5) * 50,
+        0.6 + Math.random() * 0.5, 9, 26, col);
+    }
+  }
+
+  // Flammes du boost
+  if (car.boosting) {
+    const fxv = Math.cos(car.angle), fyv = Math.sin(car.angle);
+    fx.flameAcc += dt * 90;
+    while (fx.flameAcc >= 1) {
+      fx.flameAcc -= 1;
+      const bx = car.x - fxv * car.length * 0.55;
+      const by = car.y - fyv * car.length * 0.55;
+      const sp = 180 + Math.random() * 160;
+      const col = Math.random() < 0.6 ? '#ff2bd6' : '#7af7ff';
+      particles.spawn(P_FLAME,
+        bx + (Math.random() - 0.5) * 8, by + (Math.random() - 0.5) * 8,
+        car.vx - fxv * sp, car.vy - fyv * sp,
+        0.18 + Math.random() * 0.12, 9 + Math.random() * 5, -10, col);
+    }
+  }
+
+  // Étincelles lors d'un choc
+  if (impactThisStep > 90) {
+    const n = Math.min(26, 4 + Math.floor(impactThisStep / 25));
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 150 + Math.random() * impactThisStep * 1.2;
+      particles.spawn(P_SPARK, car.impactX, car.impactY,
+        Math.cos(a) * sp + car.vx * 0.4, Math.sin(a) * sp + car.vy * 0.4,
+        0.25 + Math.random() * 0.3, 1.5 + Math.random() * 1.5, 0,
+        Math.random() < 0.5 ? '#fff6c2' : '#7af7ff');
+    }
+  }
+}
