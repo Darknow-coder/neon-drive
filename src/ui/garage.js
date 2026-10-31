@@ -3,10 +3,12 @@
 import { CARS, PAINT_COLORS, STAT_LABELS, getCar } from '../data/cars.js';
 import { isOwned, liveryFor, setLivery, unlockLabel } from '../progression/garage.js';
 import { makeCarSprite } from '../render/carSprite.js';
+import { carLevel, fragmentsOf, upgradeCost, upgradeCar, unlockFragments, unlockWithFragments } from '../progression/economy.js';
+import { MAX_LEVEL } from '../data/economy.js';
 
 const $ = (id) => document.getElementById(id);
 
-export function createGarage({ save, onSave, onClose }) {
+export function createGarage({ save, onSave, onClose, sfx }) {
   let index = Math.max(0, CARS.findIndex((c) => c.id === save.selectedCar));
   let raf = 0;
   let angle = -Math.PI / 2;
@@ -108,6 +110,7 @@ export function createGarage({ save, onSave, onClose }) {
       b.append(cv);
       b.append(document.createTextNode(c.name));
       if (!owned) { const lk = document.createElement('span'); lk.className = 'lk'; lk.textContent = '🔒'; b.append(lk); }
+      else { const lv = document.createElement('span'); lv.className = 'lvl'; lv.textContent = `N${carLevel(save, c.id)}`; b.append(lv); }
       b.addEventListener('click', () => { index = k; render(); });
       thumbs.append(b);
     });
@@ -122,6 +125,48 @@ export function createGarage({ save, onSave, onClose }) {
     $('garage-name').textContent = c.name;
     $('garage-tagline').textContent = c.tagline;
     $('garage-count').textContent = `${save.garage.owned.length} / ${CARS.length} voitures`;
+    $('garage-credits').textContent = `⚡ ${save.credits}`;
+    // Niveau, fragments et amélioration / déblocage anticipé
+    const lvl = carLevel(save, c.id);
+    const have = fragmentsOf(save, c.id);
+    const upBtn = $('garage-upgrade');
+    upBtn.classList.remove('can');
+    if (owned) {
+      $('garage-level').innerHTML = `NIVEAU <b>${lvl}</b> / ${MAX_LEVEL}${lvl > 1 ? ` · performances +${((lvl - 1) * 1.1).toFixed(1)} %` : ''}`;
+      const cost = upgradeCost(save, c.id);
+      if (cost) {
+        $('frag-text').textContent = `Fragments ${c.name}`;
+        $('frag-num').textContent = `${have} / ${cost.fragments}`;
+        $('frag-fill').style.width = `${Math.min(100, (have / cost.fragments) * 100)}%`;
+        const can = have >= cost.fragments && save.credits >= cost.credits;
+        upBtn.textContent = `AMÉLIORER → NIV. ${cost.level} (⚡ ${cost.credits} + ${cost.fragments} fragments)`;
+        upBtn.disabled = !can;
+        upBtn.classList.toggle('can', can);
+        $('garage-frags').classList.remove('hidden');
+      } else {
+        upBtn.textContent = 'NIVEAU MAXIMUM ✓';
+        upBtn.disabled = true;
+        $('garage-frags').classList.add('hidden');
+      }
+      upBtn.onclick = () => {
+        const r = upgradeCar(save, c.id);
+        if (r.ok) { onSave(); sfx?.unlock(); render(); }
+      };
+    } else {
+      $('garage-level').textContent = '';
+      const need = unlockFragments(c.id);
+      $('frag-text').textContent = 'Fragments pour la débloquer tout de suite';
+      $('frag-num').textContent = `${have} / ${need}`;
+      $('frag-fill').style.width = `${Math.min(100, (have / need) * 100)}%`;
+      $('garage-frags').classList.remove('hidden');
+      const can = have >= need;
+      upBtn.textContent = can ? 'DÉBLOQUER AVEC LES FRAGMENTS' : 'Fragments dans les packs (route, boutique)';
+      upBtn.disabled = !can;
+      upBtn.classList.toggle('can', can);
+      upBtn.onclick = () => {
+        if (unlockWithFragments(save, c.id).ok) { onSave(); sfx?.unlock(); render(); }
+      };
+    }
     const stats = $('garage-stats');
     stats.innerHTML = '';
     for (const [key, label] of Object.entries(STAT_LABELS)) {

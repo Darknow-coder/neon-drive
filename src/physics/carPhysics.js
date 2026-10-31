@@ -17,6 +17,7 @@
 //   Le drift remplit la jauge de boost.
 
 import { clamp, damp, smoothstep, lerp, wrapAngle } from '../core/math.js';
+import { LEVEL_BONUS } from '../data/economy.js';
 
 /** Réglages communs à toutes les voitures (modifiables via le panneau ⚙). */
 export const GLOBAL_TUNING = {
@@ -44,8 +45,23 @@ export const GLOBAL_TUNING = {
   draftDragCut: 0.5,        // aspiration : part de la résistance de l'air supprimée
 };
 
-/** Convertit les notes du garage (1-10) en paramètres physiques. */
-export function statsToParams(stats) {
+/**
+ * Convertit les notes du garage (1-10) en paramètres physiques.
+ * `level` : niveau d'amélioration (1 à 5) — chaque niveau au-delà du 1er
+ * augmente légèrement vitesse, accélération, adhérence, braquage et freinage.
+ */
+export function statsToParams(stats, level = 1) {
+  const p = baseParams(stats);
+  const k = Math.max(0, level - 1);
+  p.maxSpeed *= 1 + LEVEL_BONUS.maxSpeed * k;
+  p.accel *= 1 + LEVEL_BONUS.accel * k;
+  p.gripAccel *= 1 + LEVEL_BONUS.grip * k;
+  p.turnRate *= 1 + LEVEL_BONUS.turn * k;
+  p.brake *= 1 + LEVEL_BONUS.brake * k;
+  return p;
+}
+
+function baseParams(stats) {
   const s = stats;
   return {
     maxSpeed: 670 + s.speed * 11,
@@ -63,10 +79,11 @@ export function statsToParams(stats) {
   };
 }
 
-export function createCar(def, { x = 0, y = 0, angle = 0 } = {}) {
+export function createCar(def, { x = 0, y = 0, angle = 0, level = 1 } = {}) {
   return {
     def,
-    params: statsToParams(def.stats),
+    level,
+    params: statsToParams(def.stats, level),
     length: 46,
     width: 24,
     x, y, angle,

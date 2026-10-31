@@ -5,7 +5,7 @@ import { leagueProgress } from '../data/progression.js';
 
 const el = (id) => document.getElementById(id);
 
-export function showResults(rows, { trackName, reward = null, training = false }) {
+export function showResults(rows, { trackName, reward = null, training = false, credits = null }) {
   const me = rows.find((r) => r.isPlayer);
   const p = me ? me.position : rows.length;
   el('res-place').innerHTML = `${p}<sup>${p === 1 ? 'er' : 'e'}</sup>`;
@@ -31,6 +31,14 @@ export function showResults(rows, { trackName, reward = null, training = false }
       <td class="hide-narrow ${r.bestLap === bestOfRace ? 'best' : ''}">${formatTime(r.bestLap)}</td>`;
     tbody.append(tr);
   }
+  // Crédits gagnés (détail)
+  const cb = el('res-credits');
+  cb.classList.toggle('hidden', !credits);
+  if (credits) {
+    cb.innerHTML = `<span class="ct">+${credits.total} ⚡</span>` +
+      credits.lines.map((l) => `<span class="cl">${l.label} <b>+${l.amount}</b></span>`).join('');
+  }
+
   // Trophées et ligue
   const box = el('res-reward');
   box.classList.toggle('hidden', !reward);

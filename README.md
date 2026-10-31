@@ -88,6 +88,13 @@ Tout le son est généré par code (Web Audio API) : aucun fichier audio, 100 % 
 (Chrome → menu ⋮ → « Installer l'application » / « Ajouter à l'écran d'accueil »)
 et fonctionne hors ligne après une première visite.
 
+## Économie
+
+- `src/data/economy.js` : tous les montants (crédits par course, coûts d'amélioration,
+  effet des niveaux, niveau des voitures adverses par ligue, packs, route des trophées).
+- `src/progression/economy.js` : règles (crédits, améliorations, packs, déblocage par fragments, route).
+- Sauvegarde version 3 (conversion automatique des anciennes sauvegardes).
+
 ## Garage et voitures
 
 - `src/data/cars.js` : voitures (notes 1-10, silhouette, couleurs) et leur mode de déblocage

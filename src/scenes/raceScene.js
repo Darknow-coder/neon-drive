@@ -16,7 +16,7 @@ import { computeResults, randomGrid } from '../race/results.js';
 
 const PLAYER_COLORS = { body: '#00f0ff', accent: '#ff2bd6', glow: '#00f0ff' };
 
-export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, rival = false, onFinish }) {
+export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, rival = false, playerLevel = 1, onFinish }) {
   const track = buildTrack(getTrackData(trackId));
   const trackRenderer = createTrackRenderer(track, { lowEnd });
   const particles = createParticles(lowEnd ? 320 : 520);
@@ -24,7 +24,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
 
   // Grille tirée au sort : le joueur part dans l'une des 3 dernières places
   // (mode « solo » : sans adversaires, pour le tutoriel)
-  const playerEntry = { def: getCar(carId), name: 'TOI', isPlayer: true, colors: playerColors };
+  const playerEntry = { def: getCar(carId), name: 'TOI', isPlayer: true, colors: playerColors, level: playerLevel };
   let aiEntries = AI_DRIVERS.map((d) => ({ def: getCar(d.car), name: d.name, profile: d.profile, colors: d.colors }));
   // Course classée : le rival de la ligue remplace un pilote habituel (au hasard)
   const rivalData = rival ? rivalFor(league) : null;

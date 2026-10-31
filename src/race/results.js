@@ -21,6 +21,7 @@ export function computeResults(world) {
       colors: car.livery ?? car.def.colors,
       isPlayer: car.isPlayer,
       isRival: !!car.isRival,
+      stats: { drift: car.raceStats?.drift ?? 0, overtakes: car.raceStats?.overtakes ?? 0, wallHits: car.wallHits ?? 0 },
       finished: car.finished,
       estimated,
       time,

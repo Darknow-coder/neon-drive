@@ -6,6 +6,8 @@ import { applyRaceResult, pickTrack, tracksForLeague } from '../src/progression/
 import { mulberry32 } from '../src/core/math.js';
 import { syncUnlocks, isOwned, liveryFor, setLivery, selectedCar, nextCarUnlock } from '../src/progression/garage.js';
 import { CARS } from '../src/data/cars.js';
+import { raceCredits, upgradeCar, upgradeCost, carLevel, openPack, buyPack, claimMilestone, claimableCount, unlockWithFragments, fragmentsOf } from '../src/progression/economy.js';
+import { TROPHY_ROAD, PACKS, UPGRADE_COST } from '../src/data/economy.js';
 
 let ok = 0, ko = 0;
 const check = (cond, label) => { if (cond) ok++; else { ko++; console.log('  ✗ ' + label); } };
@@ -112,7 +114,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 1, trophies: 120, stats: { races: 20, wins: 4, podiums: 9 }, selectedCar: 'nova' }));
   const l = createSaveStore(st).load();
-  check(l.status === 'ok' && l.data.version === 2 && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v2 sans perte');
+  check(l.status === 'ok' && l.data.version === 3 && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v3 sans perte');
   const fresh = syncUnlocks(l.data);
   check(fresh.map((c) => c.id).join() === 'volt,halo,razor', 'voitures des paliers déjà atteints rendues après migration');
   st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 5, garage: { owned: 'x', liveries: { nova: { body: 'rouge', accent: '#00ff00' } } } }));
@@ -150,6 +152,53 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   check(r3.gained === TROPHY_REWARDS[4] && r3.rivalBonus === 0, 'rival devant : pas de bonus');
   const r4 = applyRaceResult(s, { position: 1, trackId: 'neon-boulevard', carId: 'nova', bestLap: 25 });
   check(r4.gained === 10, 'entraînement / sans rival : pas de bonus');
+}
+
+// --- Économie ---
+{
+  const c = raceCredits({ position: 2, driftTime: 12.6, overtakes: 3, clean: true, rivalBeaten: true });
+  check(c.total === 45 + 12 + 15 + 15 + 20 && c.lines.length === 5, 'crédits de course détaillés');
+  check(raceCredits({ position: 1, driftTime: 99, overtakes: 99 }).total === 60 + 20 + 25, 'bonus plafonnés');
+  const s = defaultSave();
+  check(s.credits === 0 && carLevel(s, 'nova') === 1, 'départ : 0 crédit, niveau 1');
+  check(!upgradeCar(s, 'nova').ok, 'amélioration refusée sans crédits');
+  s.credits = 10000; s.cars.fragments.nova = 200;
+  for (let k = 0; k < 4; k++) upgradeCar(s, 'nova');
+  check(carLevel(s, 'nova') === 5 && upgradeCost(s, 'nova') === null, 'amélioration jusqu\'au niveau 5');
+  const spent = Object.values(UPGRADE_COST).reduce((a, b) => a + b.credits, 0);
+  check(s.credits === 10000 - spent, 'coût des améliorations débité');
+  check(!upgradeCar(s, 'titan').ok, 'impossible d\'améliorer une voiture non débloquée');
+  // Packs
+  const s2 = defaultSave(); const rng = mulberry32(3);
+  let totalFrag = 0;
+  for (let k = 0; k < 200; k++) { const g = openPack(s2, 'medium', rng); totalFrag += g.reduce((a, x) => a + x.amount, 0); }
+  check(totalFrag === 200 * PACKS.medium.fragments, 'un pack donne exactement son nombre de fragments');
+  const lockedShare = CARS.filter((c) => c.id !== 'nova').reduce((a, c) => a + fragmentsOf(s2, c.id), 0) / totalFrag;
+  check(lockedShare > 0.75, `fragments surtout pour les voitures verrouillées (${Math.round(lockedShare * 100)} %)`);
+  check(!buyPack(defaultSave(), 'large').ok, 'achat de pack refusé sans crédits');
+  // Déblocage anticipé par fragments
+  const s3 = defaultSave(); s3.cars.fragments.comet = 80;
+  check(unlockWithFragments(s3, 'comet').ok && s3.garage.owned.includes('comet') && fragmentsOf(s3, 'comet') === 0, 'COMET débloquée avec 80 fragments');
+  // Route des trophées
+  const s4 = defaultSave(); s4.trophies = 105;
+  const n = claimableCount(s4);
+  check(n === TROPHY_ROAD.filter((m) => m.at <= 105).length, 'paliers franchis récupérables (rétroactif)');
+  const g1 = claimMilestone(s4, 10, rng);
+  check(g1.credits === 100 && s4.credits === 100, 'palier 10 : 100 crédits');
+  check(claimMilestone(s4, 10, rng) === null, 'pas de double récupération');
+  check(claimMilestone(s4, 125, rng) === null, 'palier non atteint refusé');
+  const g2 = claimMilestone(s4, 100, rng);
+  check(g2.car?.id === 'razor' && g2.packs.length === 1, 'palier 100 : RAZOR + pack');
+}
+{
+  // Migration v2 → v3
+  const st = memStorage();
+  st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 150, garage: { owned: ['nova', 'volt'] }, tutorialDone: true }));
+  const d = createSaveStore(st).load().data;
+  check(d.version === 3 && d.credits === 0 && d.road.claimed.length === 0 && d.garage.owned.includes('volt'), 'migration v2 → v3 sans perte');
+  st.setItem('neondrive.save', JSON.stringify({ version: 3, credits: -50, cars: { levels: { nova: 99 }, fragments: { volt: 'x' } }, road: { claimed: [10, 10, 'a'] } }));
+  const d2 = createSaveStore(st).load().data;
+  check(d2.credits === 0 && d2.cars.levels.nova === 5 && !('volt' in d2.cars.fragments) && d2.road.claimed.join() === '10', 'économie abîmée réparée');
 }
 
 console.log(`${ok} vérifications réussies, ${ko} échec(s). Ligues : ${LEAGUES.map((l) => `${l.name} ≥ ${l.min}`).join(', ')}`);

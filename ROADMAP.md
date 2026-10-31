@@ -27,12 +27,12 @@ son et musique générés par code, application installable et hors ligne.
 - Un rival « boss » par ligue
 - 3 à 4 morceaux de musique
 
-## Phase 3 — Économie et progression
-- Crédits gagnés en course
-- Route des trophées (récompenses par palier)
-- Fragments (gagnés en jouant) pour débloquer les voitures
+## Phase 3 — Économie et progression  ⏳ en cours
+- [x] Crédits gagnés en course (place, drift, dépassements, course propre, rival)
+- [x] Route des trophées (récompenses par palier, rétroactive)
+- [x] Fragments et packs (déblocage anticipé des voitures)
+- [x] Améliorations des voitures (niveaux 1 à 5 ; voitures adverses au niveau de la ligue)
 - Boutique (offres quotidiennes : voitures, peintures, décalcomanies, traînées)
-- Améliorations de voitures plafonnées (les IA progressent avec la ligue)
 - Missions quotidiennes / hebdomadaires
 
 ## Phase 4 — Modes de jeu

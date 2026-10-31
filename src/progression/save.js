@@ -12,7 +12,7 @@
 
 const KEY = 'neondrive.save';
 const BACKUP_KEY = 'neondrive.save.backup';
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export function defaultSave() {
   return {
@@ -33,6 +33,9 @@ export function defaultSave() {
     },
     tutorialDone: false,
     rivalsBeaten: {},        // { idRival: nombre de victoires contre lui }
+    credits: 0,              // monnaie gagnée en course (⚡)
+    cars: { levels: {}, fragments: {} }, // niveaux d'amélioration et fragments par voiture
+    road: { claimed: [] },   // paliers de la route des trophées déjà récupérés
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
@@ -89,6 +92,18 @@ function sanitize(raw) {
     }
   }
   s.createdAt = num(raw.createdAt, Date.now());
+  s.credits = Math.floor(num(raw.credits));
+  if (raw.cars && typeof raw.cars === 'object') {
+    for (const key of ['levels', 'fragments']) {
+      const src = raw.cars[key];
+      if (!src || typeof src !== 'object') continue;
+      for (const [id, v] of Object.entries(src)) {
+        if (num(v, -1) < 0) continue;
+        s.cars[key][id] = key === 'levels' ? Math.max(1, Math.min(5, Math.floor(v))) : Math.floor(v);
+      }
+    }
+  }
+  if (Array.isArray(raw.road?.claimed)) s.road.claimed = [...new Set(raw.road.claimed.filter((v) => num(v, -1) > 0))];
   if (raw.rivalsBeaten && typeof raw.rivalsBeaten === 'object') {
     for (const [k, v] of Object.entries(raw.rivalsBeaten)) if (num(v, 0) > 0) s.rivalsBeaten[k] = Math.floor(v);
   }
@@ -106,7 +121,15 @@ function migrate(raw) {
     raw.garage = { owned: ['nova'], liveries: {} };
     raw.version = 2;
   }
-  // Pour le futur : if (raw.version === 2) { …; raw.version = 3; }
+  // Version 2 → 3 : apparition de l'économie (crédits, fragments, niveaux,
+  // route des trophées). Les paliers déjà franchis restent à récupérer.
+  if (raw.version === 2) {
+    raw.credits ??= 0;
+    raw.cars ??= { levels: {}, fragments: {} };
+    raw.road ??= { claimed: [] };
+    raw.version = 3;
+  }
+  // Pour le futur : if (raw.version === 3) { …; raw.version = 4; }
   return raw;
 }
 

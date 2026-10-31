@@ -126,6 +126,7 @@
           <div class="league-bar"><div class="league-fill" id="res-fill"></div></div>
         </div>
       </div>
+      <div class="credits-box hidden" id="res-credits"></div>
       <div class="promo hidden" id="res-promo"></div>
       <div class="promo hidden" id="res-cars"></div>
       <div class="rival-banner hidden" id="res-rival"></div>
@@ -152,7 +153,8 @@
     <div class="league-card" id="league-card">
       <div class="league-badge" id="menu-league-badge">BRONZE</div>
       <div class="league-info">
-        <div class="trophy-line"><span class="trophy-ico"></span><b id="menu-trophies">0</b> <span class="muted" id="menu-trophies-word">trophées</span></div>
+        <div class="trophy-line"><span class="trophy-ico"></span><b id="menu-trophies">0</b> <span class="muted" id="menu-trophies-word">trophées</span>
+          <span class="credit-chip" id="menu-credits">⚡ 0</span></div>
         <div class="league-bar"><div class="league-fill" id="menu-league-fill"></div></div>
         <div class="league-next muted" id="menu-league-next">Prochaine ligue : ARGENT (100)</div>
         <div class="menu-rival" id="menu-rival"></div>
@@ -162,6 +164,7 @@
     <div class="menu-actions" id="menu-main">
       <button class="start-btn" id="btn-start">COURSE</button>
       <div class="row-btns">
+        <button class="menu-btn badge-host" id="btn-road">ROUTE<span class="badge hidden" id="road-badge">0</span></button>
         <button class="menu-btn" id="btn-garage">GARAGE</button>
         <button class="menu-btn" id="btn-training">ENTRAÎNEMENT</button>
         <button class="menu-btn icon-btn" id="btn-settings" aria-label="Réglages">⚙</button>
@@ -191,7 +194,7 @@
       <div class="garage-head">
         <button class="menu-btn small-btn" id="garage-back">‹ MENU</button>
         <div class="overlay-title">GARAGE</div>
-        <div class="muted garage-count" id="garage-count"></div>
+        <div class="muted garage-count"><span class="credit-chip" id="garage-credits">⚡ 0</span> <span id="garage-count"></span></div>
       </div>
       <div class="garage-body">
         <div class="garage-preview">
@@ -209,11 +212,43 @@
             <div class="paint-label muted">Accent</div>
             <div class="swatches" id="paint-accent"></div>
           </div>
+          <div class="garage-level" id="garage-level"></div>
+          <div class="frag-row" id="garage-frags">
+            <div class="frag-label"><span id="frag-text"></span><span id="frag-num"></span></div>
+            <div class="frag-bar"><div class="frag-fill" id="frag-fill"></div></div>
+          </div>
+          <button class="menu-btn upgrade-btn" id="garage-upgrade"></button>
           <div class="garage-lock hidden" id="garage-lock"></div>
           <button class="menu-btn primary" id="garage-select">CHOISIR CETTE VOITURE</button>
         </div>
       </div>
       <div class="garage-thumbs" id="garage-thumbs"></div>
+    </div>
+  </div>
+
+  <!-- Route des trophées -->
+  <div id="road" class="overlay hidden">
+    <div class="overlay-card road-card">
+      <div class="garage-head">
+        <button class="menu-btn small-btn" id="road-back">‹ MENU</button>
+        <div class="overlay-title">ROUTE DES TROPHÉES</div>
+        <div class="road-head-right"><span class="trophy-ico"></span><b id="road-trophies">0</b> <span class="credit-chip" id="road-credits">⚡ 0</span></div>
+      </div>
+      <div class="road-strip" id="road-strip"></div>
+      <div class="road-foot">
+        <span class="muted small" id="road-hint"></span>
+        <button class="menu-btn primary" id="road-claim-all">TOUT RÉCUPÉRER</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ouverture d'un pack -->
+  <div id="pack-open" class="overlay hidden">
+    <div class="overlay-card pack-card">
+      <div class="overlay-title" id="pack-title">PACK</div>
+      <div class="pack-extra" id="pack-extra"></div>
+      <div class="pack-cards" id="pack-cards"></div>
+      <button class="menu-btn primary" id="pack-ok">SUPER !</button>
     </div>
   </div>
 

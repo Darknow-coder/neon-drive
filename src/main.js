@@ -20,6 +20,8 @@ import { createSfx } from './audio/sfx.js';
 import { createMusic } from './audio/music.js';
 import { createSettingsScreen } from './ui/settings.js';
 import { createTutorial } from './scenes/tutorial.js';
+import { raceCredits, carLevel, claimableCount } from './progression/economy.js';
+import { createRoad } from './ui/road.js';
 import { rivalFor } from './data/rivals.js';
 
 const $ = (id) => document.getElementById(id);
@@ -118,7 +120,8 @@ function refreshMenu() {
   $('menu-car').innerHTML = `Voiture : <b>${carName(selectedCar(save))}</b>`;
 }
 
-const garage = createGarage({ save, onSave: persist, onClose: refreshMenu });
+const garage = createGarage({ save, onSave: persist, onClose: refreshMenu, sfx });
+const road = createRoad({ save, onSave: persist, sfx, onClose: refreshMenu });
 
 function startRace() {
   // Le circuit n'est construit qu'au lancement (et l'ancien est libéré) :
@@ -133,20 +136,28 @@ function startRace() {
     sfx,
     settings: save.settings,
     rival: !training, // le rival de la ligue est présent en course classée
+    playerLevel: carLevel(save, carId),
     onFinish: (rows) => {
       state = 'results';
       setRaceUi(false);
       let reward = null;
+      let credits = null;
       if (!training) {
         const me = rows.find((r) => r.isPlayer);
         const rv = rows.find((r) => r.isRival);
+        const rivalBeaten = !!rv && me.position < rv.position;
         reward = applyRaceResult(save, {
           position: me.position, trackId, carId, bestLap: me.bestLap,
-          rivalId: session.rival?.id ?? null, rivalBeaten: !!rv && me.position < rv.position,
+          rivalId: session.rival?.id ?? null, rivalBeaten,
         });
+        credits = raceCredits({
+          position: me.position, driftTime: me.stats.drift, overtakes: me.stats.overtakes,
+          clean: me.stats.wallHits === 0 && me.finished, rivalBeaten,
+        });
+        save.credits += credits.total;
         persist();
       }
-      showResults(rows, { trackName: session.trackName, reward, training });
+      showResults(rows, { trackName: session.trackName, reward, training, credits });
       sfx.stopCar();
       if (reward?.unlockedCars?.length || reward?.promoted) setTimeout(() => sfx.unlock(), 900);
       updateMusic();
@@ -328,6 +339,7 @@ $('btn-quit').addEventListener('click', backToMenu);
 $('btn-again').addEventListener('click', () => (training ? startTraining() : startRankedRace()));
 $('btn-training').addEventListener('click', () => showTrainingPicker(true));
 $('btn-garage').addEventListener('click', () => garage.open());
+$('btn-road').addEventListener('click', () => road.open());
 const settingsScreen = createSettingsScreen({
   save,
   onChange: (commit) => { audio.applyVolumes(); applyControls(); if (commit) persist(); },

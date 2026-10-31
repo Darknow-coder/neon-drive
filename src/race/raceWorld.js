@@ -11,6 +11,7 @@ import { createLapTracker, updateLapTracker } from './lapTracker.js';
 import { createAiDriver } from '../ai/aiDriver.js';
 import { AI_PROFILES, LEAGUE_SKILL } from '../data/aiProfiles.js';
 import { RIVAL_SKILL } from '../data/rivals.js';
+import { AI_CAR_LEVEL } from '../data/economy.js';
 import { createIntent } from '../core/input.js';
 import { mulberry32 } from '../core/math.js';
 
@@ -30,8 +31,10 @@ export function createRaceWorld(opts) {
   const slots = gridSlots(track, opts.entries.length);
   const idle = createIntent();
 
+  // Niveau des voitures adverses : fixé par la ligue (comme leur pilotage)
+  const aiLevel = AI_CAR_LEVEL[opts.league ?? 'bronze'] ?? 1;
   const cars = opts.entries.map((e, k) => {
-    const car = createCar(e.def, slots[k]);
+    const car = createCar(e.def, { ...slots[k], level: e.level ?? (e.isPlayer ? 1 : aiLevel) });
     car.trackIndex = slots[k].index;
     car.name = e.name;
     car.isPlayer = !!e.isPlayer;
@@ -42,6 +45,7 @@ export function createRaceWorld(opts) {
     car.position = k + 1;
     car.wallHits = 0;
     car.carHits = 0;
+    car.raceStats = { drift: 0, overtakes: 0, lastPos: k + 1 };
     car.isRival = !!e.isRival;
     if (!e.isPlayer) {
       const baseProfile = AI_PROFILES[e.profile ?? 'balanced'];
@@ -105,6 +109,8 @@ export function createRaceWorld(opts) {
     }
   }
 
+  let statTimer = 0;
+
   /** Avance la course d'un pas. `playerIntent` = commandes du joueur. */
   function step(dt, playerIntent) {
     world.time += dt;
@@ -130,6 +136,9 @@ export function createRaceWorld(opts) {
       if (car.contactThisStep > 150) car.carHits++;
       if (car.requestRespawn) respawn(car);
 
+      // Statistiques de course (pour les crédits) : temps de drift
+      if (world.started && !car.finished && car.drifting) car.raceStats.drift += dt;
+
       const ev = updateLapTracker(car.laps, car.trackDist, Math.max(0, world.time));
       if (ev === 'start' && world.started) car.laps.lapStart = Math.max(0, world.time);
       if (!car.finished && car.laps.lap > laps) {
@@ -143,6 +152,15 @@ export function createRaceWorld(opts) {
       }
     }
     rank();
+    // Dépassements : mesurés toutes les 0,5 s (après le premier virage)
+    statTimer += dt;
+    if (world.time > 4 && statTimer >= 0.5) {
+      statTimer = 0;
+      for (const c of cars) {
+        if (!c.finished && c.position < c.raceStats.lastPos) c.raceStats.overtakes += c.raceStats.lastPos - c.position;
+        c.raceStats.lastPos = c.position;
+      }
+    }
     if (!world.finished && cars.every((c) => c.finished)) world.finished = true;
   }
 
