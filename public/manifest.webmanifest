@@ -1,0 +1,17 @@
+{
+  "name": "NEON//DRIVE",
+  "short_name": "NEON DRIVE",
+  "description": "Course arcade néon : drift, boost et 5 adversaires.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#07041a",
+  "theme_color": "#07041a",
+  "lang": "fr",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

@@ -15,6 +15,10 @@ import { applyRaceResult, pickTrack, tracksForLeague } from './progression/progr
 import { renderMenu, revealTrack } from './ui/menu.js';
 import { createGarage, carName } from './ui/garage.js';
 import { syncUnlocks, selectedCar, liveryFor } from './progression/garage.js';
+import { createAudio } from './audio/audio.js';
+import { createSfx } from './audio/sfx.js';
+import { createMusic } from './audio/music.js';
+import { createSettingsScreen } from './ui/settings.js';
 
 const $ = (id) => document.getElementById(id);
 const show = (id, v = true) => $(id).classList.toggle('hidden', !v);
@@ -42,6 +46,29 @@ function persist() {
 }
 // Voitures dont le palier est déjà atteint (ex. ancienne sauvegarde convertie)
 if (syncUnlocks(save).length) persist();
+
+// ---------------- Son ----------------
+const audio = createAudio(save.settings);
+const sfx = createSfx(audio);
+const music = createMusic(audio);
+/** Ambiance musicale selon l'écran affiché. */
+function updateMusic() {
+  if (!audio.ctx) return;
+  music.setMode(state === 'race' || state === 'reveal' ? 'race' : 'menu');
+}
+// Sur mobile, le son ne peut démarrer qu'après un geste du joueur
+const unlockAudio = () => {
+  audio.unlock();
+  updateMusic();
+  window.removeEventListener('pointerdown', unlockAudio);
+  window.removeEventListener('keydown', unlockAudio);
+};
+window.addEventListener('pointerdown', unlockAudio);
+window.addEventListener('keydown', unlockAudio);
+// Petit « clic » sur les boutons des menus
+document.addEventListener('click', (e) => {
+  if (e.target.closest?.('.menu-btn, .start-btn, .garage-nav, .swatch, .track-pick button')) sfx.click();
+});
 
 let session = null;
 let tuning = null;
@@ -88,6 +115,8 @@ function startRace() {
   session = createRaceScene({
     renderer, input, hud, lowEnd, trackId, carId, league, laps: RACE_LAPS,
     playerColors: liveryFor(save, carId),
+    sfx,
+    settings: save.settings,
     onFinish: (rows) => {
       state = 'results';
       setRaceUi(false);
@@ -98,6 +127,9 @@ function startRace() {
         persist();
       }
       showResults(rows, { trackName: session.trackName, reward, training });
+      sfx.stopCar();
+      if (reward?.unlockedCars?.length || reward?.promoted) setTimeout(() => sfx.unlock(), 900);
+      updateMusic();
     },
   });
   input.reset();
@@ -106,6 +138,7 @@ function startRace() {
   show('start', false);
   setRaceUi(true);
   state = 'race';
+  updateMusic();
   loop.start();
 }
 
@@ -113,12 +146,15 @@ function pause() {
   state = 'pause';
   loop.stop();
   input.reset();
+  sfx.stopCar();
   show('pause', true);
+  updateMusic();
 }
 
 function resume() {
   show('pause', false);
   state = 'race';
+  updateMusic();
   loop.start();
 }
 
@@ -133,6 +169,7 @@ function backToMenu() {
   refreshMenu();
   show('start', true);
   state = 'menu';
+  updateMusic();
 }
 
 /** Course classée : circuit tiré au sort parmi ceux de la ligue du joueur. */
@@ -146,6 +183,7 @@ function startRankedRace() {
   hideResults();
   show('pause', false);
   setRaceUi(false);
+  updateMusic();
   revealTrack(pool, chosen, () => startRace());
 }
 
@@ -216,6 +254,12 @@ $('btn-quit').addEventListener('click', backToMenu);
 $('btn-again').addEventListener('click', () => (training ? startTraining() : startRankedRace()));
 $('btn-training').addEventListener('click', () => showTrainingPicker(true));
 $('btn-garage').addEventListener('click', () => garage.open());
+const settingsScreen = createSettingsScreen({
+  settings: save.settings,
+  onChange: (commit) => { audio.applyVolumes(); if (commit) persist(); },
+});
+$('btn-settings').addEventListener('click', () => settingsScreen.open());
+$('btn-pause-settings').addEventListener('click', () => settingsScreen.open());
 $('btn-train-back').addEventListener('click', () => showTrainingPicker(false));
 $('btn-menu').addEventListener('click', backToMenu);
 
@@ -242,8 +286,19 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     if (state === 'race') pause();
     else loop.stop();
-  } else if (state === 'results') loop.start();
+    audio.suspend();
+  } else {
+    audio.resume();
+    if (state === 'results') loop.start();
+  }
 });
 
 // Accès pour les tests automatiques
 window.__ND = { session: () => session, loop: () => loop, perf, state: () => state, save: () => save };
+
+// Installation comme application + jeu hors ligne (version publiée uniquement)
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => { /* pas grave : le jeu marche sans */ });
+  });
+}

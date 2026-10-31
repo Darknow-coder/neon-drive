@@ -73,6 +73,20 @@ node tools/progressionCheck.js # trophées, ligues, tirage des circuits, sauvega
 - `src/progression/save.js` : sauvegarde locale versionnée, avec copie de secours et réparation automatique.
 - Chaque circuit indique sa ligue d'accès (`league` dans `src/data/tracks/*.js`).
 
+## Son
+
+Tout le son est généré par code (Web Audio API) : aucun fichier audio, 100 % original.
+- `src/audio/audio.js` : moteur audio (volumes musique / effets, réverbération).
+- `src/audio/sfx.js` : moteur, drift, boost, chocs, compte à rebours, tours, arrivée.
+- `src/audio/music.js` : musique synthwave (séquenceur : accords, basse, nappes, arpège, batterie, mélodie).
+- Volumes et vibrations réglables (bouton ⚙ du menu), enregistrés dans la sauvegarde.
+
+## Application installable
+
+`public/manifest.webmanifest` + `public/sw.js` : le jeu s'installe sur l'écran d'accueil
+(Chrome → menu ⋮ → « Installer l'application » / « Ajouter à l'écran d'accueil »)
+et fonctionne hors ligne après une première visite.
+
 ## Garage et voitures
 
 - `src/data/cars.js` : voitures (notes 1-10, silhouette, couleurs) et leur mode de déblocage

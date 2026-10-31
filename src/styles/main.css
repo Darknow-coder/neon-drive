@@ -598,3 +598,13 @@ html, body {
   .garage-side { gap: 6px; }
 }
 @media (max-width: 640px) { .garage-body { grid-template-columns: 1fr; } }
+
+/* ---------- Réglages ---------- */
+#settings { z-index: 40; }
+.icon-btn { min-width: 0 !important; width: 48px; padding: 0; font-size: 20px; }
+.settings-card { width: min(420px, 100%); }
+.set-row { display: grid; grid-template-columns: 130px 1fr 44px; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; }
+.set-row input[type='range'] { width: 100%; accent-color: var(--magenta); }
+.set-row output { text-align: right; color: var(--cyan); font-variant-numeric: tabular-nums; }
+.set-check { grid-template-columns: 1fr auto; }
+.set-check input { width: 22px; height: 22px; accent-color: var(--magenta); }

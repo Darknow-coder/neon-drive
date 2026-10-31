@@ -15,7 +15,7 @@ import { computeResults, randomGrid } from '../race/results.js';
 
 const PLAYER_COLORS = { body: '#00f0ff', accent: '#ff2bd6', glow: '#00f0ff' };
 
-export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, onFinish }) {
+export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, onFinish }) {
   const track = buildTrack(getTrackData(trackId));
   const trackRenderer = createTrackRenderer(track, { lowEnd });
   const particles = createParticles(lowEnd ? 320 : 520);
@@ -36,6 +36,9 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   let message = '';
   let messageTimer = 0;
   let lastVibrate = 0;
+  let lastCount = 99;     // dernier chiffre du compte à rebours joué
+  let lastPad = 0;
+  let lastBoost = 0;
 
   const scene = { trackRenderer, cars: world.cars, particles, camera, player, time: 0 };
 
@@ -84,9 +87,26 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       if (near) updateCarFx(fx.get(car), car, dt, particles, trackRenderer, car.hitThisStep);
     }
     const hit = player.hitThisStep;
-    if (hit > 260 && world.time - lastVibrate > 0.25 && navigator.vibrate) {
+    if (hit > 260 && settings.vibration && world.time - lastVibrate > 0.25 && navigator.vibrate) {
       navigator.vibrate(Math.min(60, hit / 10));
       lastVibrate = world.time;
+    }
+
+    // ---------- Sons ----------
+    if (sfx) {
+      sfx.updateCar(player, world.started || world.time > -0.5);
+      if (hit > 120) sfx.hit(hit, true);
+      // Chocs des adversaires proches : plus discrets
+      for (const car of world.cars) {
+        if (car !== player && car.hitThisStep > 200 && Math.hypot(car.x - player.x, car.y - player.y) < 500) sfx.hit(car.hitThisStep, false);
+      }
+      const count = world.started ? 0 : Math.ceil(-world.time);
+      if (count !== lastCount && count <= 3) sfx.countdown(count);
+      lastCount = count;
+      if (player.padTimer > lastPad + 0.2) sfx.boostPad();
+      lastPad = player.padTimer;
+      if (player.boost >= 0.999 && lastBoost < 0.999) sfx.boostReady();
+      lastBoost = player.boost;
     }
     particles.update(dt);
     updateCamera(camera, player, dt);
@@ -103,11 +123,13 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       const isBest = player.laps.lastLap <= player.laps.bestLap;
       message = player.laps.lap === laps ? 'DERNIER TOUR !' : `${isBest ? 'MEILLEUR TOUR ' : 'Tour '}${formatTime(player.laps.lastLap)}`;
       messageTimer = 2.5;
+      sfx?.lap(isBest);
     }
     if (player.finished && !scene.announced) {
       scene.announced = true;
       message = `ARRIVÉE — ${player.position}${player.position === 1 ? 'ER' : 'E'} / ${world.cars.length}`;
       messageTimer = 9999;
+      sfx?.finish(player.position);
     } else if (!player.finished && world.playerPositionLocked() && !scene.lockedMsg) {
       scene.lockedMsg = true;
       message = 'TOUS LES ADVERSAIRES SONT ARRIVÉS';
@@ -154,6 +176,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
 
   function dispose() {
     trackRenderer.dispose();
+    sfx?.stopCar();
   }
 
   return {

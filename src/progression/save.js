@@ -27,6 +27,7 @@ export function defaultSave() {
       owned: ['nova'],       // voitures possédées (paliers, et plus tard boutique…)
       liveries: {},          // { idVoiture: { body, accent } }
     },
+    settings: { music: 0.7, sfx: 0.85, vibration: true },
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
@@ -54,6 +55,12 @@ function sanitize(raw) {
     }
   }
   if (Array.isArray(raw.history)) s.history = raw.history.filter((h) => h && typeof h === 'object').slice(-10);
+  if (raw.settings && typeof raw.settings === 'object') {
+    const vol = (v, d) => (typeof v === 'number' && v >= 0 && v <= 1 ? v : d);
+    s.settings.music = vol(raw.settings.music, s.settings.music);
+    s.settings.sfx = vol(raw.settings.sfx, s.settings.sfx);
+    if (typeof raw.settings.vibration === 'boolean') s.settings.vibration = raw.settings.vibration;
+  }
   const isColor = (c) => typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c);
   if (raw.garage && typeof raw.garage === 'object') {
     if (Array.isArray(raw.garage.owned)) {
