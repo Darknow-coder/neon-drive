@@ -30,6 +30,7 @@
       <div><span class="hud-label">ACTUEL</span> <span class="hud-mono" id="hud-time">0:00.000</span></div>
       <div><span class="hud-label">MEILLEUR</span> <span class="hud-mono" id="hud-best">--:--.---</span></div>
       <div class="hud-rival hidden" id="hud-rival"></div>
+      <div class="hud-delta hidden" id="hud-delta"></div>
     </div>
     <div class="hud-center" id="hud-msg"></div>
     <div class="hud-block hud-speed">
@@ -171,6 +172,7 @@
         <button class="menu-btn" id="btn-garage">GARAGE</button>
       </div>
       <div class="row-btns small-row">
+        <button class="menu-btn tt-btn" id="btn-timetrial">CONTRE-LA-MONTRE</button>
         <button class="menu-btn" id="btn-training">ENTRAÎNEMENT</button>
         <button class="menu-btn icon-btn" id="btn-settings" aria-label="Réglages">⚙</button>
       </div>
@@ -233,6 +235,19 @@
         </div>
       </div>
       <div class="garage-thumbs" id="garage-thumbs"></div>
+    </div>
+  </div>
+
+  <!-- Contre-la-montre : choix du circuit -->
+  <div id="tt-select" class="overlay hidden">
+    <div class="overlay-card tt-card">
+      <div class="garage-head">
+        <button class="menu-btn small-btn" id="tt-back">‹ MENU</button>
+        <div class="overlay-title">CONTRE-LA-MONTRE</div>
+        <div class="tt-total" id="tt-total"></div>
+      </div>
+      <div class="tt-sub">Bats ton fantôme, tour après tour. Chaque médaille est récompensée la première fois. Voiture : <b id="tt-car"></b></div>
+      <div class="tt-list" id="tt-list"></div>
     </div>
   </div>
 

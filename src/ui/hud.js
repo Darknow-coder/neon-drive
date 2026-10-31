@@ -14,6 +14,7 @@ export function createHud() {
     total: document.getElementById('hud-total'),
     msg: document.getElementById('hud-msg'),
     rival: document.getElementById('hud-rival'),
+    delta: document.getElementById('hud-delta'),
     time: document.getElementById('hud-time'),
     best: document.getElementById('hud-best'),
     speed: document.getElementById('hud-speed'),
@@ -31,9 +32,18 @@ export function createHud() {
 
   return {
     show(v) { el.root.classList.toggle('hidden', !v); },
-    update({ car, lap, laps, lapTime, bestLap, lastMsg, position, total, big, rival = null }) {
+    update({ car, lap, laps, lapTime, bestLap, lastMsg, position, total, big, rival = null, timeTrial = false, delta = null }) {
       set('lap', el.lap, lap > 0 ? String(lap) : '–');
-      set('laps', el.laps, `/${laps}`);
+      set('laps', el.laps, timeTrial ? '' : `/${laps}`);
+      if (cache.tt !== timeTrial) { cache.tt = timeTrial; el.root.classList.toggle('tt', timeTrial); }
+      // Écart avec le fantôme (contre-la-montre)
+      const dTxt = delta === null ? '' : `${delta.label} ${delta.value < 0 ? '−' : '+'}${Math.abs(delta.value).toFixed(2)} s`;
+      if (cache.dTxt !== dTxt) {
+        cache.dTxt = dTxt;
+        el.delta.textContent = dTxt;
+        el.delta.classList.toggle('hidden', !dTxt);
+        el.delta.classList.toggle('ahead', !!delta && delta.value < 0);
+      }
       set('pos', el.pos, String(position));
       set('total', el.total, `/${total}`);
       set('msg', el.msg, lastMsg || '');

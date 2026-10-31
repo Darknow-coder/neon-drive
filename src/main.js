@@ -23,7 +23,10 @@ import { createTutorial } from './scenes/tutorial.js';
 import { raceCredits, carLevel, claimableCount } from './progression/economy.js';
 import { createRoad } from './ui/road.js';
 import { createShop } from './ui/shop.js';
+import { showRewards } from './ui/packOpen.js';
 import { createMissions } from './ui/missions.js';
+import { createTimeTrial } from './scenes/timeTrial.js';
+import { createTimeTrialSelect } from './ui/timeTrialSelect.js';
 import { refreshMissions, applyMissionProgress } from './progression/missions.js';
 import { refreshShop } from './progression/shop.js';
 import { PACKS } from './data/economy.js';
@@ -222,6 +225,8 @@ function resume() {
 
 function backToMenu() {
   loop.stop();
+  // Packs gagnés en contre-la-montre : on les ouvre maintenant
+  const pending = session?.isTimeTrial ? session.pendingRewards.splice(0) : [];
   session?.dispose();
   session = null;
   hideResults();
@@ -232,6 +237,7 @@ function backToMenu() {
   show('start', true);
   state = 'menu';
   updateMusic();
+  if (pending.length) showRewards(save, pending, { sfx, onClose: refreshMenu });
 }
 
 /** Tutoriel : leçon de pilotage en solo. */
@@ -257,6 +263,27 @@ function startTutorial() {
   show('pause', false);
   show('start', false);
   setRaceUi(true, true);
+  state = 'race';
+  updateMusic();
+  loop.start();
+}
+
+/** Contre-la-montre sur un circuit. */
+function startTimeTrial(id) {
+  session?.dispose();
+  training = true;
+  trackId = id;
+  carId = selectedCar(save);
+  session = createTimeTrial({
+    save, onSave: persist, trackId: id, carId,
+    colors: liveryFor(save, carId), level: carLevel(save, carId),
+    renderer, input, hud, lowEnd, sfx, settings: save.settings,
+  });
+  input.reset();
+  hideResults();
+  show('pause', false);
+  show('start', false);
+  setRaceUi(true);
   state = 'race';
   updateMusic();
   loop.start();
@@ -364,7 +391,7 @@ $('btn-tuning').addEventListener('click', () => tuning.toggle());
 $('btn-pause').addEventListener('click', () => state === 'race' && pause());
 $('btn-resume').addEventListener('click', resume);
 // « Recommencer » relance le même circuit (sans trophées pour la course abandonnée)
-$('btn-restart').addEventListener('click', () => (session?.isTutorial ? startTutorial() : startRace()));
+$('btn-restart').addEventListener('click', () => (session?.isTutorial ? startTutorial() : session?.isTimeTrial ? startTimeTrial(session.trackId) : startRace()));
 $('btn-quit').addEventListener('click', backToMenu);
 // « Rejouer » : nouvelle course classée (nouveau tirage) ou même circuit en entraînement
 $('btn-again').addEventListener('click', () => (training ? startTraining() : startRankedRace()));
@@ -373,6 +400,8 @@ $('btn-garage').addEventListener('click', () => garage.open());
 $('btn-road').addEventListener('click', () => road.open());
 $('btn-shop').addEventListener('click', () => shop.open());
 $('btn-missions').addEventListener('click', () => missions.open());
+const ttSelect = createTimeTrialSelect({ save, onStart: (id) => { enterFullscreenOnMobile(); startTimeTrial(id); }, onClose: refreshMenu });
+$('btn-timetrial').addEventListener('click', () => ttSelect.open());
 const settingsScreen = createSettingsScreen({
   save,
   onChange: (commit) => { audio.applyVolumes(); applyControls(); if (commit) persist(); },

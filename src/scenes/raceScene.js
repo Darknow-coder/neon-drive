@@ -16,7 +16,7 @@ import { computeResults, randomGrid } from '../race/results.js';
 
 const PLAYER_COLORS = { body: '#00f0ff', accent: '#ff2bd6', glow: '#00f0ff' };
 
-export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, rival = false, playerLevel = 1, onFinish }) {
+export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, rival = false, playerLevel = 1, timeTrial = false, onRespawn = null, onFinish }) {
   const track = buildTrack(getTrackData(trackId));
   const trackRenderer = createTrackRenderer(track, { lowEnd });
   const particles = createParticles(lowEnd ? 320 : 520);
@@ -64,6 +64,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
     if (!world.started || player.finished) return;
     world.respawn(player);
     input.reset();
+    onRespawn?.();
   }
 
   function isFinished() {
@@ -130,7 +131,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       message = 'GO !';
       messageTimer = 0.1;
     }
-    if (player.laps.lap > lapBefore && lapBefore >= 1 && !player.finished) {
+    if (!timeTrial && player.laps.lap > lapBefore && lapBefore >= 1 && !player.finished) {
       const isBest = player.laps.lastLap <= player.laps.bestLap;
       message = player.laps.lap === laps ? 'DERNIER TOUR !' : `${isBest ? 'MEILLEUR TOUR ' : 'Tour '}${formatTime(player.laps.lastLap)}`;
       messageTimer = 2.5;
@@ -177,6 +178,8 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       total: world.cars.length,
       big: !world.started || world.time < 1,
       rival: rivalCar ? { name: rivalCar.name, position: rivalCar.position } : null,
+      timeTrial,
+      delta: scene.delta ?? null,
     });
   }
 
@@ -192,8 +195,12 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
     sfx?.setRain(false);
   }
 
+  /** Affiche un message au centre de l'écran (contre-la-montre). */
+  function flash(text, duration = 2.5) { message = text; messageTimer = duration; }
+
   return {
-    update, render, resize, respawn, setCarDef, reloadGraphics, dispose, isFinished,
+    update, render, resize, respawn, setCarDef, reloadGraphics, dispose, isFinished, flash,
+    scene,
     trackName: track.name,
     rival: rivalData,
     get car() { return player; },

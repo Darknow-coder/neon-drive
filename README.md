@@ -109,6 +109,14 @@ et fonctionne hors ligne après une première visite.
 - `src/progression/missions.js` : génération (stable dans la journée / la semaine), progression, récompenses.
 - Sauvegarde version 5 (conversion automatique).
 
+## Contre-la-montre
+
+- `src/race/ghost.js` : enregistrement / lecture des fantômes (≈ 10 Ko par tour, stockés à part).
+- `src/race/aiGhost.js` : fantôme NEON (tour de l'IA Élite), référence des médailles.
+- `src/data/timeTrial.js` : médailles et récompenses. Après une modification de la physique,
+  de l'IA ou d'un circuit, relancer `node tools/timeTrialTargets.js` pour recalculer les temps.
+- Sauvegarde version 6 (meilleurs temps et médailles).
+
 ## Garage et voitures
 
 - `src/data/cars.js` : voitures (notes 1-10, silhouette, couleurs) et leur mode de déblocage

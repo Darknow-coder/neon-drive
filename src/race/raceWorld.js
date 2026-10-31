@@ -48,7 +48,7 @@ export function createRaceWorld(opts) {
     car.raceStats = { drift: 0, overtakes: 0, pads: 0, lastPos: k + 1 };
     car.isRival = !!e.isRival;
     if (!e.isPlayer) {
-      const baseProfile = AI_PROFILES[e.profile ?? 'balanced'];
+      const baseProfile = e.profileData ?? AI_PROFILES[e.profile ?? 'balanced'];
       car.ai = createAiDriver(car, track, {
         // Un rival garde la personnalité de son profil, avec un talent supérieur
         profile: e.isRival ? { ...baseProfile, ...RIVAL_SKILL, ...(e.skill ?? {}) } : baseProfile,

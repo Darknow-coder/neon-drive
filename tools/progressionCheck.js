@@ -6,12 +6,16 @@ import { applyRaceResult, pickTrack, tracksForLeague } from '../src/progression/
 import { mulberry32 } from '../src/core/math.js';
 import { syncUnlocks, isOwned, liveryFor, setLivery, selectedCar, nextCarUnlock } from '../src/progression/garage.js';
 import { CARS } from '../src/data/cars.js';
+import { TRACKS } from '../src/data/tracks/index.js';
 import { raceCredits, upgradeCar, upgradeCost, carLevel, openPack, buyPack, claimMilestone, claimableCount, unlockWithFragments, fragmentsOf } from '../src/progression/economy.js';
 import { TROPHY_ROAD, PACKS, UPGRADE_COST } from '../src/data/economy.js';
 import { dayKey, generateOffers, refreshShop, buyOffer, buyPackItem, buyStyle, equipStyle, claimGift, giftAvailable, shopBadge, ownsFinish, racesFor, msUntilMidnight } from '../src/progression/shop.js';
 import { DAILY_GIFTS } from '../src/data/shop.js';
 import { refreshMissions, applyMissionProgress, claimMission, claimDailyBonus, missionsBadge, allDailyDone, weekKey, generateDaily } from '../src/progression/missions.js';
 import { DAILY_TEMPLATES } from '../src/data/missions.js';
+import { applyTimeTrialLap, medalFor, medalCounts, bestTime } from '../src/progression/timeTrial.js';
+import { medalTimes } from '../src/data/timeTrial.js';
+import { createRecorder, decodeGhost, ghostAt, ghostTimeAtDist } from '../src/race/ghost.js';
 
 let ok = 0, ko = 0;
 const check = (cond, label) => { if (cond) ok++; else { ko++; console.log('  ✗ ' + label); } };
@@ -118,7 +122,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 1, trophies: 120, stats: { races: 20, wins: 4, podiums: 9 }, selectedCar: 'nova' }));
   const l = createSaveStore(st).load();
-  check(l.status === 'ok' && l.data.version === 5 && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v3 sans perte');
+  check(l.status === 'ok' && l.data.version === 6 && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v3 sans perte');
   const fresh = syncUnlocks(l.data);
   check(fresh.map((c) => c.id).join() === 'volt,halo,razor', 'voitures des paliers déjà atteints rendues après migration');
   st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 5, garage: { owned: 'x', liveries: { nova: { body: 'rouge', accent: '#00ff00' } } } }));
@@ -199,7 +203,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 150, garage: { owned: ['nova', 'volt'] }, tutorialDone: true }));
   const d = createSaveStore(st).load().data;
-  check(d.version === 5 && d.credits === 0 && d.road.claimed.length === 0 && d.garage.owned.includes('volt'), 'migration v2 → v3 sans perte');
+  check(d.version === 6 && d.credits === 0 && d.road.claimed.length === 0 && d.garage.owned.includes('volt'), 'migration v2 → v3 sans perte');
   st.setItem('neondrive.save', JSON.stringify({ version: 3, credits: -50, cars: { levels: { nova: 99 }, fragments: { volt: 'x' } }, road: { claimed: [10, 10, 'a'] } }));
   const d2 = createSaveStore(st).load().data;
   check(d2.credits === 0 && d2.cars.levels.nova === 5 && !('volt' in d2.cars.fragments) && d2.road.claimed.join() === '10', 'économie abîmée réparée');
@@ -259,7 +263,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 3, trophies: 200, credits: 900, cars: { levels: { nova: 2 } }, road: { claimed: [10] } }));
   const d = createSaveStore(st).load().data;
-  check(d.version === 5 && d.credits === 900 && d.cars.levels.nova === 2 && d.shop.offers.length === 0 && d.cosmetics.finishes.length === 0, 'migration v3 → v4 sans perte');
+  check(d.version === 6 && d.credits === 900 && d.cars.levels.nova === 2 && d.shop.offers.length === 0 && d.cosmetics.finishes.length === 0, 'migration v3 → v4 sans perte');
   st.setItem('neondrive.save', JSON.stringify({ version: 4, shop: { day: 'hier', offers: [{ id: 'x', kind: 'triche', price: -5 }], giftStreak: -2 }, cosmetics: { finishes: ['gold', 'gold', 3] }, garage: { liveries: { nova: { finish: '<script>', motif: 'bolt' } } } }));
   const d2 = createSaveStore(st).load().data;
   check(d2.shop.day === null && d2.shop.offers.length === 0 && d2.shop.giftStreak === 0 && d2.cosmetics.finishes.join() === 'gold' && !d2.garage.liveries.nova.finish && d2.garage.liveries.nova.motif === 'bolt', 'boutique abîmée réparée');
@@ -301,6 +305,38 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   let carMission = false;
   for (let k = 0; k < 60; k++) { const d = defaultSave(); d.createdAt = k; if (generateDaily(d, '2026-01-01').some((m) => m.type === 'car')) carMission = true; }
   check(!carMission, 'pas de mission « voiture » avec une seule voiture');
+}
+
+// --- Contre-la-montre ---
+{
+  const mt = medalTimes('neon-boulevard');
+  check(mt.length === 4 && mt[0].time > mt[1].time && mt[1].time > mt[2].time && mt[2].time > mt[3].time, 'temps des médailles décroissants');
+  check(TRACKS.every((t) => medalTimes(t.id)), 'tous les circuits ont des médailles');
+  check(medalFor('neon-boulevard', mt[0].time + 0.01) === null && medalFor('neon-boulevard', mt[1].time)?.id === 'silver', 'médaille selon le temps');
+  const s = defaultSave();
+  const r1 = applyTimeTrialLap(s, 'neon-boulevard', mt[1].time - 0.1);
+  check(r1.record && r1.newMedals.map((m) => m.id).join() === 'bronze,silver' && s.credits === 90, 'bronze + argent d\'un coup (90 crédits)');
+  const r2 = applyTimeTrialLap(s, 'neon-boulevard', mt[1].time + 1);
+  check(!r2.record && r2.newMedals.length === 0 && bestTime(s, 'neon-boulevard') === mt[1].time - 0.1, 'tour plus lent : rien ne change');
+  const r3 = applyTimeTrialLap(s, 'neon-boulevard', mt[3].time - 0.2);
+  check(r3.record && r3.newMedals.map((m) => m.id).join() === 'gold,neon' && r3.rewards.packs.length === 2, 'or + NEON avec leurs packs');
+  check(applyTimeTrialLap(s, 'neon-boulevard', mt[3].time - 0.5).newMedals.length === 0, 'chaque médaille récompensée une seule fois');
+  check(medalCounts(s).neon === 1 && medalCounts(s).bronze === 1, 'décompte des médailles');
+}
+{
+  // Fantôme : enregistrement → décodage fidèle
+  const rec = createRecorder(); rec.start();
+  for (let k = 0; k < 360; k++) rec.step({ x: 100 + k * 5, y: 200 - k * 2, angle: (k / 360) * 6 - 3 }, k * 5);
+  const G = decodeGhost(rec.finish(3));
+  const p = ghostAt(G, 1.5);
+  check(G.n === 120 && Math.abs(p.x - (100 + 180 * 5)) < 1 && Math.abs(p.y - (200 - 180 * 2)) < 1, 'fantôme : position fidèle');
+  check(Math.abs(ghostTimeAtDist(G, 900) - 1.5) < 0.03 && ghostAt(G, 99) === null, 'fantôme : temps à une distance donnée');
+}
+{
+  const st = memStorage();
+  st.setItem('neondrive.save', JSON.stringify({ version: 5, trophies: 50, credits: 10 }));
+  const d = createSaveStore(st).load().data;
+  check(d.version === 6 && d.timeTrial && d.credits === 10, 'migration v5 → v6 sans perte');
 }
 
 console.log(`${ok} vérifications réussies, ${ko} échec(s). Ligues : ${LEAGUES.map((l) => `${l.name} ≥ ${l.min}`).join(', ')}`);

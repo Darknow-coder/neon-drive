@@ -86,6 +86,19 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
 
+    // Fantôme (contre-la-montre) : voiture translucide
+    const gh = scene.ghost;
+    if (gh) {
+      const s = spriteFor({ def: gh.def, livery: gh.colors });
+      ctx.save();
+      ctx.translate(gh.x, gh.y);
+      ctx.rotate(gh.angle);
+      ctx.globalAlpha = 0.38;
+      ctx.drawImage(s.canvas, -s.ox, -s.oy, s.w, s.h);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+
     // Voitures
     for (const car of cars) {
       const s = spriteFor(car);

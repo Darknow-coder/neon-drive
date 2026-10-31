@@ -12,7 +12,7 @@
 
 const KEY = 'neondrive.save';
 const BACKUP_KEY = 'neondrive.save.backup';
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 export function defaultSave() {
   return {
@@ -42,6 +42,8 @@ export function defaultSave() {
     cosmetics: { finishes: [], motifs: [] },
     // Missions du jour et de la semaine
     missions: { day: null, daily: [], bonusClaimed: false, week: null, weekly: null },
+    // Contre-la-montre : meilleurs temps et médailles par circuit
+    timeTrial: { best: {}, medals: {} },
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
@@ -124,6 +126,14 @@ function sanitize(raw) {
         .map((o) => ({ ...o, bought: !!o.bought }));
     }
   }
+  // Contre-la-montre
+  const tt = raw.timeTrial;
+  if (tt && typeof tt === 'object') {
+    for (const [k, v] of Object.entries(tt.best ?? {})) if (num(v, -1) > 0) s.timeTrial.best[k] = v;
+    for (const [k, v] of Object.entries(tt.medals ?? {})) {
+      if (Array.isArray(v)) s.timeTrial.medals[k] = [...new Set(v.filter((x) => ['bronze', 'silver', 'gold', 'neon'].includes(x)))];
+    }
+  }
   // Missions
   const ms = raw.missions;
   if (ms && typeof ms === 'object') {
@@ -176,7 +186,12 @@ function migrate(raw) {
     raw.missions ??= { day: null, daily: [], bonusClaimed: false, week: null, weekly: null };
     raw.version = 5;
   }
-  // Pour le futur : if (raw.version === 5) { …; raw.version = 6; }
+  // Version 5 → 6 : contre-la-montre
+  if (raw.version === 5) {
+    raw.timeTrial ??= { best: {}, medals: {} };
+    raw.version = 6;
+  }
+  // Pour le futur : if (raw.version === 6) { …; raw.version = 7; }
   return raw;
 }
 

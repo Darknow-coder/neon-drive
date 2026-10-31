@@ -1126,3 +1126,41 @@ html, body {
   .mis-bonus { padding: 5px 10px; font-size: 12px; }
   .res-missions { font-size: 11px; padding: 2px 8px; }
 }
+
+/* Contre-la-montre */
+.hud.tt .hud-pos { display: none; }
+.hud.tt .hud-lap { left: calc(14px + var(--safe-l)); }
+.hud.tt .hud-times { left: calc(86px + var(--safe-l)); }
+.hud-delta { font-family: var(--font-ui); font-weight: 800; font-size: 18px; color: #ff6b8a; font-variant-numeric: tabular-nums; text-shadow: 0 0 8px rgba(255, 107, 138, 0.6); }
+.hud-delta.ahead { color: #3dff9e; text-shadow: 0 0 8px rgba(61, 255, 158, 0.6); }
+
+/* ======================= CONTRE-LA-MONTRE ======================= */
+.tt-btn { border-color: #3dff9e; color: #b8ffd9; }
+#tt-select { background: rgba(7, 4, 26, 0.96); }
+.tt-card { width: min(1080px, 100%); gap: 8px; }
+.tt-total { justify-self: end; display: flex; gap: 8px; font-weight: 800; font-size: 14px; }
+.tt-total span { display: flex; align-items: center; gap: 3px; }
+.tt-sub { font-size: 14px; color: var(--muted); }
+.tt-sub b { color: var(--cyan); }
+.tt-list { display: flex; gap: 12px; overflow-x: auto; padding: 6px 40px 8px 2px; touch-action: pan-x; -webkit-mask-image: linear-gradient(90deg, #000 93%, transparent); mask-image: linear-gradient(90deg, #000 93%, transparent); }
+.tt-track { flex: 0 0 auto; width: 210px; display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 14px; cursor: pointer;
+  background: linear-gradient(180deg, #1a1045, #0d0828); border: 1px solid rgba(61, 255, 158, 0.3); transition: transform 0.15s, box-shadow 0.15s; }
+.tt-track:hover { transform: translateY(-4px); box-shadow: 0 8px 22px rgba(61, 255, 158, 0.25); }
+.tt-track canvas { width: 100%; height: 96px; border-radius: 8px; background: #07041a; }
+.tt-track .tn { font-family: var(--font-display); font-weight: 900; font-size: 14px; letter-spacing: 2px; }
+.tt-track .tp { font-size: 12px; color: var(--muted); }
+.tt-track .tb { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tt-track .tb span { color: var(--muted); font-weight: 600; font-size: 12px; }
+.tt-medals { display: flex; gap: 6px; }
+.medal { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 900;
+  border: 2px solid var(--mc); color: var(--mc); opacity: 0.28; }
+.medal.on { opacity: 1; background: radial-gradient(circle at 35% 30%, #fff, var(--mc) 45%, color-mix(in srgb, var(--mc) 40%, #000)); color: #1a0b2e; box-shadow: 0 0 10px var(--mc); }
+.tt-next { font-size: 12px; color: #ffe680; min-height: 16px; }
+.tt-go { margin-top: auto; padding: 8px; font-size: 12px; }
+@media (max-height: 460px) {
+  .tt-card { padding: 6px 12px; gap: 4px; }
+  .tt-track { width: 170px; padding: 7px; gap: 3px; }
+  .tt-track canvas { height: 60px; }
+  .tt-sub { font-size: 12px; }
+  .medal { width: 22px; height: 22px; }
+}

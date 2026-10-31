@@ -35,8 +35,8 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Boutique : cadeau quotidien (cycle 7 jours), 6 offres du jour, packs, finitions et motifs (cosmétiques)
 - [x] Missions : 3 du jour (+ bonus), 1 de la semaine — aucune mission de drift
 
-## Phase 4 — Modes de jeu
-- Contre-la-montre avec fantôme (enregistrement des commandes, rejouable à l'identique)
+## Phase 4 — Modes de jeu  ⏳ en cours
+- [x] Contre-la-montre avec fantôme (record + fantôme NEON), 4 médailles par circuit
 - Coupe (3-4 courses aux points), Élimination, Défi drift, Événements hebdomadaires
 
 ## Phase 5 — Saisons
