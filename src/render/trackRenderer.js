@@ -27,7 +27,7 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
   const oy = b.minY - DECOR_MARGIN;
   const ww = b.maxX - b.minX + DECOR_MARGIN * 2;
   const wh = b.maxY - b.minY + DECOR_MARGIN * 2;
-  const maxPx = lowEnd ? 4e6 : 7e6;
+  const maxPx = lowEnd ? 3e6 : 7e6;
   const scale = Math.min(1, Math.sqrt(maxPx / (ww * wh)), 4096 / ww, 4096 / wh);
 
   const cache = document.createElement('canvas');
@@ -495,7 +495,16 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
     }
   }
 
-  return { draw, addSkid, clearSkids, theme };
+    // Si le système efface l'image (manque de mémoire graphique), on la refait.
+  cache.addEventListener?.('contextrestored', buildCache);
+
+  /** Libère immédiatement la mémoire de l'image du circuit. */
+  function dispose() {
+    cache.width = 0;
+    cache.height = 0;
+  }
+
+  return { draw, addSkid, clearSkids, rebuild: buildCache, dispose, theme };
 }
 
 /** Pilier vu du dessus : colonne sombre cerclée de néon (rayon de référence 26). */

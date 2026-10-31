@@ -11,6 +11,7 @@
 </head>
 <body>
   <canvas id="game"></canvas>
+  <div class="vignette"></div>
 
   <!-- HUD -->
   <div id="hud" class="hud hidden">
@@ -60,14 +61,39 @@
     <div class="track-pick" id="track-pick"></div>
     <button class="start-btn" id="btn-start">TOUCHER POUR ROULER</button>
     <div class="controls-help">
-      <div><b>Clavier :</b> ← → tourner · ↑ / Z accélérer · ↓ / S / Espace freiner · Freiner + tourner à grande vitesse = DRIFT · Maj / B boost · R replacer · T réglages</div>
-      <div><b>Tactile :</b> pouce gauche ◀ ▶ · pouce droit GAZ, FREIN/DRIFT, BOOST</div>
+      <div class="help-kb"><b>Clavier :</b> ← → tourner · ↑ / Z accélérer · ↓ / S / Espace freiner · Freiner + tourner à grande vitesse = DRIFT · Maj / B boost · R replacer · T réglages</div>
+      <div class="help-touch"><b>Tactile :</b> pouce gauche ◀ ▶ · pouce droit GAZ, FREIN/DRIFT, BOOST</div>
       <div class="hint">Le drift remplit la jauge de boost.</div>
     </div>
   </div>
 
+  <!-- Affichage des erreurs (pour pouvoir les signaler) -->
+  <div id="error-box" class="error-box hidden">
+    <b>Oups, une erreur est survenue</b>
+    <pre id="error-text"></pre>
+    <button onclick="location.reload()">Recharger le jeu</button>
+  </div>
+
   <div id="rotate-hint" class="rotate-hint">Tourne ton téléphone à l'horizontale pour un meilleur confort ↻</div>
 
+  <script>
+    // Affiche les erreurs à l'écran : utile pour les signaler depuis un téléphone.
+    (function () {
+      function show(msg) {
+        var box = document.getElementById('error-box');
+        var txt = document.getElementById('error-text');
+        if (!box || !txt) return;
+        txt.textContent += msg + '\n';
+        box.classList.remove('hidden');
+      }
+      window.addEventListener('error', function (e) {
+        show((e.message || 'Erreur') + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : ''));
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        show('Promesse : ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+      });
+    })();
+  </script>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

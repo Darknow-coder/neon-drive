@@ -88,8 +88,19 @@ export function createTestDrive({ renderer, input, hud, lowEnd, trackId, carId }
     hud.update({ car, lap: laps.lap, lapTime: laps.lapTime, bestLap: laps.bestLap, lastMsg: message });
   }
 
+  /** Après une perte du contexte graphique : tout redessiner. */
+  function reloadGraphics() {
+    trackRenderer.rebuild();
+    renderer.resetSprites();
+    particles.resetSprites();
+  }
+
+  function dispose() {
+    trackRenderer.dispose();
+  }
+
   return {
-    update, render, resize, respawn, setCarDef,
+    update, render, resize, respawn, setCarDef, reloadGraphics, dispose,
     get car() { return car; },
     track,
     // Accès pour les tests automatiques

@@ -44,6 +44,34 @@ html, body {
 
 .hidden { display: none !important; }
 
+/* Assombrissement des bords (fait par le navigateur, gratuit en performances) */
+.vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(10, 0, 30, 0.6) 100%);
+}
+
+/* ---------- Erreurs ---------- */
+.error-box {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 560px);
+  max-height: 80vh;
+  overflow: auto;
+  z-index: 100;
+  background: #1a0b2e;
+  border: 2px solid var(--magenta);
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  touch-action: pan-y;
+}
+.error-box pre { white-space: pre-wrap; font-size: 12px; color: #ffb3ec; }
+.error-box button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--cyan); background: #0d0828; color: var(--text); }
+
 /* ---------- HUD ---------- */
 .hud {
   position: fixed;
@@ -199,9 +227,26 @@ html, body {
   background:
     radial-gradient(ellipse at 50% 40%, rgba(138, 43, 255, 0.35), transparent 60%),
     radial-gradient(ellipse at 50% 100%, rgba(255, 43, 214, 0.25), transparent 50%),
-    rgba(7, 4, 26, 0.88);
+    repeating-linear-gradient(0deg, rgba(138, 43, 255, 0.08) 0 1px, transparent 1px 60px),
+    repeating-linear-gradient(90deg, rgba(138, 43, 255, 0.08) 0 1px, transparent 1px 60px),
+    #07041a;
   text-align: center;
+  overflow-y: auto;
+  touch-action: pan-y;
+  z-index: 20;
 }
+/* Écrans peu hauts (téléphone à l'horizontale) : menu compact */
+@media (max-height: 520px) {
+  .start-screen { gap: 10px; padding: 10px 16px; }
+  .logo { font-size: clamp(28px, 7vw, 52px); }
+  .subtitle { font-size: 10px; }
+  .start-btn { font-size: 15px; padding: 11px 26px; }
+  .track-pick button { padding: 6px 12px; font-size: 14px; }
+  .controls-help { font-size: 13px; }
+}
+/* Sur écran tactile, l'aide clavier est inutile (et inversement) */
+@media (pointer: coarse) { .help-kb { display: none; } }
+@media (pointer: fine) { .help-touch { display: none; } }
 .logo {
   font-family: var(--font-display);
   font-weight: 900;

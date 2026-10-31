@@ -85,5 +85,5 @@ export function createParticles(max = 500) {
     life.fill(0);
   }
 
-  return { spawn, update, draw, clear };
+  return { spawn, update, draw, clear, resetSprites: () => sprites.clear() };
 }

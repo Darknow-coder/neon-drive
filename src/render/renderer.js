@@ -5,10 +5,10 @@ import { lerp, lerpAngle } from '../core/math.js';
 
 export function createRenderer(canvas, { lowEnd = false } = {}) {
   const ctx = canvas.getContext('2d', { alpha: false });
-  const state = { cssW: 0, cssH: 0, dpr: 1, vignette: null };
+  const state = { cssW: 0, cssH: 0, dpr: 1 };
   const sprites = new Map();
-  const brakeGlow = makeGlowSprite('#ff2b5a', 64);
-  const headCone = makeHeadlightCone();
+  let brakeGlow = makeGlowSprite('#ff2b5a', 64);
+  let headCone = makeHeadlightCone();
 
   function resize() {
     const cssW = window.innerWidth;
@@ -16,12 +16,24 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
     // Résolution limitée : au-delà de 2x, la différence ne se voit pas mais
     // coûte très cher en performances sur téléphone.
     const dpr = Math.min(window.devicePixelRatio || 1, lowEnd ? 1.5 : 2);
-    canvas.width = Math.round(cssW * dpr);
-    canvas.height = Math.round(cssH * dpr);
+    const w = Math.round(cssW * dpr);
+    const h = Math.round(cssH * dpr);
     state.cssW = cssW;
     state.cssH = cssH;
     state.dpr = dpr;
-    state.vignette = makeVignette(canvas.width, canvas.height);
+    // Sur mobile, l'événement « resize » arrive très souvent (barre d'adresse
+    // qui apparaît/disparaît) : on ne réalloue le canvas que si nécessaire.
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+  }
+
+  /** Recrée les petites images en cache (après une perte du contexte graphique). */
+  function resetSprites() {
+    sprites.clear();
+    brakeGlow = makeGlowSprite('#ff2b5a', 64);
+    headCone = makeHeadlightCone();
   }
 
   function spriteFor(car) {
@@ -99,24 +111,10 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     const player = scene.player;
     if (player && player.boosting) drawSpeedLines(ctx, W, H, player);
-    ctx.drawImage(state.vignette, 0, 0);
+    // (le vignettage des bords est fait en CSS : .vignette dans main.css)
   }
 
-  return { resize, render, state, ctx };
-}
-
-function makeVignette(w, h) {
-  const cv = document.createElement('canvas');
-  cv.width = w;
-  cv.height = h;
-  const c = cv.getContext('2d');
-  const r = Math.hypot(w, h) / 2;
-  const g = c.createRadialGradient(w / 2, h / 2, r * 0.45, w / 2, h / 2, r);
-  g.addColorStop(0, 'rgba(0,0,0,0)');
-  g.addColorStop(1, 'rgba(10,0,30,0.62)');
-  c.fillStyle = g;
-  c.fillRect(0, 0, w, h);
-  return cv;
+  return { resize, render, resetSprites, state, ctx };
 }
 
 function makeHeadlightCone() {

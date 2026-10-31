@@ -30,14 +30,16 @@ const input = createInput({
   },
 });
 
+// Le circuit n'est construit qu'au lancement (et l'ancien est libéré) :
+// sur téléphone, garder plusieurs grands circuits en mémoire peut provoquer
+// un écran noir.
 let trackId = TRACKS[0].id;
 function loadTrack(id) {
-  trackId = id;
+  if (session && session.track.id === id) return;
   const carId = session ? session.car.def.id : 'nova';
-  session = createTestDrive({ renderer, input, hud, lowEnd, trackId, carId });
-  session.render(1);
+  session?.dispose();
+  session = createTestDrive({ renderer, input, hud, lowEnd, trackId: id, carId });
 }
-loadTrack(trackId);
 
 // Choix du circuit sur l'écran de départ (provisoire, avant le vrai menu)
 const pick = document.getElementById('track-pick');
@@ -46,7 +48,7 @@ for (const t of TRACKS) {
   b.innerHTML = `${t.name}<small>${t.profile}</small>`;
   b.dataset.id = t.id;
   b.addEventListener('click', () => {
-    loadTrack(t.id);
+    trackId = t.id;
     pick.querySelectorAll('button').forEach((x) => x.classList.toggle('selected', x === b));
   });
   if (t.id === trackId) b.classList.add('selected');
@@ -54,8 +56,8 @@ for (const t of TRACKS) {
 }
 
 tuning = createTuningPanel(document.getElementById('tuning'), {
-  getCar: () => session.car,
-  setCarDef: (id) => session.setCarDef(id),
+  getCar: () => session?.car ?? { def: { id: 'nova', stats: {} }, params: {} },
+  setCarDef: (id) => session?.setCarDef(id),
   getFps: () => loop.fps,
   getPerf: () => perf,
 });
@@ -65,12 +67,12 @@ const perf = { update: 0, render: 0, worst: 0, frameUpdate: 0 };
 const loop = createLoop({
   update: (dt) => {
     const t = performance.now();
-    session.update(dt);
+    session?.update(dt);
     perf.frameUpdate += performance.now() - t;
   },
   render: (alpha) => {
     const t = performance.now();
-    session.render(alpha);
+    session?.render(alpha);
     const r = performance.now() - t;
     perf.render += (r - perf.render) * 0.05;
     perf.update += (perf.frameUpdate - perf.update) * 0.05;
@@ -79,12 +81,18 @@ const loop = createLoop({
   },
 });
 
-window.addEventListener('resize', () => session.resize());
-document.getElementById('btn-reset').addEventListener('click', () => session.respawn());
+window.addEventListener('resize', () => session?.resize());
+document.getElementById('btn-reset').addEventListener('click', () => session?.respawn());
+
+// Si Android efface le dessin du jeu (manque de mémoire graphique),
+// on reconstruit les images au lieu de rester sur un écran noir.
+canvas.addEventListener('contextlost', (e) => e.preventDefault());
+canvas.addEventListener('contextrestored', () => session?.reloadGraphics());
 document.getElementById('btn-tuning').addEventListener('click', () => tuning.toggle());
 
 
 document.getElementById('btn-start').addEventListener('click', async () => {
+  loadTrack(trackId);
   document.getElementById('start').classList.add('hidden');
   hud.show(true);
   document.getElementById('sys-buttons').classList.remove('hidden');
@@ -95,7 +103,7 @@ document.getElementById('btn-start').addEventListener('click', async () => {
       await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
       await screen.orientation?.lock?.('landscape');
     } catch { /* pas grave : certains navigateurs refusent */ }
-    setTimeout(() => session.resize(), 300);
+    setTimeout(() => session?.resize(), 300);
   }
   loop.start();
 });
