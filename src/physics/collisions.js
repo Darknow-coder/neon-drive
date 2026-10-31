@@ -58,6 +58,8 @@ export function collideCarWithWalls(car, track) {
     const vn = pvx * wx + pvy * wy;
     if (vn <= 0) continue;
 
+    const speedBefore = Math.hypot(car.vx, car.vy);
+
     // Rebond sur la composante perpendiculaire au mur
     const j = (1 + RESTITUTION) * vn;
     car.vx -= wx * j;
@@ -71,6 +73,27 @@ export function collideCarWithWalls(car, track) {
     const keep = 1 - (1 - car.params.wallRetain) * impactRatio - 0.02;
     car.vx += tx * vt * (keep - 1);
     car.vy += ty * vt * (keep - 1);
+
+    // Arcade : une partie de la vitesse « écrasée » contre le mur est redirigée
+    // le long du mur, dans le sens de la course. Un choc reste pénalisant,
+    // mais on repart beaucoup plus vite (même règle pour toutes les voitures).
+    const vtAfter = car.vx * tx + car.vy * ty;
+    const raceDir = Math.sign(track.tx[q.seg] * tx + track.ty[q.seg] * ty) || 1;
+    const dirT = Math.abs(vtAfter) > 40 ? Math.sign(vtAfter) : raceDir;
+    const add = vn * car.params.wallDeflect * dirT;
+    car.vx += tx * add;
+    car.vy += ty * add;
+    const sp = Math.hypot(car.vx, car.vy);
+    const cap = speedBefore * 0.92;
+    if (sp > cap && sp > 0) { car.vx *= cap / sp; car.vy *= cap / sp; }
+    // La carrosserie s'aligne un peu sur le mur (évite de rester bloqué de travers)
+    if (sp > 60 && impactRatio > 0.35) {
+      const va = Math.atan2(car.vy, car.vx);
+      let da = va - car.angle;
+      while (da > Math.PI) da -= Math.PI * 2;
+      while (da < -Math.PI) da += Math.PI * 2;
+      if (Math.abs(da) < Math.PI / 2) car.yawRate += da * 1.6 * impactRatio;
+    }
 
     // Couple : un choc sur l'avant fait pivoter la voiture
     const torque = (c.ox * wy - c.oy * wx) * j;

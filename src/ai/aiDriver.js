@@ -14,19 +14,20 @@ import { getRacingLine, computeSpeedProfile } from './racingLine.js';
 import { GLOBAL_TUNING } from '../physics/carPhysics.js';
 import { clamp, damp, smoothstep, createIntentObject } from './aiUtils.js';
 
-export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1, rng = Math.random }) {
+export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1, lineMul = 1, driftMul = 1, rng = Math.random }) {
   const line = getRacingLine(track);
   const skill = {
     gripUse: Math.min(0.99, profile.gripUse * pace),
     brakeUse: Math.min(0.95, profile.brakeUse * pace),
-    driftUse: profile.driftUse,
+    driftUse: profile.driftUse * driftMul,
+    steerUse: Math.min(1, 0.6 + 0.4 * pace),
   };
   const prof = computeSpeedProfile(track, line, car.params, skill);
   const n = track.count;
   const intent = createIntentObject();
 
   // Petite imprécision de trajectoire propre à chaque pilote
-  const noiseAmp = (1 - profile.lineFocus) * 110;
+  const noiseAmp = Math.min(90, (1 - profile.lineFocus) * 110 * lineMul);
   const noiseFreq = 0.15 + rng() * 0.2;
   const noisePhase = rng() * 100;
 
@@ -52,7 +53,7 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
     const r = rng();
     const type = r < 0.3 ? 'lateBrake' : r < 0.6 ? 'wide' : r < 0.8 ? 'lift' : 'noDrift';
     st.mistake = { type, dir: rng() < 0.5 ? -1 : 1 };
-    st.mistakeTime = type === 'lift' ? 0.45 : type === 'wide' ? 1.4 : 1.2;
+    st.mistakeTime = type === 'lift' ? 0.8 : type === 'wide' ? 1.6 : 1.4;
   }
 
   /** Différence de distance sur le tracé entre deux voitures (−L/2 … +L/2). */
@@ -170,7 +171,7 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
     let biasTarget = st.passLat !== null ? st.passLat - line.off[j] : 0;
     biasTarget += sidePush;
     biasTarget += Math.sin(st.time * noiseFreq * 6.283 + noisePhase) * noiseAmp;
-    if (mk === 'wide') biasTarget += -Math.sign(line.curv[j] || st.mistake.dir) * 70;
+    if (mk === 'wide') biasTarget += -Math.sign(line.curv[j] || st.mistake.dir) * 95;
     // En drift, le nez pointe vers l'intérieur : on prend la corde moins serrée
     // pour ne pas toucher le mur intérieur avec l'avant.
     const driftNear = car.drifting || prof.drift[j] === 1 || prof.drift[i] === 1;
@@ -224,7 +225,7 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
     // ---------------- Vitesse ----------------
     const react = Math.round((speed * profile.reaction) / track.spacing);
     let vt = prof.v[aheadIdx(react)];
-    if (mk === 'lateBrake') vt *= 1.12;
+    if (mk === 'lateBrake') vt *= 1.18;
     vt = Math.min(vt, speedCap);
     if (!world.started) vt = 0;
 

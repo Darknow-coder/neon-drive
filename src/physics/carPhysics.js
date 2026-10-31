@@ -59,6 +59,7 @@ export function statsToParams(stats) {
     boostGain: 0.8 + s.drift * 0.06,
     mass: 0.8 + s.toughness * 0.06,
     wallRetain: 0.55 + s.toughness * 0.03,
+    wallDeflect: 0.3 + s.toughness * 0.035,  // vitesse redirigée le long du mur lors d'un choc
   };
 }
 

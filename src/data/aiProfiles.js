@@ -60,13 +60,17 @@ export const AI_DRIVERS = [
     colors: { body: '#3dff9e', accent: '#00f0ff', glow: '#3dff9e' } },
 ];
 
-// Niveau général des adversaires selon la ligue du joueur.
-// Multiplie la part des capacités exploitée et le taux d'erreurs.
-// (Fixé au moment de lancer la course.)
+// Niveau général des adversaires selon la ligue du joueur (fixé au lancement).
+//   pace     part des capacités exploitée en virage et au freinage
+//   mistakes multiplie le taux d'erreurs
+//   line     multiplie l'imprécision de trajectoire
+//   drift    multiplie l'usage du drift (donc le boost récupéré)
+// Les voitures, elles, restent identiques : vitesse et accélération ne
+// changent jamais.
 export const LEAGUE_SKILL = {
-  bronze:  { pace: 0.93, mistakes: 1.5 },
-  argent:  { pace: 0.96, mistakes: 1.2 },
-  or:      { pace: 0.98, mistakes: 1.0 },
-  diamant: { pace: 1.0, mistakes: 0.8 },
-  elite:   { pace: 1.02, mistakes: 0.6 },
+  bronze:  { pace: 0.86, mistakes: 2.4, line: 2.6, drift: 0.5 },
+  argent:  { pace: 0.9, mistakes: 1.8, line: 2.0, drift: 0.7 },
+  or:      { pace: 0.94, mistakes: 1.3, line: 1.5, drift: 0.85 },
+  diamant: { pace: 0.98, mistakes: 1.0, line: 1.1, drift: 1.0 },
+  elite:   { pace: 1.01, mistakes: 0.7, line: 0.8, drift: 1.0 },
 };

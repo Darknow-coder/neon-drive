@@ -149,7 +149,8 @@ export function computeSpeedProfile(track, line, params, skill) {
     // Limite d'adhérence : v² × courbure ≤ adhérence
     const vGrip = Math.sqrt((params.gripAccel * gm * skill.gripUse) / c);
     // Limite de braquage : la rotation max diminue avec la vitesse
-    const T = params.turnRate * 0.92;
+    // Part du braquage que le pilote ose utiliser à haute vitesse
+    const T = params.turnRate * 0.92 * (skill.steerUse ?? 1);
     const vSteer = T / (c + (T * u) / vref);
     let lim = Math.min(vGrip, vSteer);
     // En drift, la voiture peut tourner plus serré (si le pilote sait drifter)
@@ -188,7 +189,7 @@ export function computeSpeedProfile(track, line, params, skill) {
         // Sans drift, la vitesse redescend à la limite « grip »
         const c = Math.max(Math.abs(line.curv[j]), 1e-5);
         const gm = gripMulAt[j];
-        const T = params.turnRate * 0.92;
+        const T = params.turnRate * 0.92 * (skill.steerUse ?? 1);
         v[j] = Math.min(vmax, Math.sqrt((params.gripAccel * gm * skill.gripUse) / c), T / (c + (T * u) / vref));
       }
     }

@@ -46,6 +46,8 @@ export function createRaceWorld(opts) {
         profile: AI_PROFILES[e.profile ?? 'balanced'],
         pace: skill.pace,
         mistakesMul: skill.mistakes,
+        lineMul: skill.line,
+        driftMul: skill.drift,
         rng: mulberry32((rng() * 1e9) | 0),
       });
     }
