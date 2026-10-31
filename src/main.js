@@ -46,6 +46,13 @@ function offerLabel(o) {
   return `${o.kind === 'finish' ? 'finition' : 'motif'} ${it?.name ?? ''} (${o.price})`;
 }
 import { rivalFor } from './data/rivals.js';
+import { createProfile } from './ui/profile.js';
+import { avatarHtml } from './ui/avatar.js';
+import { setPlayerLabel } from './ui/playerLabel.js';
+import { runBoot } from './ui/boot.js';
+import { recordRace, addDriving, trackTotals, playerName, currentTitle, achievementsBadge } from './progression/profile.js';
+import { iconImage } from './ui/icons.js';
+import { minimap } from './ui/timeTrialSelect.js';
 
 const $ = (id) => document.getElementById(id);
 const show = (id, v = true) => $(id).classList.toggle('hidden', !v);
@@ -68,9 +75,14 @@ const store = createSaveStore();
 const loaded = store.load();
 const save = loaded.data;
 let saveStatus = loaded.status;
+// Crédits gagnés et record de trophées : suivis à chaque sauvegarde
+let lastCredits = save.credits;
 function persist() {
+  lastCredits = trackTotals(save, lastCredits);
+  setPlayerLabel(save.profile.name);
   if (!store.save(save) && store.available) saveStatus = 'failed';
 }
+setPlayerLabel(save.profile.name);
 // Voitures dont le palier est déjà atteint (ex. ancienne sauvegarde convertie)
 if (syncUnlocks(save).length) persist();
 
@@ -145,6 +157,13 @@ function refreshMenu() {
     ? `Reprendre · course ${save.cup.race + 1}/3`
     : `3 courses · ligue ${LEAGUES.find((l) => l.id === leagueFor(save.trophies).id)?.name ?? ''}`;
   $('btn-cup').classList.toggle('live', !!save.cup);
+  // Profil : emblème, pseudo, titre et succès à récupérer
+  $('menu-avatar').innerHTML = avatarHtml(save.profile, 'av-s');
+  $('menu-name').textContent = playerName(save);
+  $('menu-title').textContent = currentTitle(save);
+  const nb = achievementsBadge(save);
+  $('profile-badge').textContent = String(nb);
+  $('profile-badge').classList.toggle('hidden', !nb);
 }
 
 const shop = createShop({ save, onSave: persist, sfx, onClose: refreshMenu });
@@ -153,6 +172,7 @@ const garage = createGarage({ save, onSave: persist, onClose: refreshMenu, sfx, 
 if (refreshShop(save)) persist();
 const missions = createMissions({ save, onSave: persist, sfx, onClose: refreshMenu });
 const road = createRoad({ save, onSave: persist, sfx, onClose: refreshMenu });
+const profile = createProfile({ save, onSave: persist, sfx, onClose: refreshMenu });
 
 function startRace() {
   // Le circuit n'est construit qu'au lancement (et l'ancien est libéré) :
@@ -246,6 +266,7 @@ function cupRaceDone(rows, abandoned = false) {
       position: me.position, overtakes: me.stats.overtakes, clean: me.stats.wallHits === 0 && me.finished,
       rivalBeaten, pads: me.stats.pads, trackId, carId, credits: credits.total,
     });
+    recordRace(save, { position: me.position, carId, trackId, mode: 'cup' });
     info = `<span>Crédits de la course : <b>+${credits.total}</b></span>` +
       changes.map((c) => `<span class="${c.done ? 'ok' : ''}">${c.mission.text} <b>${c.done ? '✓' : `${c.after}/${c.mission.target}`}</b></span>`).join('');
   }
@@ -303,6 +324,7 @@ function handleRaceFinish(rows, { trophyTable } = {}) {
       position: me.position, overtakes: me.stats.overtakes, clean: me.stats.wallHits === 0 && me.finished,
       rivalBeaten, pads: me.stats.pads, trackId, carId, credits: credits.total,
     });
+    recordRace(save, { position: me.position, carId, trackId, mode: session.isElimination ? 'elim' : 'ranked' });
     persist();
   }
   showResults(rows, { trackName: session.trackName, reward, training, credits, missions: missionChanges });
@@ -513,6 +535,8 @@ const loop = createLoop({
   update: (dt) => {
     const t = performance.now();
     session?.update(dt);
+    // Temps au volant et distance parcourue (profil)
+    if (state === 'race' && session?.car && session.world?.started !== false) addDriving(save, dt, session.car.speed);
     perf.frameUpdate += performance.now() - t;
   },
   render: (alpha) => {
@@ -555,6 +579,7 @@ $('btn-event').addEventListener('click', () => {
   sfx.click();
 });
 $('btn-road').addEventListener('click', () => road.open());
+$('btn-profile').addEventListener('click', () => profile.open(achievementsBadge(save) ? 'ach' : 'stats'));
 $('btn-shop').addEventListener('click', () => shop.open());
 $('btn-missions').addEventListener('click', () => missions.open());
 const ttSelect = createTimeTrialSelect({ save, onStart: (id) => { enterFullscreenOnMobile(); startTimeTrial(id); }, onClose: refreshMenu });
@@ -604,6 +629,33 @@ document.addEventListener('visibilitychange', () => {
     audio.resume();
     if (state === 'results') loop.start();
   }
+});
+
+// ---------------- Écran de chargement, puis accueil ----------------
+// (les tests automatiques le passent, sauf avec ?intro dans l'adresse)
+const skipIntro = navigator.webdriver && !urlParams.has('intro');
+$('about').innerHTML = `NEON//DRIVE <b>v${__APP_VERSION__}</b> · un jeu de Darknow`;
+runBoot({
+  version: __APP_VERSION__,
+  touch,
+  skip: skipIntro,
+  tasks: [
+    ['Allumage des néons…', () => Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 2500))])],
+    ['Chargement des icônes…', () => Promise.all(['trophy', 'credit', 'lock'].map((n) => iconImage(n).decode?.().catch(() => {})))],
+    ['Préparation des circuits…', async () => {
+      // Plans des circuits calculés à l'avance (chrono, profil : affichage immédiat)
+      for (const t of TRACKS) { if (!t.custom) minimap(t); await new Promise((r) => setTimeout(r, 0)); }
+    }],
+    ['Chargement de ta progression…', () => {
+      refreshMenu();
+      if (saveStatus === 'restored') $('boot-status').textContent = 'Sauvegarde de secours restaurée.';
+    }],
+  ],
+  onEnter: () => {
+    if (!skipIntro) setTimeout(() => sfx.unlock(), 60);
+    // Premier lancement : choix du pseudo
+    if (!save.profile.name && !skipIntro) profile.openIdentity({ welcome: true });
+  },
 });
 
 // Accès pour les tests automatiques

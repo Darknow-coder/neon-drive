@@ -149,6 +149,7 @@ export function claimMission(save, id, rng) {
   const m = [...save.missions.daily, save.missions.weekly].find((x) => x && x.id === id);
   if (!m || !isDone(m) || m.claimed) return null;
   m.claimed = true;
+  if (save.career) save.career.missionsDone++;
   return grant(save, m.reward, rng);
 }
 

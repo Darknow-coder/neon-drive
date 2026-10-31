@@ -12,7 +12,7 @@
 
 const KEY = 'neondrive.save';
 const BACKUP_KEY = 'neondrive.save.backup';
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 export function defaultSave() {
   return {
@@ -47,6 +47,16 @@ export function defaultSave() {
     // Coupe en cours (ou null) et palmarès
     cup: null,
     cupStats: { played: 0, podiums: 0, won: {} },
+    // Profil du joueur (pseudo choisi au premier lancement)
+    profile: { name: null, avatar: 'bolt', color: '#00f0ff', title: null },
+    // Carrière : statistiques de toutes les courses (classées, élimination, coupe)
+    career: {
+      races: 0, wins: 0, podiums: 0, elimPlayed: 0, elimWins: 0,
+      maxTrophies: 0, creditsEarned: 0, missionsDone: 0,
+      playTime: 0, distance: 0, carRaces: {}, trackRaces: {},
+    },
+    // Succès : nombre de paliers récupérés par succès
+    achievements: { claimed: {} },
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
@@ -173,6 +183,28 @@ function sanitize(raw) {
   if (raw.rivalsBeaten && typeof raw.rivalsBeaten === 'object') {
     for (const [k, v] of Object.entries(raw.rivalsBeaten)) if (num(v, 0) > 0) s.rivalsBeaten[k] = Math.floor(v);
   }
+  // Profil
+  const pr = raw.profile;
+  if (pr && typeof pr === 'object') {
+    if (typeof pr.name === 'string' && /^[A-Z0-9À-ÖØ-Þ _.-]{3,14}$/.test(pr.name)) s.profile.name = pr.name;
+    if (typeof pr.avatar === 'string' && /^[a-z]{2,16}$/.test(pr.avatar)) s.profile.avatar = pr.avatar;
+    if (isColor(pr.color)) s.profile.color = pr.color;
+    if (typeof pr.title === 'string' && pr.title.length <= 40) s.profile.title = pr.title;
+  }
+  // Carrière
+  const ca = raw.career;
+  if (ca && typeof ca === 'object') {
+    for (const k of ['races', 'wins', 'podiums', 'elimPlayed', 'elimWins', 'maxTrophies', 'creditsEarned', 'missionsDone']) s.career[k] = Math.floor(num(ca[k]));
+    s.career.playTime = num(ca.playTime);
+    s.career.distance = num(ca.distance);
+    for (const key of ['carRaces', 'trackRaces']) {
+      for (const [k, v] of Object.entries(ca[key] ?? {})) if (num(v, 0) > 0) s.career[key][k] = Math.floor(v);
+    }
+  }
+  s.career.maxTrophies = Math.max(s.career.maxTrophies, s.trophies);
+  for (const [k, v] of Object.entries(raw.achievements?.claimed ?? {})) {
+    if (num(v, 0) > 0) s.achievements.claimed[k] = Math.min(3, Math.floor(v));
+  }
   // Joueur existant (sauvegarde sans ce champ, mais avec des courses) : pas de tutoriel imposé
   s.tutorialDone = typeof raw.tutorialDone === 'boolean' ? raw.tutorialDone : s.stats.races > 0;
   return s;
@@ -217,7 +249,25 @@ function migrate(raw) {
     raw.cupStats ??= { played: 0, podiums: 0, won: {} };
     raw.version = 7;
   }
-  // Pour le futur : if (raw.version === 7) { …; raw.version = 8; }
+  // Version 7 → 8 : profil, carrière et succès. La carrière reprend les
+  // statistiques déjà connues (courses classées, historique, coupes).
+  if (raw.version === 7) {
+    const st = raw.stats ?? {};
+    const carRaces = {}, trackRaces = {};
+    for (const h of Array.isArray(raw.history) ? raw.history : []) {
+      if (typeof h?.carId === 'string') carRaces[h.carId] = (carRaces[h.carId] ?? 0) + 1;
+      if (typeof h?.trackId === 'string') trackRaces[h.trackId] = (trackRaces[h.trackId] ?? 0) + 1;
+    }
+    raw.profile ??= { name: null, avatar: 'bolt', color: '#00f0ff', title: null };
+    raw.career ??= {
+      races: st.races ?? 0, wins: st.wins ?? 0, podiums: st.podiums ?? 0, elimPlayed: 0, elimWins: 0,
+      maxTrophies: raw.trophies ?? 0, creditsEarned: raw.credits ?? 0, missionsDone: 0,
+      playTime: 0, distance: 0, carRaces, trackRaces,
+    };
+    raw.achievements ??= { claimed: {} };
+    raw.version = 8;
+  }
+  // Pour le futur : if (raw.version === 8) { …; raw.version = 9; }
   return raw;
 }
 

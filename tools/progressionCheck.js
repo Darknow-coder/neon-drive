@@ -1,7 +1,7 @@
 // Tests automatiques de la progression et de la sauvegarde.
 // Usage : node tools/progressionCheck.js
 import { TROPHY_REWARDS, LEAGUES, leagueFor, leagueProgress } from '../src/data/progression.js';
-import { createSaveStore, defaultSave, exportSaveCode, importSaveCode } from '../src/progression/save.js';
+import { createSaveStore, defaultSave, exportSaveCode, importSaveCode, SAVE_VERSION } from '../src/progression/save.js';
 import { applyRaceResult, pickTrack, tracksForLeague } from '../src/progression/progression.js';
 import { mulberry32 } from '../src/core/math.js';
 import { syncUnlocks, isOwned, liveryFor, setLivery, selectedCar, nextCarUnlock } from '../src/progression/garage.js';
@@ -17,6 +17,8 @@ import { applyTimeTrialLap, medalFor, medalCounts, bestTime } from '../src/progr
 import { medalTimes } from '../src/data/timeTrial.js';
 import { startCup, cupGrid, applyCupRace, standings, finishCup, cupReward, PLAYER } from '../src/progression/cup.js';
 import { CUP_POINTS } from '../src/data/cup.js';
+import { cleanName, setIdentity, recordRace, addDriving, trackTotals, achievementStatus, achievementsBadge, claimAchievement, claimAllAchievements, unlockedTitles, currentTitle, favorite } from '../src/progression/profile.js';
+import { ACHIEVEMENTS, ACHIEVEMENT_REWARDS, AVATARS, randomName, DEFAULT_TITLE } from '../src/data/profile.js';
 import { createRecorder, decodeGhost, ghostAt, ghostTimeAtDist } from '../src/race/ghost.js';
 
 let ok = 0, ko = 0;
@@ -124,7 +126,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 1, trophies: 120, stats: { races: 20, wins: 4, podiums: 9 }, selectedCar: 'nova' }));
   const l = createSaveStore(st).load();
-  check(l.status === 'ok' && l.data.version === 7 && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v3 sans perte');
+  check(l.status === 'ok' && l.data.version === SAVE_VERSION && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v3 sans perte');
   const fresh = syncUnlocks(l.data);
   check(fresh.map((c) => c.id).join() === 'volt,halo,razor', 'voitures des paliers déjà atteints rendues après migration');
   st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 5, garage: { owned: 'x', liveries: { nova: { body: 'rouge', accent: '#00ff00' } } } }));
@@ -205,7 +207,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 150, garage: { owned: ['nova', 'volt'] }, tutorialDone: true }));
   const d = createSaveStore(st).load().data;
-  check(d.version === 7 && d.credits === 0 && d.road.claimed.length === 0 && d.garage.owned.includes('volt'), 'migration v2 → v3 sans perte');
+  check(d.version === SAVE_VERSION && d.credits === 0 && d.road.claimed.length === 0 && d.garage.owned.includes('volt'), 'migration v2 → v3 sans perte');
   st.setItem('neondrive.save', JSON.stringify({ version: 3, credits: -50, cars: { levels: { nova: 99 }, fragments: { volt: 'x' } }, road: { claimed: [10, 10, 'a'] } }));
   const d2 = createSaveStore(st).load().data;
   check(d2.credits === 0 && d2.cars.levels.nova === 5 && !('volt' in d2.cars.fragments) && d2.road.claimed.join() === '10', 'économie abîmée réparée');
@@ -265,7 +267,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 3, trophies: 200, credits: 900, cars: { levels: { nova: 2 } }, road: { claimed: [10] } }));
   const d = createSaveStore(st).load().data;
-  check(d.version === 7 && d.credits === 900 && d.cars.levels.nova === 2 && d.shop.offers.length === 0 && d.cosmetics.finishes.length === 0, 'migration v3 → v4 sans perte');
+  check(d.version === SAVE_VERSION && d.credits === 900 && d.cars.levels.nova === 2 && d.shop.offers.length === 0 && d.cosmetics.finishes.length === 0, 'migration v3 → v4 sans perte');
   st.setItem('neondrive.save', JSON.stringify({ version: 4, shop: { day: 'hier', offers: [{ id: 'x', kind: 'triche', price: -5 }], giftStreak: -2 }, cosmetics: { finishes: ['gold', 'gold', 3] }, garage: { liveries: { nova: { finish: '<script>', motif: 'bolt' } } } }));
   const d2 = createSaveStore(st).load().data;
   check(d2.shop.day === null && d2.shop.offers.length === 0 && d2.shop.giftStreak === 0 && d2.cosmetics.finishes.join() === 'gold' && !d2.garage.liveries.nova.finish && d2.garage.liveries.nova.motif === 'bolt', 'boutique abîmée réparée');
@@ -338,7 +340,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const st = memStorage();
   st.setItem('neondrive.save', JSON.stringify({ version: 5, trophies: 50, credits: 10 }));
   const d = createSaveStore(st).load().data;
-  check(d.version === 7 && d.timeTrial && d.credits === 10, 'migration v5 → v6 sans perte');
+  check(d.version === SAVE_VERSION && d.timeTrial && d.credits === 10, 'migration v5 → v6 sans perte');
 }
 
 // --- Coupe ---
@@ -385,6 +387,84 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   check(d.cup && d.cup.race === 1 && d.cup.tracks.length === 3, 'coupe en cours sauvegardée et reprise');
   st.setItem('neondrive.save', JSON.stringify({ version: 7, cup: { tracks: ['a'], race: 9, points: 'x' } }));
   check(createSaveStore(st).load().data.cup === null, 'coupe abîmée ignorée');
+}
+
+// ---------------------------------------------------------------- Profil et succès
+{
+  check(cleanName('  zorro   speed ').name === 'ZORRO SPEED', 'pseudo nettoyé (espaces, majuscules)');
+  check(!!cleanName('ab').error && !!cleanName('X'.repeat(15)).error && !!cleanName('<b>hey</b>').error && !!cleanName('toi').error, 'pseudos refusés');
+  check(cleanName('Élodie_93').name === 'ÉLODIE_93', 'accents et chiffres acceptés');
+  for (let i = 0; i < 50; i++) if (cleanName(randomName(mulberry32(i))).error) { check(false, `pseudo au hasard valide (${randomName(mulberry32(i))})`); break; }
+  const s = defaultSave();
+  check(s.profile.name === null && currentTitle(s) === DEFAULT_TITLE, 'profil vierge');
+  check(setIdentity(s, { name: 'ab' }).error && s.profile.name === null, 'pseudo invalide non enregistré');
+  setIdentity(s, { name: 'Neo', avatar: 'crown', color: '#ff2bd6', title: 'Magnat' });
+  check(s.profile.name === 'NEO' && s.profile.avatar === 'crown' && s.profile.color === '#ff2bd6', 'identité enregistrée');
+  check(s.profile.title === null, 'titre non débloqué refusé');
+  setIdentity(s, { avatar: 'nope', color: '#123456' });
+  check(s.profile.avatar === 'crown' && s.profile.color === '#ff2bd6', 'emblème/couleur inconnus ignorés');
+
+  // Carrière
+  recordRace(s, { position: 1, carId: 'nova', trackId: 'citadel', mode: 'elim' });
+  recordRace(s, { position: 3, carId: 'nova', trackId: 'rainline', mode: 'cup' });
+  recordRace(s, { position: 5, carId: 'volt', trackId: 'rainline' });
+  const c = s.career;
+  check(c.races === 3 && c.wins === 1 && c.podiums === 2 && c.elimWins === 1 && c.elimPlayed === 1, 'carrière : courses, victoires, podiums, élimination');
+  check(favorite(c.carRaces).id === 'nova' && favorite(c.trackRaces).id === 'rainline' && favorite({}) === null, 'voiture et circuit préférés');
+  addDriving(s, 2, 500); addDriving(s, 1, -10);
+  check(c.playTime === 3 && c.distance === 1000, 'temps et distance de conduite');
+  let last = s.credits; s.credits += 150; last = trackTotals(s, last); s.credits -= 100; last = trackTotals(s, last); s.credits += 20; s.trophies = 42; trackTotals(s, last);
+  check(c.creditsEarned === 170 && c.maxTrophies === 42, 'crédits gagnés (achats non comptés) et record de trophées');
+  s.trophies = 10; trackTotals(s, s.credits);
+  check(c.maxTrophies === 42, 'record de trophées conservé');
+
+  // Succès
+  check(ACHIEVEMENTS.length === 15 && ACHIEVEMENTS.every((a) => a.tiers.length === 3 && a.tiers[0] < a.tiers[1] && a.tiers[1] < a.tiers[2] && a.title), 'succès : 3 paliers croissants et un titre');
+  check(new Set(ACHIEVEMENTS.map((a) => a.id)).size === ACHIEVEMENTS.length && AVATARS.length >= 8, 'identifiants uniques');
+  const fresh = defaultSave();
+  check(achievementsBadge(fresh) === 0 && achievementStatus(fresh).every((x) => x.value >= 0 && !x.claimable), 'aucun succès au départ');
+  fresh.career.races = 55;
+  let st = achievementStatus(fresh).find((x) => x.def.id === 'races');
+  check(st.reached === 2 && st.claimable && st.target === 10, 'deux paliers atteints, le premier à récupérer');
+  const cr0 = fresh.credits;
+  const g1 = claimAchievement(fresh, 'races');
+  check(g1.credits === ACHIEVEMENT_REWARDS[0] && fresh.credits === cr0 + ACHIEVEMENT_REWARDS[0] && !g1.title, 'palier I récupéré');
+  claimAchievement(fresh, 'races');
+  check(claimAchievement(fresh, 'races') === null, 'palier III pas encore atteint');
+  st = achievementStatus(fresh).find((x) => x.def.id === 'races');
+  check(st.claimed === 2 && st.target === 200 && !st.claimable && !st.complete, 'prochain objectif : palier III');
+  fresh.career.races = 200;
+  const g3 = claimAchievement(fresh, 'races');
+  check(g3.title === 'Increvable' && unlockedTitles(fresh).includes('Increvable'), 'palier III : titre débloqué');
+  check(achievementStatus(fresh).find((x) => x.def.id === 'races').complete, 'succès terminé');
+  check(setIdentity(fresh, { title: 'Increvable' }).ok && currentTitle(fresh) === 'Increvable', 'titre choisi');
+  fresh.career.wins = 30; fresh.garage.owned = ['nova', 'volt', 'halo'];
+  const all = claimAllAchievements(fresh);
+  check(all.count === 3 && all.credits === ACHIEVEMENT_REWARDS[0] * 2 + ACHIEVEMENT_REWARDS[1] && achievementsBadge(fresh) === 0, 'tout récupérer');
+  check(claimAchievement(fresh, 'inconnu') === null, 'succès inconnu');
+  // Circuits : courses + records + chrono
+  const t = defaultSave(); t.bestLaps = { a: { nova: 1 } }; t.timeTrial.best = { b: 3 }; t.career.trackRaces = { a: 1, c: 2 };
+  check(achievementStatus(t).find((x) => x.def.id === 'tracks').value === 3, 'circuits différents');
+}
+{
+  // Ancienne sauvegarde (v7) : carrière reprise des statistiques existantes
+  const st = memStorage();
+  st.setItem('neondrive.save', JSON.stringify({ version: 7, trophies: 120, credits: 300, stats: { races: 20, wins: 4, podiums: 9 },
+    history: [{ trackId: 'citadel', carId: 'volt', position: 1, gained: 10 }, { trackId: 'citadel', carId: 'nova', position: 2, gained: 7 }] }));
+  const d = createSaveStore(st).load().data;
+  check(d.version === 8 && d.career.races === 20 && d.career.wins === 4 && d.career.podiums === 9, 'migration v7 → v8 : carrière');
+  check(d.career.maxTrophies === 120 && d.career.creditsEarned === 300 && d.career.trackRaces.citadel === 2 && d.career.carRaces.volt === 1, 'migration : record, crédits, préférés');
+  check(d.profile.name === null && d.profile.avatar === 'bolt', 'migration : profil à créer');
+  // Données abîmées
+  st.setItem('neondrive.save', JSON.stringify({ version: 8, profile: { name: '<script>', avatar: 5, color: 'red', title: 'x'.repeat(99) }, career: { races: -4, distance: 'loin', carRaces: { nova: -1, volt: 2 } }, achievements: { claimed: { races: 9, wins: -1 } } }));
+  const e = createSaveStore(st).load().data;
+  check(e.profile.name === null && e.profile.avatar === 'bolt' && e.profile.color === '#00f0ff' && e.profile.title === null, 'profil abîmé réparé');
+  check(e.career.races === 0 && e.career.distance === 0 && !('nova' in e.career.carRaces) && e.career.carRaces.volt === 2, 'carrière abîmée réparée');
+  check(e.achievements.claimed.races === 3 && !('wins' in e.achievements.claimed), 'succès abîmés réparés');
+  // Le pseudo passe aussi par l'export / import
+  const s = defaultSave(); setIdentity(s, { name: 'Code Test' }); s.career.races = 7;
+  const back = importSaveCode(exportSaveCode(s));
+  check(back.profile.name === 'CODE TEST' && back.career.races === 7, 'profil et carrière dans le code de sauvegarde');
 }
 
 console.log(`${ok} vérifications réussies, ${ko} échec(s). Ligues : ${LEAGUES.map((l) => `${l.name} ≥ ${l.min}`).join(', ')}`);

@@ -54,7 +54,12 @@ const GEAR = line('<circle cx="16" cy="16" r="4"/><path d="M16 3v4M16 25v4M3 16h
 const PLAY = '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M10 6l16 10-16 10z" fill="currentColor"/></svg>';
 const TRAIN = line('<path d="M6 26h20"/><path d="M8 26V14l8-6 8 6v12"/><path d="M13 26v-6h6v6"/>');
 
-const SVGS = { trophy: TROPHY, credit: CREDIT, lock: LOCK, shop: SHOP, missions: MISSIONS, road: ROAD, garage: GARAGE, cup: CUP, elim: ELIM, chrono: CHRONO, event: EVENT, gear: GEAR, play: PLAY, train: TRAIN };
+const DICE = line('<rect x="5" y="5" width="22" height="22" rx="5"/><circle cx="11" cy="11" r="1.6" fill="currentColor"/><circle cx="21" cy="11" r="1.6" fill="currentColor"/><circle cx="16" cy="16" r="1.6" fill="currentColor"/><circle cx="11" cy="21" r="1.6" fill="currentColor"/><circle cx="21" cy="21" r="1.6" fill="currentColor"/>');
+const EDIT = line('<path d="M6 26l1.5-6L21 6.5l4.5 4.5L12 24.5z"/><path d="M18 9.5l4.5 4.5"/>');
+const MEDAL = line('<path d="M10 4l4 8M22 4l-4 8"/><circle cx="16" cy="20" r="8"/><path d="M16 15.5l1.4 2.9 3.1.4-2.3 2.2.6 3.1-2.8-1.5-2.8 1.5.6-3.1-2.3-2.2 3.1-.4z" fill="currentColor" stroke="none"/>');
+const STATS = line('<path d="M5 27h22"/><path d="M8 27V17h4v10M14 27V9h4v18M20 27V13h4v14"/>');
+
+const SVGS = { dice: DICE, edit: EDIT, medal: MEDAL, stats: STATS, trophy: TROPHY, credit: CREDIT, lock: LOCK, shop: SHOP, missions: MISSIONS, road: ROAD, garage: GARAGE, cup: CUP, elim: ELIM, chrono: CHRONO, event: EVENT, gear: GEAR, play: PLAY, train: TRAIN };
 
 /** Icône en ligne (HTML). `cls` : classe supplémentaire (taille…). */
 export function ico(name, cls = '') {

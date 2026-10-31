@@ -1,5 +1,6 @@
 // Écran de résultats de fin de course.
 
+import { playerLabel } from './playerLabel.js';
 import { formatTime } from '../core/math.js';
 import { leagueProgress } from '../data/progression.js';
 import { ico } from './icons.js';
@@ -26,7 +27,7 @@ export function showResults(rows, { trackName, reward = null, training = false, 
     const time = far ? 'NON TERMINÉ' : r.position === 1 ? formatTime(r.time) : `+${r.gap.toFixed(2)} s`;
     tr.innerHTML = `
       <td class="pos">${r.position}</td>
-      <td class="name"><i style="background:${r.colors.body};box-shadow:0 0 6px ${r.colors.glow}"></i>${r.isPlayer ? 'TOI' : r.isRival ? `★ ${r.name}` : r.name}</td>
+      <td class="name"><i style="background:${r.colors.body};box-shadow:0 0 6px ${r.colors.glow}"></i>${r.isPlayer ? playerLabel() : r.isRival ? `★ ${r.name}` : r.name}</td>
       <td class="hide-narrow">${r.car}</td>
       <td class="${r.estimated ? 'est' : ''}">${r.label ?? `${time}${r.estimated && !far ? ' ~' : ''}`}</td>
       <td class="hide-narrow ${r.bestLap === bestOfRace ? 'best' : ''}">${formatTime(r.bestLap)}</td>`;

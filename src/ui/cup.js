@@ -1,5 +1,6 @@
 // Écrans de la Coupe : présentation, classement entre les courses, podium final.
 
+import { playerLabel } from './playerLabel.js';
 import { getTrackData } from '../data/tracks/index.js';
 import { getCar } from '../data/cars.js';
 import { AI_DRIVERS } from '../data/aiProfiles.js';
@@ -69,7 +70,7 @@ export function createCupScreens({ save, sfx }) {
       el.append(minimap(td));
       const h = cup.history[k];
       el.insertAdjacentHTML('beforeend', `<div class="ct-i">${k + 1}</div><div class="ct-n">${td.name}</div>
-        <div class="ct-w">${h ? `Vainqueur : ${h.order[0] === PLAYER ? 'TOI' : h.order[0]}` : td.profile}</div>`);
+        <div class="ct-w">${h ? `Vainqueur : ${h.order[0] === PLAYER ? playerLabel() : h.order[0]}` : td.profile}</div>`);
       wrap.append(el);
     });
     return wrap;
@@ -81,7 +82,7 @@ export function createCupScreens({ save, sfx }) {
       const mv = r.move === undefined ? '' : r.move > 0 ? `<td class="mv up">▲${r.move}</td>` : r.move < 0 ? `<td class="mv down">▼${-r.move}</td>` : '<td class="mv eq">=</td>';
       return `<tr class="${r.name === PLAYER ? 'me' : w.rival ? 'rival' : ''}" style="animation-delay:${k * 0.08}s">
         <td class="rk">${r.rank}</td>
-        <td class="nm"><i style="background:${w.colors.body};box-shadow:0 0 6px ${w.colors.glow}"></i>${r.name === PLAYER ? 'TOI' : w.rival ? `★ ${r.name}` : r.name}</td>
+        <td class="nm"><i style="background:${w.colors.body};box-shadow:0 0 6px ${w.colors.glow}"></i>${r.name === PLAYER ? playerLabel() : w.rival ? `★ ${r.name}` : r.name}</td>
         ${r.gained !== undefined ? `<td class="gain">${r.gained ? `+${r.gained}` : ''}</td>` : ''}
         <td class="tot">${r.points} pts</td>${mv}</tr>`;
     }).join('')}</table>`;
@@ -159,7 +160,7 @@ export function createCupScreens({ save, sfx }) {
       const el = document.createElement('div');
       el.className = `pod p${rank} ${r.name === PLAYER ? 'me' : ''}`;
       el.append(carIcon(w.car, w.colors, 220, 140));
-      el.insertAdjacentHTML('beforeend', `<div class="pn">${r.name === PLAYER ? 'TOI' : r.name}</div><div class="pp">${r.points} pts</div><div class="step">${rank}</div>`);
+      el.insertAdjacentHTML('beforeend', `<div class="pn">${r.name === PLAYER ? playerLabel() : r.name}</div><div class="pp">${r.points} pts</div><div class="step">${rank}</div>`);
       pod.append(el);
     }
     card.append(pod);

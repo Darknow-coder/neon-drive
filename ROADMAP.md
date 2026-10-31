@@ -39,6 +39,8 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Contre-la-montre avec fantôme (record + fantôme NEON), 4 médailles par circuit
 - [x] Coupe : 3 courses, mêmes adversaires, points, grille inversée, podium et récompenses
 - [x] Élimination : le dernier sort à chaque tour du leader, alerte DANGER, compte à rebours
+- [x] Nouveau menu principal (vitrine de la voiture, tuiles de modes, barre de navigation)
+- [x] Essentiels : écran de chargement (astuces, version), profil du joueur (pseudo, emblème, titre, statistiques), 15 succès à 3 paliers
 - [ ] Événements hebdomadaires
 
 ## Phase 5 — Saisons

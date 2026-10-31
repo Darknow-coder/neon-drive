@@ -16,6 +16,20 @@
   <canvas id="game"></canvas>
   <div class="vignette"></div>
 
+  <!-- Écran de chargement (visible avant même que le jeu soit chargé) -->
+  <div id="boot" class="boot">
+    <div class="menu-bg"><div class="menu-sun"></div><div class="menu-floor"></div></div>
+    <div class="boot-center">
+      <div class="logo boot-logo">NEON<span>//</span>DRIVE</div>
+      <div class="boot-sub">COURSES NÉON · ARCADE</div>
+      <div class="boot-bar"><i id="boot-fill"></i></div>
+      <div class="boot-status" id="boot-status">Chargement…</div>
+      <button class="boot-go hidden" id="boot-go">TOUCHE L'ÉCRAN POUR JOUER</button>
+    </div>
+    <div class="boot-tip" id="boot-tip"></div>
+    <div class="boot-ver" id="boot-ver"></div>
+  </div>
+
   <!-- HUD -->
   <div id="hud" class="hud hidden">
     <div class="hud-block hud-pos">
@@ -115,6 +129,7 @@
         </div>
         <div class="small" id="save-io-msg"></div>
       </div>
+      <div class="about" id="about">NEON//DRIVE</div>
       <button class="menu-btn primary" id="settings-close">OK</button>
     </div>
   </div>
@@ -165,6 +180,7 @@
     <header class="menu-top">
       <div class="logo">NEON<span>//</span>DRIVE</div>
       <div class="menu-wallet">
+        <button class="chip profile-chip badge-host" id="btn-profile" aria-label="Mon profil"><span id="menu-avatar"></span><span class="pc-txt"><b id="menu-name">PILOTE</b><small id="menu-title">Débutant</small></span><span class="badge hidden" id="profile-badge"></span></button>
         <span class="chip trophy-chip"><span data-ico="trophy"></span><b id="menu-trophies">0</b><span class="sr" id="menu-trophies-word">trophées</span></span>
         <span class="chip credit-chip" id="menu-credits"></span>
         <button class="chip icon-chip" id="btn-settings" aria-label="Réglages"><span data-ico="gear"></span></button>
@@ -292,6 +308,59 @@
   </div>
 
   <!-- Missions -->
+  <!-- Profil -->
+  <div id="profile" class="overlay hidden">
+    <div class="overlay-card profile-card">
+      <div class="garage-head">
+        <button class="menu-btn small-btn" id="profile-back">‹ MENU</button>
+        <div class="overlay-title">PROFIL</div>
+        <div class="shop-wallet"><span class="credit-chip big" id="profile-credits"></span></div>
+      </div>
+      <div class="pf-cols">
+        <aside class="pf-id" id="pf-id"></aside>
+        <section class="pf-main">
+          <div class="pf-tabs">
+            <button class="pf-tab on" data-tab="stats"><span data-ico="stats"></span>STATISTIQUES</button>
+            <button class="pf-tab badge-host" data-tab="ach"><span data-ico="medal"></span>SUCCÈS<span class="badge hidden" id="pf-ach-badge"></span></button>
+          </div>
+          <div class="pf-pane" id="pf-stats"></div>
+          <div class="pf-pane hidden" id="pf-ach"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- Identité : premier lancement et modification -->
+  <div id="identity" class="overlay hidden">
+    <div class="overlay-card identity-card">
+      <div class="overlay-title" id="id-title">BIENVENUE, PILOTE !</div>
+      <div class="id-sub" id="id-sub"></div>
+      <div class="id-top">
+        <div class="id-preview" id="id-preview"></div>
+        <div class="id-form">
+          <label class="id-label" for="id-input">PSEUDO</label>
+          <div class="id-input-row">
+            <input id="id-input" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+            <button class="menu-btn small-btn id-dice" id="id-dice" aria-label="Pseudo au hasard"><span data-ico="dice"></span></button>
+          </div>
+          <div class="id-error" id="id-error"></div>
+          <div class="id-label">EMBLÈME</div>
+          <div class="id-avatars" id="id-avatars"></div>
+          <div class="id-label">COULEUR</div>
+          <div class="id-colors" id="id-colors"></div>
+          <div id="id-titles-wrap">
+            <div class="id-label">TITRE</div>
+            <div class="id-titles" id="id-titles"></div>
+          </div>
+        </div>
+      </div>
+      <div class="id-actions">
+        <button class="menu-btn" id="id-cancel">ANNULER</button>
+        <button class="menu-btn primary" id="id-ok">C'EST PARTI !</button>
+      </div>
+    </div>
+  </div>
+
   <div id="missions" class="overlay hidden">
     <div class="overlay-card missions-card">
       <div class="garage-head">

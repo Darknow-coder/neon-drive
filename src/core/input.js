@@ -29,6 +29,8 @@ export function createInput({ touchRoot, onAction } = {}) {
 
   // ----- Clavier -----
   window.addEventListener('keydown', (e) => {
+    // Saisie dans un champ de texte (pseudo, code de sauvegarde) : on laisse écrire
+    if (e.target?.closest?.('input, textarea')) return;
     const a = KEYMAP[e.code];
     if (a) {
       keys.add(a);

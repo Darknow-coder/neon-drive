@@ -237,7 +237,7 @@ export function showRewards(save, results, { sfx, onClose } = {}) {
   // ---------- Récompense simple ----------
   function showSimple(r) {
     reset(r.car ? '#ffd34d' : '#00f0ff');
-    $('pack-title').textContent = r.car ? 'NOUVELLE VOITURE' : 'RÉCOMPENSE';
+    $('pack-title').textContent = r.car ? 'NOUVELLE VOITURE' : (r.title ?? 'RÉCOMPENSE');
     const big = document.createElement('div');
     big.className = 'reward-big';
     if (r.car) {
@@ -262,6 +262,7 @@ export function showRewards(save, results, { sfx, onClose } = {}) {
         if (k < 1) requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
+      if (r.note) big.insertAdjacentHTML('beforeend', `<div class="reward-note">${r.note}</div>`);
     }
     $('pack-wrap').after(big);
     later(() => {
