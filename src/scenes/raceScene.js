@@ -12,6 +12,7 @@ import { createParticles } from '../render/particles.js';
 import { createCamera, computeBaseZoom, snapCamera, updateCamera } from '../render/camera.js';
 import { createCarFx, updateCarFx } from '../render/carFx.js';
 import { P_SPARK } from '../render/particles.js';
+import { weatherOf, lastLightning } from '../data/weather.js';
 import { formatTime } from '../core/math.js';
 import { computeResults, randomGrid } from '../race/results.js';
 
@@ -73,8 +74,10 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   let wasBoosting = false;
   const passSide = new Map(); // dépassements serrés (son « whoosh »)
 
-  const scene = { trackRenderer, cars: world.cars, particles, camera, player, time: 0 };
-  sfx?.setRain(track.weather === 'rain');
+  const scene = { trackRenderer, cars: world.cars, particles, camera, player, time: 0, wind: world.wind };
+  sfx?.setWeather?.(track.weather);
+  const weatherInfo = track.weather && track.weather !== 'clear' ? weatherOf(track.weather) : null;
+  let lastBolt = -1;
 
   function resize() {
     renderer.resize();
@@ -120,6 +123,13 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
     camera.zoomMul = slowmo > 0 ? 1.32 : 1;
     world.step(dt, intent);
     scene.time = world.time;
+    scene.wind = world.wind;
+    // Orage : tonnerre un peu après chaque éclair ; vent : souffle selon la rafale
+    if (track.weather === 'storm') {
+      const L = lastLightning(world.time);
+      if (L.k !== lastBolt && L.since < 0.2) { lastBolt = L.k; sfx?.thunder?.(0.25 + Math.random() * 0.8); if (settings.vibration && navigator.vibrate) navigator.vibrate(30); }
+    }
+    if (track.windSeed !== null && track.windSeed !== undefined) sfx?.setWind?.(world.wind.k);
 
     // Effets visuels (uniquement pour les voitures proches de la caméra)
     for (const car of world.cars) {
@@ -244,6 +254,14 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
     }
   }
 
+  function windHud() {
+    const w = world.wind;
+    if (!w || !world.started) return null;
+    if (w.k > 0.2) return { angle: Math.atan2(w.ay, w.ax), soon: false };
+    if (w.soon !== null) return { angle: w.soon, soon: true };
+    return null;
+  }
+
   function render(alpha) {
     renderer.render(scene, alpha);
     hud.update({
@@ -258,6 +276,8 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       big: world.started && world.time < 1 && !player.launch,
       lights: !world.started ? Math.max(1, Math.ceil(-world.time)) : world.time < 1 ? 0 : null,
       launchHint: launchControl && !timeTrial && !solo,
+      weather: !world.started && weatherInfo ? weatherInfo : null,
+      wind: windHud(),
       msgTone,
       rival: rivalCar ? { name: rivalCar.name, position: rivalCar.position } : null,
       timeTrial,
@@ -275,7 +295,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   function dispose() {
     trackRenderer.dispose();
     sfx?.stopCar();
-    sfx?.setRain(false);
+    sfx?.setWeather?.('clear');
   }
 
   /** Affiche un message au centre de l'écran (contre-la-montre). */

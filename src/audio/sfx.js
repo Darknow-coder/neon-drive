@@ -148,9 +148,38 @@ export function createSfx(audio) {
     s.stop(t + dur + 0.05);
   }
 
+  // Vent (tempête de sable, neige) : souffle filtré dont l'intensité varie
+  let wind = null;
+  let windBase = 0;
+  function ensureWind() {
+    if (wind || !audio.ready) return;
+    const ctx = audio.ctx;
+    const src = ctx.createBufferSource(); src.buffer = audio.noise; src.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 500; f.Q.value = 0.7;
+    const g = ctx.createGain(); g.gain.value = 0;
+    src.connect(f); f.connect(g); g.connect(audio.sfxBus);
+    src.start();
+    wind = { g, f };
+  }
+  function setWind(k) {
+    if (!audio.ready) return;
+    ensureWind();
+    const t = audio.ctx.currentTime;
+    wind.g.gain.setTargetAtTime(windBase + 0.11 * k, t, 0.15);
+    wind.f.frequency.setTargetAtTime(400 + 700 * k, t, 0.2);
+  }
+  /** Ambiance sonore de la météo du circuit. */
+  function setWeather(kind) {
+    if (!audio.ready) return;
+    setRain(kind === 'rain' || kind === 'storm', kind === 'storm' ? 0.08 : 0.05);
+    windBase = kind === 'sand' ? 0.025 : kind === 'snow' ? 0.02 : kind === 'fog' ? 0.012 : 0;
+    ensureWind();
+    wind.g.gain.setTargetAtTime(windBase, audio.ctx.currentTime, 0.5);
+  }
+
   // Ambiance de pluie (bruit filtré en boucle)
   let rain = null;
-  function setRain(on) {
+  function setRain(on, level = 0.05) {
     if (!audio.ready) return;
     if (!rain) {
       const ctx = audio.ctx;
@@ -162,12 +191,20 @@ export function createSfx(audio) {
       src.start();
       rain = g;
     }
-    rain.gain.setTargetAtTime(on ? 0.05 : 0, audio.ctx.currentTime, 0.5);
+    rain.gain.setTargetAtTime(on ? level : 0, audio.ctx.currentTime, 0.5);
   }
 
   let lastHit = 0;
   return {
     setRain,
+    setWeather,
+    setWind,
+    /** Tonnerre (un peu après l'éclair). */
+    thunder(delay = 0.5) {
+      noiseHit({ vol: 0.3, dur: 0.25, freq: 1800, q: 0.5, type: 'bandpass', delay });
+      noiseHit({ vol: 0.5, dur: 2.6, freq: 140, q: 0.6, type: 'lowpass', delay: delay + 0.05 });
+      noiseHit({ vol: 0.3, dur: 1.8, freq: 90, q: 0.8, type: 'lowpass', delay: delay + 0.6 });
+    },
     updateCar,
     /** Choc : volume selon la violence (limité à un son toutes les 90 ms). */
     hit(strength, isPlayer = true) {

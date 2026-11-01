@@ -14,6 +14,7 @@ import { RIVAL_SKILL } from '../data/rivals.js';
 import { AI_CAR_LEVEL } from '../data/economy.js';
 import { createIntent } from '../core/input.js';
 import { mulberry32 } from '../core/math.js';
+import { windAt } from '../data/weather.js';
 
 /**
  * @param opts.track     circuit déjà construit (ou opts.trackData)
@@ -77,6 +78,7 @@ export function createRaceWorld(opts) {
     countdown: opts.countdown ?? 3,
     order: cars.slice(),
     player: cars.find((c) => c.isPlayer) ?? null,
+    wind: { ax: 0, ay: 0, k: 0, soon: null },
   };
   world.time = -world.countdown;
 
@@ -164,6 +166,11 @@ export function createRaceWorld(opts) {
     trackPlayerLaunch(playerIntent);
     updateMovingObstacles(track, Math.max(0, world.time));
     updateDraft(dt);
+    // Vent (tempête de sable) : la même poussée pour toutes les voitures
+    if (track.windSeed !== null && track.windSeed !== undefined && world.started) {
+      windAt(track.windSeed, world.time, world.wind);
+      if (world.wind.k > 0) for (const car of cars) { car.vx += world.wind.ax * dt; car.vy += world.wind.ay * dt; }
+    }
 
     for (const car of cars) {
       car.contactThisStep = 0;

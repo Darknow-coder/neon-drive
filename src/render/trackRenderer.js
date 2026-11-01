@@ -18,6 +18,10 @@ const STYLES = {
   city: { ground: '#080522', asphalt: '#15112f', grid: 'rgba(138,43,255,0.13)' },
   desert: { ground: '#160817', asphalt: '#1e1228', grid: 'rgba(255,122,61,0.10)' },
   orbital: { ground: '#02010a', asphalt: '#161a2e', grid: 'rgba(90,150,255,0.10)' },
+  dusk: { ground: '#170818', asphalt: '#22102b', grid: 'rgba(255,140,110,0.10)' },
+  snow: { ground: '#101a36', asphalt: '#1c2645', grid: 'rgba(180,210,255,0.10)' },
+  fog: { ground: '#0a0e18', asphalt: '#161c2b', grid: 'rgba(150,180,220,0.08)' },
+  storm: { ground: '#05040d', asphalt: '#131126', grid: 'rgba(255,225,77,0.05)' },
 };
 
 export function createTrackRenderer(track, { lowEnd = false } = {}) {
@@ -170,7 +174,103 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
   function drawDecor(rand) {
     if (style === 'desert') return drawDesert(rand);
     if (style === 'orbital') return drawOrbital(rand);
+    if (style === 'dusk') return drawSakura(rand);
+    if (style === 'snow') return drawSnow(rand);
+    if (style === 'fog') return drawBay(rand);
     return drawCity(rand);
+  }
+
+  // ----- Crépuscule : cerisiers en fleurs, lanternes, pétales au sol -----
+  function drawSakura(rand) {
+    // Lueur chaude du couchant (grandes taches)
+    for (let k = 0; k < Math.round((ww * wh) / 1500000); k++) {
+      const x = ox + rand() * ww, y = oy + rand() * wh, r = 500 + rand() * 700;
+      const g = cctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, rand() < 0.5 ? 'rgba(255,120,90,0.14)' : 'rgba(200,60,160,0.14)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      cctx.fillStyle = g; cctx.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    // Pétales au sol
+    for (let k = 0; k < Math.round((ww * wh) / 9000); k++) {
+      cctx.fillStyle = `rgba(255,${150 + Math.floor(rand() * 60)},${200 + Math.floor(rand() * 40)},${0.25 + rand() * 0.35})`;
+      cctx.beginPath(); cctx.ellipse(ox + rand() * ww, oy + rand() * wh, 3, 1.8, rand() * 3, 0, Math.PI * 2); cctx.fill();
+    }
+    // Cerisiers (grappes de fleurs roses) et lanternes
+    const trees = Math.round((ww * wh) / 160000);
+    for (let k = 0; k < trees; k++) {
+      const cx = ox + rand() * ww, cy = oy + rand() * wh, r = 55 + rand() * 50;
+      if (clearance(cx, cy, r) < 50) continue;
+      cctx.fillStyle = 'rgba(0,0,0,0.35)';
+      cctx.beginPath(); cctx.arc(cx + 10, cy + 12, r, 0, Math.PI * 2); cctx.fill();
+      for (let b = 0; b < 7; b++) {
+        const a = rand() * Math.PI * 2, d = rand() * r * 0.55, br = r * (0.35 + rand() * 0.3);
+        const bx = cx + Math.cos(a) * d, by = cy + Math.sin(a) * d;
+        const g = cctx.createRadialGradient(bx - br * 0.3, by - br * 0.3, 0, bx, by, br);
+        g.addColorStop(0, '#ffd6ec'); g.addColorStop(0.6, '#ff7ad9'); g.addColorStop(1, 'rgba(200,40,140,0.7)');
+        cctx.fillStyle = g;
+        cctx.beginPath(); cctx.arc(bx, by, br, 0, Math.PI * 2); cctx.fill();
+      }
+    }
+    for (let k = 0; k < trees; k++) {
+      const cx = ox + rand() * ww, cy = oy + rand() * wh;
+      if (clearance(cx, cy, 20) < 40) continue;
+      const g = cctx.createRadialGradient(cx, cy, 0, cx, cy, 46);
+      g.addColorStop(0, 'rgba(255,190,90,0.85)'); g.addColorStop(0.25, 'rgba(255,120,60,0.45)'); g.addColorStop(1, 'rgba(255,90,60,0)');
+      cctx.fillStyle = g; cctx.fillRect(cx - 46, cy - 46, 92, 92);
+    }
+  }
+
+  // ----- Neige : sapins, congères, sol enneigé -----
+  function drawSnow(rand) {
+    for (let k = 0; k < Math.round((ww * wh) / 260000); k++) {
+      const x = ox + rand() * ww, y = oy + rand() * wh, r = 200 + rand() * 500;
+      const g = cctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, 'rgba(220,235,255,0.22)'); g.addColorStop(1, 'rgba(220,235,255,0)');
+      cctx.fillStyle = g; cctx.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    for (let k = 0; k < Math.round((ww * wh) / 4000); k++) {
+      cctx.fillStyle = `rgba(235,245,255,${0.15 + rand() * 0.35})`;
+      cctx.fillRect(ox + rand() * ww, oy + rand() * wh, 2, 2);
+    }
+    // Sapins vus de dessus (étoile verte sombre, bout enneigé)
+    const trees = Math.round((ww * wh) / 70000);
+    for (let k = 0; k < trees; k++) {
+      const cx = ox + rand() * ww, cy = oy + rand() * wh, r = 26 + rand() * 30;
+      if (clearance(cx, cy, r) < 50) continue;
+      cctx.fillStyle = 'rgba(0,0,10,0.4)';
+      cctx.beginPath(); cctx.arc(cx + 8, cy + 10, r, 0, Math.PI * 2); cctx.fill();
+      for (const [rr, col] of [[r, '#0f3a33'], [r * 0.7, '#165247'], [r * 0.4, '#e8f2ff']]) {
+        cctx.fillStyle = col;
+        cctx.beginPath();
+        for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, q = i % 2 ? rr * 0.55 : rr; cctx.lineTo(cx + Math.cos(a) * q, cy + Math.sin(a) * q); }
+        cctx.closePath(); cctx.fill();
+      }
+    }
+  }
+
+  // ----- Baie dans la brume : eau sombre, quais, bouées -----
+  function drawBay(rand) {
+    for (let k = 0; k < Math.round((ww * wh) / 700000); k++) {
+      const x = ox + rand() * ww, y = oy + rand() * wh, r = 400 + rand() * 600;
+      const g = cctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, 'rgba(20,60,90,0.45)'); g.addColorStop(1, 'rgba(10,20,40,0)');
+      cctx.fillStyle = g; cctx.fillRect(x - r, y - r, r * 2, r * 2);
+    }
+    cctx.strokeStyle = 'rgba(120,180,230,0.08)';
+    cctx.lineWidth = 3;
+    for (let k = 0; k < Math.round((ww * wh) / 30000); k++) {
+      const x = ox + rand() * ww, y = oy + rand() * wh, l = 40 + rand() * 90;
+      if (clearance(x, y, l) < 30) continue;
+      cctx.beginPath(); cctx.moveTo(x, y); cctx.quadraticCurveTo(x + l / 2, y - 8, x + l, y); cctx.stroke();
+    }
+    drawCity(rand);
+    for (let k = 0; k < Math.round((ww * wh) / 200000); k++) {
+      const cx = ox + rand() * ww, cy = oy + rand() * wh;
+      if (clearance(cx, cy, 20) < 60) continue;
+      const g = cctx.createRadialGradient(cx, cy, 0, cx, cy, 36);
+      g.addColorStop(0, 'rgba(255,80,90,0.8)'); g.addColorStop(1, 'rgba(255,80,90,0)');
+      cctx.fillStyle = g; cctx.fillRect(cx - 36, cy - 36, 72, 72);
+    }
   }
 
   // ----- Désert néon : dunes, mesas rocheuses, pylônes lumineux -----
@@ -334,7 +434,7 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
     for (const [side, col] of [[-1, theme.left], [1, theme.right]]) {
       cctx.beginPath();
       tracePath(cctx, (i) => side * track.hw[i]);
-      cctx.strokeStyle = rgba(col, track.weather === 'rain' ? 0.17 : 0.1); // piste mouillée : plus de reflets
+      cctx.strokeStyle = rgba(col, track.weather === 'rain' || track.weather === 'storm' ? 0.17 : 0.1); // piste mouillée : plus de reflets
       cctx.lineWidth = 70;
       cctx.stroke();
       cctx.strokeStyle = rgba(col, 0.1);
@@ -342,6 +442,25 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
       cctx.stroke();
     }
     cctx.restore();
+    // Neige : congères le long des murs et neige tassée sur la piste
+    if (style === 'snow') {
+      cctx.save();
+      cctx.lineJoin = 'round';
+      for (const side of [-1, 1]) {
+        cctx.beginPath();
+        tracePath(cctx, (i) => side * (track.hw[i] + 34));
+        cctx.strokeStyle = 'rgba(225,238,255,0.35)';
+        cctx.lineWidth = 46;
+        cctx.stroke();
+      }
+      asphaltPath(cctx);
+      cctx.clip('evenodd');
+      for (let k = 0; k < Math.round((ww * wh) / 2500); k++) {
+        cctx.fillStyle = `rgba(230,240,255,${0.04 + rand() * 0.08})`;
+        cctx.fillRect(ox + rand() * ww, oy + rand() * wh, 3, 3);
+      }
+      cctx.restore();
+    }
   }
 
   // ----- Vibreurs à l'intérieur des virages -----

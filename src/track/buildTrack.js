@@ -1,3 +1,4 @@
+import { weatherOf } from '../data/weather.js';
 // Construit un circuit jouable à partir de sa description (src/data/tracks/*).
 //
 // Un circuit est décrit par quelques points de contrôle. On les relie par une
@@ -130,7 +131,8 @@ export function buildTrack(data) {
     // Météo : la pluie réduit l'adhérence de TOUTES les voitures (IA comprises)
     weather: data.weather ?? 'clear',
     gridCols: data.gridCols ?? 1,
-    gripMul: data.weather === 'rain' ? 0.82 : 1,
+    gripMul: weatherOf(data.weather).grip,
+    windSeed: data.weather === 'sand' ? [...(data.id ?? 'x')].reduce((a, c) => a + c.charCodeAt(0), 0) : null,
     obstacles: [],
     zones: [],
   };

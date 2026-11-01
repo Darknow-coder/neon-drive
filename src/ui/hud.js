@@ -19,6 +19,9 @@ export function createHud() {
     danger: document.getElementById('hud-danger'),
     count: document.getElementById('hud-count'),
     lights: document.getElementById('hud-lights'),
+    weather: document.getElementById('hud-weather'),
+    wind: document.getElementById('hud-wind'),
+    windArrow: document.getElementById('hud-wind-arrow'),
     lightsHint: document.getElementById('hud-lights-hint'),
     time: document.getElementById('hud-time'),
     best: document.getElementById('hud-best'),
@@ -37,7 +40,18 @@ export function createHud() {
 
   return {
     show(v) { el.root.classList.toggle('hidden', !v); },
-    update({ car, lap, laps, lapTime, bestLap, lastMsg, position, total, big, rival = null, timeTrial = false, delta = null, elim = null, lights = null, launchHint = true, msgTone = '' }) {
+    update({ car, lap, laps, lapTime, bestLap, lastMsg, position, total, big, rival = null, timeTrial = false, delta = null, elim = null, lights = null, launchHint = true, msgTone = '', weather = null, wind = null }) {
+      // Bandeau météo (pendant le compte à rebours)
+      const wTxt = weather ? `<b>${weather.name}</b>${weather.desc ? ` · ${weather.desc}` : ''}` : '';
+      if (cache.wTxt !== wTxt) { cache.wTxt = wTxt; el.weather.innerHTML = wTxt; el.weather.classList.toggle('hidden', !wTxt); }
+      // Rafale de vent : annoncée, puis direction pendant la rafale
+      const windOn = !!wind;
+      if (cache.windOn !== windOn) { cache.windOn = windOn; el.wind.classList.toggle('hidden', !windOn); }
+      if (wind) {
+        const deg = Math.round((wind.angle * 180) / Math.PI);
+        if (cache.windDeg !== deg) { cache.windDeg = deg; el.windArrow.style.transform = `rotate(${deg}deg)`; }
+        if (cache.windSoon !== wind.soon) { cache.windSoon = wind.soon; el.wind.classList.toggle('soon', wind.soon); }
+      }
       // Feux de départ : 3 rouges (3, 2, 1) puis tout vert (0)
       const lKey = lights === null ? 'off' : `${lights}${launchHint ? 'h' : ''}`;
       if (cache.lKey !== lKey) {

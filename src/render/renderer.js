@@ -1,5 +1,6 @@
 // Assemble l'image de chaque frame : sol, circuit, voitures, effets, filtres.
 
+import { createWeatherFx } from './weatherFx.js';
 import { makeCarSprite, makeGlowSprite } from './carSprite.js';
 import { lerp, lerpAngle } from '../core/math.js';
 
@@ -181,7 +182,11 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
     // Effets d'écran
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     const player = scene.player;
-    if (trackRenderer.weather === 'rain') drawRain(ctx, W, H, cam, state.dpr);
+    // Météo (pluie, neige, sable, brouillard…)
+    if (trackRenderer.weather && trackRenderer.weather !== 'clear') {
+      if (!weatherFx || weatherKind !== trackRenderer.weather) { weatherKind = trackRenderer.weather; weatherFx = createWeatherFx(weatherKind); }
+      weatherFx.draw(ctx, W, H, cam, state.dpr, scene);
+    }
     // Lignes de vitesse : en boost, et plus discrètes à très haute vitesse
     if (player) {
       const fast = player.speed / player.params.maxSpeed;
@@ -237,39 +242,5 @@ function drawSpeedLines(ctx, W, H, car, k = 1) {
   ctx.restore();
 }
 
-// ---------- Pluie (effet d'écran) ----------
-const drops = [];
-const ripples = [];
-let lastCamX = null, lastCamY = null;
-function drawRain(ctx, W, H, cam, dpr) {
-  if (!drops.length) {
-    for (let i = 0; i < 140; i++) drops.push({ x: Math.random() * W, y: Math.random() * H, l: 8 + Math.random() * 16, s: 0.6 + Math.random() * 0.8 });
-  }
-  // Les gouttes glissent légèrement à l'opposé du mouvement de la caméra
-  const dx = lastCamX === null ? 0 : (cam.x - lastCamX) * cam.zoom * dpr * 0.6;
-  const dy = lastCamY === null ? 0 : (cam.y - lastCamY) * cam.zoom * dpr * 0.6;
-  lastCamX = cam.x; lastCamY = cam.y;
-  ctx.fillStyle = 'rgba(20,30,70,0.18)'; // ambiance assombrie
-  ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = 'rgba(170,190,255,0.35)';
-  ctx.lineWidth = 1.2 * dpr;
-  ctx.beginPath();
-  for (const d of drops) {
-    d.x += (2.2 * d.s) * dpr - dx;
-    d.y += (6 * d.s) * dpr - dy;
-    if (d.y > H || d.x > W || d.x < 0 || d.y < 0) { d.x = Math.random() * W; d.y = Math.random() * H * 0.2; }
-    ctx.moveTo(d.x, d.y);
-    ctx.lineTo(d.x - d.l * 0.35 * dpr, d.y - d.l * dpr);
-  }
-  ctx.stroke();
-  // Ronds dans l'eau
-  if (ripples.length < 22 && Math.random() < 0.6) ripples.push({ x: Math.random() * W, y: Math.random() * H, r: 1, a: 0.5 });
-  ctx.lineWidth = 1 * dpr;
-  for (let i = ripples.length - 1; i >= 0; i--) {
-    const r = ripples[i];
-    r.r += 0.7 * dpr; r.a -= 0.018; r.x -= dx; r.y -= dy;
-    if (r.a <= 0) { ripples.splice(i, 1); continue; }
-    ctx.strokeStyle = `rgba(170,200,255,${r.a})`;
-    ctx.beginPath(); ctx.ellipse(r.x, r.y, r.r * 1.6, r.r, 0, 0, Math.PI * 2); ctx.stroke();
-  }
-}
+let weatherFx = null, weatherKind = null;
+

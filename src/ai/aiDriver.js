@@ -88,7 +88,9 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
       const stuck = speed < 45 || tangentDot < -0.2;
       st.stuckTime = stuck ? st.stuckTime + dt : 0;
       if (st.stuckTime > 1.1) { st.recoverTime = 0.9; st.stuckTime = 0; }
-      if (st.stuckTimeTotal > 6) car.requestRespawn = true;
+      // Toujours bloqué : on replace la voiture (et on remet les compteurs à zéro,
+      // sinon elle serait replacée en boucle puisqu'elle repart de l'arrêt)
+      if (st.stuckTimeTotal > 6) { car.requestRespawn = true; st.stuckTimeTotal = 0; st.stuckTime = 0; }
     }
     st.stuckTimeTotal = speed < 45 && world.started ? (st.stuckTimeTotal || 0) + dt : 0;
     if (st.recoverTime > 0) {

@@ -1893,3 +1893,20 @@ html, body {
   .pt button { padding: 5px 4px; }
   .pass-help { font-size: 11px; padding: 6px 10px; }
 }
+
+/* Météo : bandeau au départ, alerte de rafale */
+.hud-weather { position: absolute; left: 50%; top: calc(12% + 100px); transform: translateX(-50%); padding: 6px 14px; border-radius: 10px; white-space: nowrap;
+  background: rgba(7, 4, 26, 0.75); border: 1px solid rgba(122, 247, 255, 0.4); font-size: 14px; color: #d8d4ff; pointer-events: none; }
+.hud-weather b { font-family: var(--font-display); font-size: 12px; letter-spacing: 2px; color: #7af7ff; margin-right: 2px; }
+.hud-wind { position: absolute; right: calc(16px + var(--safe-r)); top: 38%; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 10px; border-radius: 12px;
+  background: rgba(60, 25, 8, 0.75); border: 2px solid #ffb000; color: #ffe0a0; pointer-events: none; box-shadow: 0 0 16px rgba(255, 176, 0, 0.4); }
+.hud-wind i { font-style: normal; line-height: 0; transition: transform 0.2s; display: inline-block; }
+.hud-wind svg { width: 30px; height: 30px; }
+.hud-wind span { font-family: var(--font-display); font-size: 10px; letter-spacing: 2px; }
+.hud-wind.soon { animation: windwarn 0.35s ease-in-out infinite alternate; }
+@keyframes windwarn { to { opacity: 0.45; } }
+@media (max-height: 460px) {
+  .hud-weather { top: calc(18% + 64px); font-size: 11px; padding: 4px 10px; }
+  .hud-weather b { font-size: 10px; }
+  .hud-wind { top: 30%; padding: 5px 8px; } .hud-wind i { font-size: 22px; }
+}
