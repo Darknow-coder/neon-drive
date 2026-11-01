@@ -27,6 +27,10 @@ export const FINISHES = [
   { id: 'carbon', name: 'CARBONE', price: 600, desc: 'Fibre de carbone tissée, accents colorés.' },
   { id: 'holo', name: 'HOLOGRAPHIQUE', price: 900, desc: 'Un arc-en-ciel qui change selon l\'angle.' },
   { id: 'gold', name: 'OR', price: 1200, desc: 'Or pur. Pour les légendes.' },
+  // Exclusives du passe de saison (jamais en boutique)
+  { id: 'aurora', name: 'AURORE', price: 0, exclusive: 'season', desc: 'Exclusif Saison 1 : des lumières boréales qui ondulent.' },
+  { id: 'obsidian', name: 'OBSIDIENNE', price: 0, exclusive: 'season', desc: 'Exclusif Saison 1 : noir miroir aux reflets de ta couleur.' },
+  { id: 'galaxy', name: 'GALAXIE', price: 0, exclusive: 'season', desc: 'Exclusif Saison 1 : une nébuleuse et ses étoiles.' },
 ];
 
 // ---------- Motifs (décorations) ----------
@@ -42,6 +46,11 @@ export const MOTIFS = [
   { id: 'checker', name: 'DAMIER', price: 300, desc: 'Le drapeau à damier de la victoire.' },
   { id: 'circuit', name: 'CIRCUIT IMPRIMÉ', price: 350, desc: 'Des pistes électroniques lumineuses.' },
   { id: 'flames', name: 'FLAMMES', price: 400, desc: 'Des flammes néon qui partent du nez.' },
+  // Exclusifs du passe de saison
+  { id: 'stars', name: 'ÉTOILES', price: 0, exclusive: 'season', desc: 'Exclusif Saison 1 : une pluie d\'étoiles.' },
+  { id: 'hex', name: 'HEXAGONES', price: 0, exclusive: 'season', desc: 'Exclusif Saison 1 : un nid d\'abeille high-tech.' },
+  { id: 'tiger', name: 'TIGRE', price: 0, exclusive: 'season', desc: 'Exclusif Saison 1 : les rayures du fauve.' },
+  { id: 'wings', name: 'AILES', price: 0, exclusive: 'season', desc: 'Exclusif Saison 1 : des ailes le long des flancs.' },
   // Exclusif : gagné en remportant l'événement GIGA RUSH (jamais en boutique)
   { id: 'giga', name: 'GIGA RUSH', price: 0, exclusive: true, desc: 'Exclusif : réservé aux vainqueurs de la GIGA RUSH.' },
 ];

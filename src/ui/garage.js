@@ -183,6 +183,13 @@ export function createGarage({ save, onSave, onClose, sfx, openShop }) {
         const r = upgradeCar(save, c.id);
         if (r.ok) { onSave(); sfx?.unlock(); render(); }
       };
+    } else if (!unlockFragments(c.id)) {
+      // Voiture exclusive du passe de saison : aucun autre moyen de l'obtenir
+      $('garage-level').textContent = '';
+      $('garage-frags').classList.add('hidden');
+      upBtn.textContent = `Exclusive : niveau ${c.unlock?.tier ?? 100} du PASSE DE SAISON`;
+      upBtn.disabled = true;
+      upBtn.onclick = null;
     } else {
       $('garage-level').textContent = '';
       const need = unlockFragments(c.id);

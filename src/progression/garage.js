@@ -33,6 +33,7 @@ export function unlockLabel(car) {
   const u = car.unlock ?? { type: 'start' };
   if (u.type === 'trophies') return `Débloquée à ${u.min} trophées`;
   if (u.type === 'shop') return 'Disponible dans la boutique';
+  if (u.type === 'pass') return `Récompense du niveau ${u.tier} du PASSE DE SAISON`;
   return 'Bientôt disponible';
 }
 
@@ -43,14 +44,17 @@ export function nextCarUnlock(save) {
     .sort((a, b) => a.unlock.min - b.unlock.min)[0] ?? null;
 }
 
+/** Voiture qu'on ne peut obtenir que par le passe de saison (pas de fragments avant). */
+export const passOnly = (car) => car.unlock?.type === 'pass';
+
 /** Couleurs choisies par le joueur pour une voiture (sinon couleurs d'origine). */
 export function liveryFor(save, carId) {
   const base = getCar(carId).colors;
   const l = save.garage.liveries[carId];
-  if (!l) return { ...base, finish: 'standard', motif: 'origin' };
+  if (!l) return { ...base, finish: base.finish ?? 'standard', motif: 'origin' };
   return {
     body: l.body ?? base.body, accent: l.accent ?? base.accent, glow: l.body ?? base.glow,
-    finish: l.finish ?? 'standard', motif: l.motif ?? 'origin',
+    finish: l.finish ?? base.finish ?? 'standard', motif: l.motif ?? 'origin',
   };
 }
 

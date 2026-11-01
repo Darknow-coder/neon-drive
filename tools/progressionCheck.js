@@ -22,6 +22,10 @@ import { ACHIEVEMENTS, ACHIEVEMENT_REWARDS, AVATARS, randomName, DEFAULT_TITLE }
 import { eventField, applyEventResult, eventGoalsDone } from '../src/progression/event.js';
 import { EVENT, EVENT_GOALS, EVENT_CREDITS } from '../src/data/event.js';
 import { MOTIFS } from '../src/data/shop.js';
+import { seasonLevel, addSeasonXp, raceXp, doubleRacesLeft, addTimeTrialLapXp, tierStatus, claimTier, claimBonus, bonusAvailable, seasonBadge, seasonTitles, TOTAL_XP, xpForLevel } from '../src/progression/season.js';
+import { SEASON, TIER_REWARDS, XP as SXP, BONUS_XP, tierCost } from '../src/data/season.js';
+import { ownsAvatar } from '../src/data/profile.js';
+import { FINISHES } from '../src/data/shop.js';
 import { createRecorder, decodeGhost, ghostAt, ghostTimeAtDist } from '../src/race/ghost.js';
 
 let ok = 0, ko = 0;
@@ -117,7 +121,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   r = applyRaceResult(s, { position: 1, trackId: 'neon-boulevard', carId: 'nova', bestLap: 25 });
   check(r.unlockedCars.length === 0, 'pas de double déblocage');
   s.trophies = 1000; const all = syncUnlocks(s);
-  check(all.length === CARS.length - 2 && CARS.every((c) => isOwned(s, c.id)), 'toutes les voitures débloquées à 1000 trophées');
+  check(all.length === CARS.length - 3 && CARS.every((c) => isOwned(s, c.id) === (c.unlock?.type !== 'pass')), 'toutes les voitures (sauf celle du passe) débloquées à 1000 trophées');
   check(liveryFor(s, 'nova').body === CARS[0].colors.body, 'couleurs d\'origine par défaut');
   setLivery(s, 'nova', 'body', '#ff3b5c');
   check(liveryFor(s, 'nova').body === '#ff3b5c' && liveryFor(s, 'nova').glow === '#ff3b5c', 'couleur personnalisée');
@@ -503,6 +507,71 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const d = createSaveStore(st).load().data;
   check(d.version === SAVE_VERSION && d.event.best === null && d.event.claimed.join() === 'top10' && d.event.played === 0, 'événement abîmé réparé');
   check(!tracksForLeague('elite').some((t) => t.event), 'circuit d\'événement hors courses classées');
+}
+
+// ---------------------------------------------------------------- Passe de saison
+{
+  check(TIER_REWARDS.length === SEASON.tiers && TIER_REWARDS.every((t, k) => t.tier === k + 1 && Object.keys(t.reward).length), '100 niveaux, chacun avec une récompense');
+  check(TOTAL_XP > 60000 && TOTAL_XP < 100000 && tierCost(100) > tierCost(1), `passe long et progressif (${TOTAL_XP} XP au total)`);
+  check(seasonLevel(0).level === 0 && seasonLevel(xpForLevel(1)).level === 1 && seasonLevel(xpForLevel(1) - 1).level === 0, 'calcul du niveau');
+  check(seasonLevel(TOTAL_XP).max && seasonLevel(TOTAL_XP + BONUS_XP * 2 + 5).bonusEarned === 2, 'niveau 100 puis coffres bonus');
+  // Toutes les récompenses exclusives existent vraiment
+  const ids = (list) => new Set(list.map((x) => x.id));
+  const fin = ids(FINISHES), mot = ids(MOTIFS), av = ids(AVATARS);
+  check(TIER_REWARDS.every(({ reward: r }) => (!r.finish || fin.has(r.finish)) && (!r.motif || mot.has(r.motif)) && (!r.avatar || av.has(r.avatar)) && (!r.car || CARS.some((c) => c.id === r.car)) && (!r.pack || PACKS[r.pack])), 'récompenses valides');
+  check(TIER_REWARDS[99].reward.car === 'aurora' && CARS.find((c) => c.id === 'aurora').unlock.type === 'pass', 'AURORA au niveau 100');
+  check(AVATARS.filter((a) => a.exclusive).every((a) => TIER_REWARDS[a.tier - 1].reward.avatar === a.id), 'niveaux des emblèmes exclusifs cohérents');
+  // XP du jour
+  const s = defaultSave();
+  const day = '2026-11-02';
+  let r = addSeasonXp(s, raceXp('ranked', 1), { race: true, day });
+  check(r.gained === SXP.race[0] * 2 && r.doubled, 'première course du jour : XP ×2');
+  addSeasonXp(s, 10, { race: true, day }); addSeasonXp(s, 10, { race: true, day });
+  check(doubleRacesLeft(s, day) === 0, 'bonus ×2 limité à 3 courses');
+  r = addSeasonXp(s, 50, { race: true, day });
+  check(r.gained === 50 && !r.doubled, '4e course : XP normale');
+  check(doubleRacesLeft(s, '2026-11-03') === 3, 'bonus de retour le lendemain');
+  check(raceXp('event', 1, 20) === 120 && raceXp('event', 20, 20) === 40 && raceXp('elim', 6) === SXP.race[5], 'XP selon le mode et la place');
+  // Chrono : plafond par jour
+  const t = defaultSave();
+  let tot = 0; for (let i = 0; i < 40; i++) tot += addTimeTrialLapXp(t, day).gained;
+  check(tot === SXP.ttLapDailyCap, 'chrono : XP des tours plafonnée chaque jour');
+  // Récompenses
+  const c = defaultSave();
+  check(claimTier(c, 1) === null && seasonBadge(c) === 0, 'niveau non atteint : rien à récupérer');
+  c.pass.xp = xpForLevel(100);
+  check(seasonBadge(c) === 100, '100 récompenses à récupérer');
+  const cr0 = c.credits;
+  for (let n = 1; n <= 100; n++) claimTier(c, n, mulberry32(n));
+  check(seasonBadge(c) === 0 && claimTier(c, 5) === null, 'tout récupéré, pas deux fois');
+  check(c.garage.owned.includes('aurora') && c.cosmetics.finishes.includes('aurora') && c.cosmetics.motifs.includes('wings') && c.profile.avatars.length === 4, 'voiture, finitions, motifs et emblèmes exclusifs obtenus');
+  check(c.credits > cr0 + 10000, 'beaucoup de crédits au fil du passe');
+  check(seasonTitles(c).length === 5 && unlockedTitles(c).includes('Légende de la Saison 1'), 'titres de saison');
+  check(ownsAvatar(c, 'phoenix') && !ownsAvatar(defaultSave(), 'phoenix') && setIdentity(defaultSave(), { avatar: 'phoenix' }) && true, 'emblème exclusif réservé');
+  const d = defaultSave(); setIdentity(d, { avatar: 'phoenix' });
+  check(d.profile.avatar === 'bolt', 'emblème exclusif refusé sans le passe');
+  c.pass.xp += BONUS_XP * 2;
+  check(bonusAvailable(c) === 2 && claimBonus(c) && claimBonus(c) && !claimBonus(c), 'coffres bonus');
+  // La voiture du passe n'apparaît ni dans les packs ni en boutique avant d'être gagnée
+  const e = defaultSave();
+  let auroraFrag = 0; for (let i = 0; i < 30; i++) { openPack(e, 'large', mulberry32(i)); }
+  auroraFrag = e.cars.fragments.aurora ?? 0;
+  check(auroraFrag === 0, 'pas de fragments AURORA dans les packs');
+  check(!generateOffers(e, '2026-11-02').some((o) => o.carId === 'aurora'), 'pas d\'offre AURORA en boutique');
+  check(buyStyle(Object.assign(defaultSave(), { credits: 1e6 }), 'finish', 'aurora').ok === false, 'finition exclusive pas à vendre');
+  // Missions et succès donnent de l'XP
+  const m = defaultSave(); refreshMissions(m);
+  m.missions.daily[0].progress = m.missions.daily[0].target;
+  const x0 = m.pass.xp; claimMission(m, m.missions.daily[0].id, mulberry32(1));
+  check(m.pass.xp - x0 === SXP.missionDaily, 'mission du jour : XP');
+  // Sauvegarde
+  const st = memStorage();
+  st.setItem('neondrive.save', JSON.stringify({ version: 9, trophies: 50 }));
+  const l = createSaveStore(st).load().data;
+  check(l.version === SAVE_VERSION && l.pass.xp === 0 && l.profile.avatars.length === 0, 'migration v9 → v10');
+  st.setItem('neondrive.save', JSON.stringify({ version: 10, pass: { xp: -5, claimed: [3, 3, 999, 'x'], bonusClaimed: 'a', day: 'hier' }, profile: { avatars: ['phoenix', 3] } }));
+  const k = createSaveStore(st).load().data;
+  check(k.pass.xp === 0 && k.pass.claimed.join() === '3' && k.pass.bonusClaimed === 0 && k.pass.day === null && k.profile.avatars.join() === 'phoenix', 'passe abîmé réparé');
 }
 
 console.log(`${ok} vérifications réussies, ${ko} échec(s). Ligues : ${LEAGUES.map((l) => `${l.name} ≥ ${l.min}`).join(', ')}`);

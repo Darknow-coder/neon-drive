@@ -1,5 +1,7 @@
 // Règles des missions (sans affichage, testées dans tools/progressionCheck.js).
 
+import { addSeasonXp } from './season.js';
+import { XP } from '../data/season.js';
 import { DAILY_TEMPLATES, WEEKLY_TEMPLATES, DAILY_COUNT, DAILY_BONUS } from '../data/missions.js';
 import { getCar } from '../data/cars.js';
 import { getTrackData } from '../data/tracks/index.js';
@@ -150,6 +152,7 @@ export function claimMission(save, id, rng) {
   if (!m || !isDone(m) || m.claimed) return null;
   m.claimed = true;
   if (save.career) save.career.missionsDone++;
+  if (save.pass) addSeasonXp(save, save.missions.weekly?.id === id ? XP.missionWeekly : XP.missionDaily);
   return grant(save, m.reward, rng);
 }
 
@@ -157,5 +160,6 @@ export function claimMission(save, id, rng) {
 export function claimDailyBonus(save, rng) {
   if (!allDailyDone(save) || save.missions.bonusClaimed) return null;
   save.missions.bonusClaimed = true;
+  if (save.pass) addSeasonXp(save, XP.missionBonus);
   return grant(save, DAILY_BONUS, rng);
 }

@@ -54,6 +54,9 @@ import { recordRace, addDriving, trackTotals, playerName, currentTitle, achievem
 import { iconImage } from './ui/icons.js';
 import { minimap } from './ui/timeTrialSelect.js';
 import { createEventScreen } from './ui/event.js';
+import { createSeasonScreen } from './ui/season.js';
+import { addSeasonXp, raceXp, seasonLevel, seasonBadge } from './progression/season.js';
+import { XP } from './data/season.js';
 import { EVENT } from './data/event.js';
 import { eventField, applyEventResult } from './progression/event.js';
 import { EVENT_TRACKS } from './data/tracks/index.js';
@@ -162,6 +165,11 @@ function refreshMenu() {
     ? `Reprendre · course ${save.cup.race + 1}/3`
     : `3 courses · ligue ${LEAGUES.find((l) => l.id === leagueFor(save.trophies).id)?.name ?? ''}`;
   $('btn-cup').classList.toggle('live', !!save.cup);
+  // Passe de saison : niveau et récompenses à récupérer
+  $('nav-pass-lvl').textContent = String(seasonLevel(save.pass.xp).level);
+  const pb = seasonBadge(save);
+  $('pass-badge').textContent = String(pb);
+  $('pass-badge').classList.toggle('hidden', !pb);
   // Tuile de l'événement : meilleure place
   $('event-sub').textContent = save.event.best ? `Événement · record ${save.event.best === 1 ? '1re' : `${save.event.best}e`} place` : `Événement · ${EVENT.drivers} pilotes`;
   // Profil : emblème, pseudo, titre et succès à récupérer
@@ -180,6 +188,7 @@ if (refreshShop(save)) persist();
 const missions = createMissions({ save, onSave: persist, sfx, onClose: refreshMenu });
 const road = createRoad({ save, onSave: persist, sfx, onClose: refreshMenu });
 const profile = createProfile({ save, onSave: persist, sfx, onClose: refreshMenu });
+const seasonScreen = createSeasonScreen({ save, onSave: persist, sfx, onClose: refreshMenu });
 
 function startRace() {
   // Le circuit n'est construit qu'au lancement (et l'ancien est libéré) :
@@ -274,7 +283,8 @@ function cupRaceDone(rows, abandoned = false) {
       rivalBeaten, pads: me.stats.pads, trackId, carId, credits: credits.total,
     });
     recordRace(save, { position: me.position, carId, trackId, mode: 'cup' });
-    info = `<span>Crédits de la course : <b>+${credits.total}</b></span>` +
+    const sx = addSeasonXp(save, raceXp('cup', me.position), { race: true });
+    info = `<span>Crédits de la course : <b>+${credits.total}</b></span><span>Passe de saison : <b>+${sx.gained} XP${sx.doubled ? ' (×2)' : ''}</b>${sx.after > sx.before ? ` · NIVEAU ${sx.after} !` : ''}</span>` +
       changes.map((c) => `<span class="${c.done ? 'ok' : ''}">${c.mission.text} <b>${c.done ? '✓' : `${c.after}/${c.mission.target}`}</b></span>`).join('');
   }
   const res = applyCupRace(cup, order);
@@ -284,6 +294,7 @@ function cupRaceDone(rows, abandoned = false) {
     onNext: () => {
       if (!res.finished) return startCupRace();
       const fin = finishCup(save);
+      if (fin?.rank) addSeasonXp(save, XP.cupFinal[fin.rank - 1] ?? 0);
       persist();
       loop.stop();
       session?.dispose();
@@ -306,6 +317,7 @@ function handleRaceFinish(rows, { trophyTable } = {}) {
   let reward = null;
   let credits = null;
   let missionChanges = [];
+  let season = null;
   if (!training) {
     const me = rows.find((r) => r.isPlayer);
     const rv = rows.find((r) => r.isRival);
@@ -332,9 +344,10 @@ function handleRaceFinish(rows, { trophyTable } = {}) {
       rivalBeaten, pads: me.stats.pads, trackId, carId, credits: credits.total,
     });
     recordRace(save, { position: me.position, carId, trackId, mode: session.isElimination ? 'elim' : 'ranked' });
+    season = addSeasonXp(save, raceXp(session.isElimination ? 'elim' : 'ranked', me.position), { race: true });
     persist();
   }
-  showResults(rows, { trackName: session.trackName, reward, training, credits, missions: missionChanges });
+  showResults(rows, { trackName: session.trackName, reward, training, credits, missions: missionChanges, season });
   sfx.stopCar();
   if (reward?.unlockedCars?.length || reward?.promoted) setTimeout(() => sfx.unlock(), 900);
   updateMusic();
@@ -414,6 +427,7 @@ function eventDone(rows) {
   const me = rows.find((r) => r.isPlayer);
   const res = applyEventResult(save, me.position);
   recordRace(save, { position: me.position, carId, trackId, mode: 'event' });
+  const season = addSeasonXp(save, raceXp('event', me.position, rows.length), { race: true });
   persist();
   const place = me.position === 1 ? '1re' : `${me.position}e`;
   const lines = [{ label: `${place} place sur ${rows.length}`, amount: res.credits }];
@@ -421,6 +435,7 @@ function eventDone(rows) {
   showResults(rows, {
     trackName: `${EVENT.name} · ${session.trackName}`,
     credits: { total: lines.reduce((a, l) => a + l.amount, 0), lines },
+    season,
     event: {
       record: res.newBest && save.event.played > 1 ? `NOUVEAU RECORD : ${place} PLACE !` : '',
       goals: res.goals.map((g) => g.goal.label),
@@ -646,6 +661,7 @@ $('btn-car-show').addEventListener('click', () => garage.open());
 const eventScreen = createEventScreen({ save, sfx, onPlay: () => { enterFullscreenOnMobile(); startEvent(); }, onClose: refreshMenu });
 $('btn-event').addEventListener('click', () => eventScreen.open());
 $('btn-road').addEventListener('click', () => road.open());
+$('btn-pass').addEventListener('click', () => seasonScreen.open());
 $('btn-profile').addEventListener('click', () => profile.open(achievementsBadge(save) ? 'ach' : 'stats'));
 $('btn-shop').addEventListener('click', () => shop.open());
 $('btn-missions').addEventListener('click', () => missions.open());

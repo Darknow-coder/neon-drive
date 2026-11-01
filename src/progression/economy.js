@@ -61,7 +61,8 @@ export function openPack(save, packId, rng = Math.random) {
   if (!pack) return null;
   const weights = CARS.map((c) => ({
     id: c.id,
-    w: isOwned(save, c.id) ? (carLevel(save, c.id) >= MAX_LEVEL ? 0.2 : 1) : 2.2,
+    // (voiture du passe de saison pas encore gagnée : pas de fragments inutiles)
+    w: isOwned(save, c.id) ? (carLevel(save, c.id) >= MAX_LEVEL ? 0.2 : 1) : c.unlock?.type === 'pass' ? 0 : 2.2,
   }));
   const total = weights.reduce((s, x) => s + x.w, 0);
   const pick = () => {

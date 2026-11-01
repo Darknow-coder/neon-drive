@@ -169,7 +169,7 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
   bodyPath(ctx, shape, L, Wd);
   ctx.fillStyle = bodyFill(ctx, finish, body, hl, hw);
   ctx.fill();
-  if (finish === 'carbon' || finish === 'holo' || finish === 'chrome' || finish === 'metal') {
+  if (OVERLAY_FINISHES.has(finish)) {
     ctx.save();
     bodyPath(ctx, shape, L, Wd);
     ctx.clip();
@@ -275,6 +275,63 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
         ctx.quadraticCurveTo(hl * 0.6, sy * hw * 0.55, hl * 0.95, sy * hw * 0.15);
         ctx.fill();
       }
+      break;
+    }
+    case 'stars': {
+      // Étoiles à 4 branches de tailles variées
+      const star = (x, y, r) => {
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const a = (i * Math.PI) / 4, rr = i % 2 ? r * 0.35 : r;
+          ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+        }
+        ctx.closePath(); ctx.fill();
+      };
+      for (const [x, y, r] of [[0.55, -0.4, 2.6], [0.15, 0.45, 1.8], [-0.2, -0.55, 2.0], [-0.55, 0.3, 2.8], [0.35, 0.05, 1.2], [-0.75, -0.25, 1.4], [0.75, 0.5, 1.3], [-0.05, 0.05, 1.0]]) star(x * hl, y * hw, r);
+      break;
+    }
+    case 'hex': {
+      // Nid d'abeille au trait
+      ctx.lineWidth = 0.5;
+      const r = 2.6, h = r * Math.sqrt(3);
+      for (let col = 0, x = -hl; x < hl + r; x += r * 1.5, col++) {
+        for (let y = -hw - h + (col % 2) * (h / 2); y < hw + h; y += h) {
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) ctx.lineTo(x + Math.cos((i * Math.PI) / 3) * r * 0.92, y + Math.sin((i * Math.PI) / 3) * r * 0.92);
+          ctx.closePath(); ctx.stroke();
+        }
+      }
+      break;
+    }
+    case 'tiger': {
+      // Rayures de fauve, des flancs vers le centre
+      ctx.globalAlpha = 0.95;
+      for (let k = 0; k < 7; k++) {
+        const x = -hl * 0.85 + k * hl * 0.28;
+        for (const sy of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(x, sy * hw);
+          ctx.quadraticCurveTo(x + 2.2, sy * hw * 0.55, x - 0.6, sy * hw * (0.18 + (k % 3) * 0.08));
+          ctx.lineTo(x + 1.6, sy * hw * 0.5);
+          ctx.lineTo(x + 2.6, sy * hw);
+          ctx.closePath(); ctx.fill();
+        }
+      }
+      break;
+    }
+    case 'wings': {
+      // Ailes stylisées le long des flancs (plumes en dégradé)
+      for (const sy of [-1, 1]) {
+        for (let k = 0; k < 4; k++) {
+          ctx.globalAlpha = 0.95 - k * 0.18;
+          ctx.beginPath();
+          ctx.moveTo(hl * 0.5 - k * hl * 0.12, sy * hw * 0.35);
+          ctx.quadraticCurveTo(-hl * 0.1 - k * hl * 0.15, sy * hw * 1.05, -hl * 0.75 - k * hl * 0.06, sy * hw * (0.9 - k * 0.05));
+          ctx.quadraticCurveTo(-hl * 0.2 - k * hl * 0.12, sy * hw * 0.7, hl * 0.3 - k * hl * 0.12, sy * hw * 0.3);
+          ctx.closePath(); ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
       break;
     }
     case 'giga': {
@@ -458,13 +515,65 @@ function bodyFill(ctx, finish, body, hl, hw) {
     chrome: [[0, '#1d1f2c'], [0.18, mix(body, '#ffffff', 0.75)], [0.32, mix(body, '#3a3d55', 0.6)], [0.48, '#ffffff'], [0.62, mix(body, '#5a5f78', 0.5)], [0.8, mix(body, '#ffffff', 0.6)], [1, '#1d1f2c']],
     carbon: [[0, '#07070c'], [0.5, '#1b1b26'], [1, '#07070c']],
     holo: [[0, '#2b6bff'], [1, '#2b6bff']],
+    aurora: [[0, '#04201c'], [0.5, '#0b3a40'], [1, '#04201c']],
+    galaxy: [[0, '#0a0420'], [0.5, '#1a0b3d'], [1, '#0a0420']],
+    obsidian: [[0, '#020205'], [0.3, '#0d0d16'], [0.5, '#22222e'], [0.7, '#0d0d16'], [1, '#020205']],
     gold: [[0, '#5a3300'], [0.2, '#c88a10'], [0.4, '#fff1a8'], [0.52, '#ffd34d'], [0.7, '#fff6c8'], [0.85, '#b47a08'], [1, '#5a3300']],
   }[finish] ?? null;
   for (const [o, c] of stops ?? []) g.addColorStop(o, c);
   return stops ? g : body;
 }
 
+const OVERLAY_FINISHES = new Set(['carbon', 'holo', 'chrome', 'metal', 'aurora', 'galaxy', 'obsidian']);
+
 function drawFinishOverlay(ctx, finish, body, hl, hw, L, Wd) {
+  if (finish === 'aurora') {
+    // Rideaux de lumière boréale (vert → cyan → violet) en vagues
+    ctx.globalCompositeOperation = 'lighter';
+    const cols = ['#3dff9e', '#00f0ff', '#8a2bff', '#ff2bd6'];
+    for (let k = 0; k < 4; k++) {
+      ctx.beginPath();
+      const y0 = -hw + (k + 0.5) * (Wd / 4);
+      ctx.moveTo(-hl, y0);
+      for (let x = -hl; x <= hl; x += 2) ctx.lineTo(x, y0 + Math.sin(x * 0.35 + k * 1.7) * hw * 0.22);
+      ctx.lineTo(hl, y0 + hw * 0.45); ctx.lineTo(-hl, y0 + hw * 0.45); ctx.closePath();
+      const g = ctx.createLinearGradient(0, y0 - hw * 0.2, 0, y0 + hw * 0.45);
+      g.addColorStop(0, rgba(cols[k], 0.55)); g.addColorStop(1, rgba(cols[k], 0));
+      ctx.fillStyle = g;
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    return;
+  }
+  if (finish === 'galaxy') {
+    // Nébuleuse + étoiles
+    for (const [x, y, r, c] of [[hl * 0.3, -hw * 0.3, hw * 1.1, '#ff2bd6'], [-hl * 0.4, hw * 0.35, hw * 1.2, '#2b6bff'], [-hl * 0.05, -hw * 0.1, hw * 0.8, '#8a2bff']]) {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, rgba(c, 0.55)); g.addColorStop(1, rgba(c, 0));
+      ctx.fillStyle = g;
+      ctx.fillRect(-hl, -hw, L, Wd);
+    }
+    for (let k = 0; k < 34; k++) {
+      ctx.fillStyle = `rgba(255,255,255,${0.4 + ((k * 13) % 6) / 10})`;
+      const sz = (k % 7 === 0) ? 0.8 : 0.4;
+      ctx.fillRect(-hl + ((k * 61) % 100) / 100 * L, -hw + ((k * 37) % 100) / 100 * Wd, sz, sz);
+    }
+    return;
+  }
+  if (finish === 'obsidian') {
+    // Noir miroir : reflet net + liseré lumineux de la couleur choisie
+    const g = ctx.createLinearGradient(-hl, -hw, hl * 0.3, hw);
+    g.addColorStop(0.42, 'rgba(255,255,255,0)');
+    g.addColorStop(0.5, 'rgba(255,255,255,0.5)');
+    g.addColorStop(0.53, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(-hl, -hw, L, Wd);
+    const e = ctx.createLinearGradient(0, -hw, 0, hw);
+    e.addColorStop(0, rgba(body, 0.75)); e.addColorStop(0.18, rgba(body, 0)); e.addColorStop(0.82, rgba(body, 0)); e.addColorStop(1, rgba(body, 0.75));
+    ctx.fillStyle = e;
+    ctx.fillRect(-hl, -hw, L, Wd);
+    return;
+  }
   if (finish === 'carbon') {
     // Tissage de fibre de carbone
     const c = 1.6;

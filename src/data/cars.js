@@ -10,6 +10,7 @@
 // DÉBLOCAGE (`unlock`) — comment le joueur obtient la voiture :
 //   { type: 'start' }                    possédée dès le début
 //   { type: 'trophies', min: 100 }       palier de trophées
+//   { type: 'pass', tier: 100 }          niveau du passe de saison (exclusive)
 // Prévu pour plus tard (même format, sans changer le reste du code) :
 //   { type: 'shop', price: … }           boutique
 //   { type: 'fragments', count: … }      fragments
@@ -96,6 +97,16 @@ export const CARS = [
     design: { cockpit: 'front', livery: 'chevron', spoiler: 'bar', lights: 'bar', extras: ['armor', 'skirts'] },
     colors: { body: '#dfe3ff', accent: '#ff3b5c', glow: '#ff6b8a' },
     unlock: { type: 'trophies', min: 600 },
+  },
+  {
+    id: 'aurora',
+    name: 'AURORA',
+    tagline: 'Exclusive Saison 1 · rapide et vive',
+    stats: { speed: 7, accel: 7, handling: 6, drift: 5, toughness: 5 },
+    shape: 'blade',
+    design: { lm: 1.05, wm: 0.96, cockpit: 'bubble', wheels: 'covered', livery: 'stars', spoiler: 'wide', lights: 'quad', extras: ['fins', 'intakes'] },
+    colors: { body: '#3dff9e', accent: '#8a2bff', glow: '#7af7ff', finish: 'aurora' },
+    unlock: { type: 'pass', tier: 100 },
   },
 ];
 

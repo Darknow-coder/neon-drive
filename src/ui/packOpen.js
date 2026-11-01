@@ -256,6 +256,10 @@ export function showRewards(save, results, { sfx, onClose } = {}) {
       front.insertAdjacentHTML('beforeend', `<div class="n">★</div><div class="nm">${r.car.name}</div><div class="goal">${r.car.tagline}</div>`);
       big.append(card);
       if (r.credits) big.insertAdjacentHTML('beforeend', `<div class="pack-extra">${ico('credit')} +${r.credits}</div>`);
+    } else if (!r.credits) {
+      // Récompense sans crédits (ex. titre) : un badge et le texte
+      big.innerHTML = `<div class="reward-badge">${ico('medal')}</div>`;
+      if (r.note) big.insertAdjacentHTML('beforeend', `<div class="reward-note">${r.note}</div>`);
     } else {
       big.innerHTML = `${ico('credit')}<div class="amt">+0</div>`;
       // Le montant défile jusqu'à sa valeur

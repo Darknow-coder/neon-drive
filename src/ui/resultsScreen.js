@@ -4,10 +4,11 @@ import { playerLabel } from './playerLabel.js';
 import { formatTime } from '../core/math.js';
 import { leagueProgress } from '../data/progression.js';
 import { ico } from './icons.js';
+import { seasonLevel } from '../progression/season.js';
 
 const el = (id) => document.getElementById(id);
 
-export function showResults(rows, { trackName, reward = null, training = false, credits = null, missions = [], event = null }) {
+export function showResults(rows, { trackName, reward = null, training = false, credits = null, missions = [], event = null, season = null }) {
   const me = rows.find((r) => r.isPlayer);
   const p = me ? me.position : rows.length;
   el('res-place').innerHTML = `${p}<sup>${p === 1 ? 'er' : 'e'}</sup>`;
@@ -51,6 +52,16 @@ export function showResults(rows, { trackName, reward = null, training = false, 
     cb.innerHTML = `<span class="ct">${ico('credit', 'big')}+${credits.total}</span>` +
       credits.lines.map((l) => `<span class="cl">${l.label} <b>+${l.amount}</b></span>`).join('') +
       (credits.shopHint ? `<span class="shop-hint">De quoi t'offrir en boutique : <b>${credits.shopHint}</b></span>` : '');
+  }
+
+  // Passe de saison : XP gagnée
+  const sp = el('res-pass');
+  sp.classList.toggle('hidden', !season);
+  if (season) {
+    const lv = seasonLevel(season.xp);
+    sp.innerHTML = `<span class="rp-t">${ico('pass')} PASSE DE SAISON</span><b>+${season.gained} XP</b>${season.doubled ? '<i>×2</i>' : ''}
+      <span class="rp-lvl">NIV. ${lv.level}</span><span class="rp-bar"><em style="width:${(lv.into / lv.need) * 100}%"></em></span>
+      ${season.after > season.before ? `<span class="rp-up">NIVEAU ${season.after} ATTEINT ! Récompense dans le PASSE</span>` : ''}`;
   }
 
   // Missions qui ont progressé

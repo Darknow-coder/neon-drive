@@ -14,6 +14,8 @@ import { createRecorder, decodeGhost, ghostAt, ghostTimeAtDist, loadGhost, saveG
 import { computeNeonGhost } from '../race/aiGhost.js';
 import { applyTimeTrialLap, bestTime } from '../progression/timeTrial.js';
 import { formatTime } from '../core/math.js';
+import { addTimeTrialLapXp, addSeasonXp } from '../progression/season.js';
+import { XP } from '../data/season.js';
 
 /** Fantôme NEON : calculé une fois puis gardé en mémoire (recalculé si la référence change). */
 function neonGhost(trackId) {
@@ -64,6 +66,9 @@ export function createTimeTrial({ save, onSave, trackId, carId, colors, level, .
   function onLapDone(time) {
     if (invalid) return;
     const res = applyTimeTrialLap(save, trackId, time);
+    // XP de saison : tour valide (plafonné par jour) + médailles
+    let xp = addTimeTrialLapXp(save).gained;
+    if (res.newMedals.length) xp += addSeasonXp(save, XP.ttMedal * res.newMedals.length).gained;
     onSave();
     const parts = [];
     if (res.record) {
@@ -79,6 +84,7 @@ export function createTimeTrial({ save, onSave, trackId, carId, colors, level, .
       opts.sfx?.unlock();
       for (const p of res.rewards.packs) pendingRewards.push(p);
     }
+    if (xp) parts.push(`+${xp} XP`);
     scene.flash(parts.join('  ·  '), res.newMedals.length ? 4 : 3);
   }
 

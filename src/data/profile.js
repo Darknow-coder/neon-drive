@@ -15,7 +15,17 @@ export const AVATARS = [
   { id: 'skull', name: 'Crâne', path: '<path d="M7 15a9 9 0 0 1 18 0v4l-2 2v4h-3v-2h-2v2h-4v-2h-2v2H9v-4l-2-2z"/><circle cx="12.5" cy="15.5" r="2.3"/><circle cx="19.5" cy="15.5" r="2.3"/><path d="M16 19l-1 2h2z"/>' },
   { id: 'wave', name: 'Vague', path: '<path d="M3 20c3-3 5.5-3 8 0s5 3 8 0 5.5-3 8 0"/><path d="M3 14c3-3 5.5-3 8 0s5 3 8 0 5.5-3 8 0"/><path d="M3 26c3-3 5.5-3 8 0s5 3 8 0 5.5-3 8 0" opacity=".5"/>' },
   { id: 'rocket', name: 'Fusée', path: '<path d="M16 3c5 3 7 9 6 16H10C9 12 11 6 16 3z"/><circle cx="16" cy="12" r="2.5"/><path d="M10 19l-4 4 1 3 4-2M22 19l4 4-1 3-4-2M13 23l3 6 3-6"/>' },
+  // Exclusifs du passe de saison (niveau indiqué)
+  { id: 'comet', name: 'Comète', exclusive: 'season', tier: 4, path: '<circle cx="21" cy="11" r="5"/><path d="M17.5 14.5L5 27M16 12l-9 6M19 16l-5 9"/><path d="M21 8.5v5M18.5 11h5" stroke-width="1.4"/>' },
+  { id: 'planet', name: 'Planète', exclusive: 'season', tier: 25, path: '<circle cx="16" cy="16" r="7.5"/><path d="M4 21c2 3 10 1 17-3.5S30.5 9 28 7c-1.5-1.2-4.5-.6-7.5.8"/><circle cx="25" cy="24" r="1.4" fill="currentColor"/><circle cx="7" cy="8" r="1" fill="currentColor"/>' },
+  { id: 'phoenix', name: 'Phénix', exclusive: 'season', tier: 55, path: '<path d="M16 28c-1-5 0-9 0-12"/><path d="M16 16C12 14 6 14 3 9c5 1 8 0 11 2-2-3-2-6 0-8 1 3 2 5 2 8 0-3 1-5 2-8 2 2 2 5 0 8 3-2 6-1 11-2-3 5-9 5-13 7z"/><path d="M13 27h6"/>' },
+  { id: 'cup', name: 'Coupe d\'or', exclusive: 'season', tier: 75, path: '<path d="M10 5h12v6a6 6 0 0 1-12 0z"/><path d="M10 7H6v2a4 4 0 0 0 4 4M22 7h4v2a4 4 0 0 1-4 4M16 17v4M11 27h10l-1-6h-8z"/><path d="M16 7.5l.9 1.8 2 .3-1.4 1.4.3 2-1.8-.9-1.8.9.3-2-1.4-1.4 2-.3z" fill="currentColor" stroke="none"/>' },
 ];
+/** L'emblème est-il disponible pour ce joueur ? */
+export const ownsAvatar = (save, id) => {
+  const a = AVATARS.find((x) => x.id === id);
+  return !!a && (!a.exclusive || save.profile.avatars.includes(id));
+};
 
 export const AVATAR_COLORS = ['#00f0ff', '#ff2bd6', '#8a2bff', '#3dff9e', '#ffd34d', '#ff8a3d', '#ff2b5a', '#e8e6ff'];
 

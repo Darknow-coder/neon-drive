@@ -12,7 +12,7 @@
 
 const KEY = 'neondrive.save';
 const BACKUP_KEY = 'neondrive.save.backup';
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 export function defaultSave() {
   return {
@@ -48,7 +48,7 @@ export function defaultSave() {
     cup: null,
     cupStats: { played: 0, podiums: 0, won: {} },
     // Profil du joueur (pseudo choisi au premier lancement)
-    profile: { name: null, avatar: 'bolt', color: '#00f0ff', title: null },
+    profile: { name: null, avatar: 'bolt', color: '#00f0ff', title: null, avatars: [] },
     // Carrière : statistiques de toutes les courses (classées, élimination, coupe)
     career: {
       races: 0, wins: 0, podiums: 0, elimPlayed: 0, elimWins: 0,
@@ -59,6 +59,8 @@ export function defaultSave() {
     achievements: { claimed: {} },
     // Événement GIGA RUSH : meilleure place, objectifs récompensés
     event: { best: null, claimed: [], played: 0 },
+    // Passe de saison : XP, niveaux récupérés, coffres bonus, bonus du jour
+    pass: { season: 's1', xp: 0, claimed: [], bonusClaimed: 0, day: null, dayRaces: 0, ttXp: 0 },
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
@@ -192,6 +194,7 @@ function sanitize(raw) {
     if (typeof pr.avatar === 'string' && /^[a-z]{2,16}$/.test(pr.avatar)) s.profile.avatar = pr.avatar;
     if (isColor(pr.color)) s.profile.color = pr.color;
     if (typeof pr.title === 'string' && pr.title.length <= 40) s.profile.title = pr.title;
+    if (Array.isArray(pr.avatars)) s.profile.avatars = [...new Set(pr.avatars.filter((x) => typeof x === 'string' && /^[a-z]{2,16}$/.test(x)))];
   }
   // Carrière
   const ca = raw.career;
@@ -213,6 +216,16 @@ function sanitize(raw) {
     if (Number.isInteger(ev.best) && ev.best >= 1 && ev.best <= 20) s.event.best = ev.best;
     if (Array.isArray(ev.claimed)) s.event.claimed = [...new Set(ev.claimed.filter((x) => typeof x === 'string' && /^[a-z0-9]{2,16}$/.test(x)))];
     s.event.played = Math.floor(num(ev.played));
+  }
+  // Passe de saison
+  const pa = raw.pass;
+  if (pa && typeof pa === 'object') {
+    s.pass.xp = Math.floor(num(pa.xp));
+    if (Array.isArray(pa.claimed)) s.pass.claimed = [...new Set(pa.claimed.filter((t) => Number.isInteger(t) && t >= 1 && t <= 100))];
+    s.pass.bonusClaimed = Math.floor(num(pa.bonusClaimed));
+    if (typeof pa.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(pa.day)) s.pass.day = pa.day;
+    s.pass.dayRaces = Math.floor(num(pa.dayRaces));
+    s.pass.ttXp = Math.floor(num(pa.ttXp));
   }
   // Joueur existant (sauvegarde sans ce champ, mais avec des courses) : pas de tutoriel imposé
   s.tutorialDone = typeof raw.tutorialDone === 'boolean' ? raw.tutorialDone : s.stats.races > 0;
@@ -281,7 +294,12 @@ function migrate(raw) {
     raw.event ??= { best: null, claimed: [], played: 0 };
     raw.version = 9;
   }
-  // Pour le futur : if (raw.version === 9) { …; raw.version = 10; }
+  // Version 9 → 10 : passe de saison (tout le monde commence au niveau 0)
+  if (raw.version === 9) {
+    raw.pass ??= { season: 's1', xp: 0, claimed: [], bonusClaimed: 0, day: null, dayRaces: 0, ttXp: 0 };
+    raw.version = 10;
+  }
+  // Pour le futur : if (raw.version === 10) { …; raw.version = 11; }
   return raw;
 }
 

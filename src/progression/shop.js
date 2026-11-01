@@ -38,6 +38,7 @@ export const ownsMotif = (save, id) => id === 'origin' || id === 'none' || save.
 /** Intérêt d'une voiture pour des fragments : verrouillée et proche du but d'abord. */
 function fragmentNeed(save, car) {
   if (!isOwned(save, car.id)) {
+    if (!UNLOCK_FRAGMENTS[car.id]) return { score: 0, need: 0 }; // (voiture du passe de saison)
     const need = UNLOCK_FRAGMENTS[car.id] ?? 0;
     return { score: 2 + fragmentsOf(save, car.id) / Math.max(1, need), need };
   }

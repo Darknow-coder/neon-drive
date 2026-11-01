@@ -1,7 +1,9 @@
 // Profil du joueur : pseudo, avatar, carrière (statistiques) et succès.
 // Aucune dépendance à l'affichage (testable dans tools/progressionCheck.js).
 
-import { ACHIEVEMENTS, ACHIEVEMENT_REWARDS, AVATARS, AVATAR_COLORS, DEFAULT_TITLE, NAME_MIN, NAME_MAX } from '../data/profile.js';
+import { ACHIEVEMENTS, ACHIEVEMENT_REWARDS, AVATARS, AVATAR_COLORS, DEFAULT_TITLE, NAME_MIN, NAME_MAX, ownsAvatar } from '../data/profile.js';
+import { seasonTitles, addSeasonXp } from './season.js';
+import { XP } from '../data/season.js';
 
 /** Nettoie un pseudo ; retourne { name } ou { error }. */
 export function cleanName(raw) {
@@ -22,7 +24,7 @@ export function setIdentity(save, { name, avatar, color, title }) {
     if (r.error) return r;
     save.profile.name = r.name;
   }
-  if (avatar && AVATARS.some((a) => a.id === avatar)) save.profile.avatar = avatar;
+  if (avatar && AVATARS.some((a) => a.id === avatar) && ownsAvatar(save, avatar)) save.profile.avatar = avatar;
   if (color && AVATAR_COLORS.includes(color)) save.profile.color = color;
   if (title !== undefined && unlockedTitles(save).includes(title)) save.profile.title = title;
   return { ok: true };
@@ -90,13 +92,14 @@ export function claimAchievement(save, id) {
   save.achievements.claimed[id] = tier + 1;
   const credits = ACHIEVEMENT_REWARDS[tier];
   save.credits += credits;
+  if (save.pass) addSeasonXp(save, XP.achievement);
   const title = tier + 1 === st.def.tiers.length ? st.def.title : null;
   return { credits, title, tier: tier + 1, name: st.def.name };
 }
 
 /** Titres disponibles : celui de départ + ceux des succès terminés. */
 export function unlockedTitles(save) {
-  return [DEFAULT_TITLE, ...ACHIEVEMENTS.filter((a) => (save.achievements.claimed[a.id] ?? 0) >= a.tiers.length).map((a) => a.title)];
+  return [DEFAULT_TITLE, ...seasonTitles(save), ...ACHIEVEMENTS.filter((a) => (save.achievements.claimed[a.id] ?? 0) >= a.tiers.length).map((a) => a.title)];
 }
 
 export function currentTitle(save) {

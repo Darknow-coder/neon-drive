@@ -49,7 +49,12 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Ralenti + confettis sur une victoire ou un photo-finish, coup de caméra au boost, lignes de vitesse
 - [x] Sons : moteur qui chante sur la grille, passages de rapport, pétarades, frottement contre le mur, « whoosh » des dépassements
 
-## Phase 5 — Saisons
+## ✅ Phase 5 — Passe de saison (Saison 1, sans date de fin pour l'instant)
+- [x] 100 niveaux gratuits (~75 000 XP), XP dans tous les modes, missions et succès, XP ×2 sur les 3 premières courses du jour
+- [x] Exclusifs : voiture AURORA (niveau 100), 3 finitions, 4 motifs, 4 emblèmes, 5 titres ; coffres bonus après le niveau 100
+- [ ] Plus tard : saisons qui changent (thème, date de fin, récompenses de fin de saison)
+
+## Phase 5 (suite) — Saisons
 - Saisons de ~4 semaines, récompenses de fin de saison, passe de saison gratuit, thème par saison
 
 ## Phase 6 — En ligne

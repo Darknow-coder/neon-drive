@@ -1,7 +1,7 @@
 // Profil du joueur : identité (pseudo, emblème, titre), statistiques et succès.
 // Contient aussi l'écran « Bienvenue, pilote » du premier lancement.
 
-import { AVATARS, AVATAR_COLORS, ACHIEVEMENT_REWARDS, randomName, kmOf, NAME_MAX } from '../data/profile.js';
+import { AVATARS, AVATAR_COLORS, ACHIEVEMENT_REWARDS, randomName, kmOf, NAME_MAX, ownsAvatar } from '../data/profile.js';
 import {
   setIdentity, cleanName, playerName, currentTitle, unlockedTitles, favorite,
   achievementStatus, achievementsBadge, claimAchievement, claimAllAchievements,
@@ -194,12 +194,15 @@ export function createProfile({ save, onSave, sfx, onClose }) {
   let idDone = null;
   function renderIdentity() {
     $('id-preview').innerHTML = `${avatarHtml(draft, 'av-l')}<div class="id-pname">${(cleanName(draft.name).name ?? draft.name.toUpperCase()) || '…'}</div><div class="id-ptitle">${draft.title ?? currentTitle(save)}</div>`;
-    $('id-avatars').innerHTML = AVATARS.map((a) => `<button class="id-av ${a.id === draft.avatar ? 'on' : ''}" data-av="${a.id}" title="${a.name}" style="--ac:${draft.color}">${avatarSvg(a.id)}</button>`).join('');
+    $('id-avatars').innerHTML = AVATARS.map((a) => {
+      const owned = ownsAvatar(save, a.id);
+      return `<button class="id-av ${a.id === draft.avatar ? 'on' : ''} ${owned ? '' : 'locked'} ${a.exclusive ? 'excl' : ''}" data-av="${a.id}" ${owned ? '' : 'disabled'} title="${owned ? a.name : `${a.name} : niveau ${a.tier} du passe de saison`}" style="--ac:${draft.color}">${avatarSvg(a.id)}${owned ? '' : `<small>NIV ${a.tier}</small>`}</button>`;
+    }).join('');
     $('id-colors').innerHTML = AVATAR_COLORS.map((c) => `<button class="id-col ${c === draft.color ? 'on' : ''}" data-col="${c}" style="--c:${c}" aria-label="Couleur ${c}"></button>`).join('');
     const titles = unlockedTitles(save);
     $('id-titles').innerHTML = titles.map((t) => `<button class="id-tt ${t === (draft.title ?? currentTitle(save)) ? 'on' : ''}" data-tt="${t}">${t}</button>`).join('')
       + (titles.length === 1 ? '<span class="id-tt-note">Termine des succès pour gagner d\'autres titres.</span>' : '');
-    $('id-avatars').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { draft.avatar = b.dataset.av; sfx?.click?.(); renderIdentity(); }));
+    $('id-avatars').querySelectorAll('button:not([disabled])').forEach((b) => b.addEventListener('click', () => { draft.avatar = b.dataset.av; sfx?.click?.(); renderIdentity(); }));
     $('id-colors').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { draft.color = b.dataset.col; sfx?.click?.(); renderIdentity(); }));
     $('id-titles').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { draft.title = b.dataset.tt; sfx?.click?.(); renderIdentity(); }));
   }
