@@ -7,7 +7,7 @@ import { ico } from './icons.js';
 
 const el = (id) => document.getElementById(id);
 
-export function showResults(rows, { trackName, reward = null, training = false, credits = null, missions = [] }) {
+export function showResults(rows, { trackName, reward = null, training = false, credits = null, missions = [], event = null }) {
   const me = rows.find((r) => r.isPlayer);
   const p = me ? me.position : rows.length;
   el('res-place').innerHTML = `${p}<sup>${p === 1 ? 'er' : 'e'}</sup>`;
@@ -18,7 +18,18 @@ export function showResults(rows, { trackName, reward = null, training = false, 
   const bestOfRace = Math.min(...rows.map((r) => r.bestLap));
   const tbody = el('res-rows');
   tbody.innerHTML = '';
-  for (const r of rows) {
+  // Grand plateau (20 voitures) : le haut du classement et les voisins du joueur
+  const big = rows.length > 10;
+  const shown = big ? rows.filter((r) => r.position <= 6 || Math.abs(r.position - p) <= 1 || r.position === rows.length) : rows;
+  let prev = 0;
+  for (const r of shown) {
+    if (big && r.position > prev + 1) {
+      const gap = document.createElement('tr');
+      gap.className = 'res-gap';
+      gap.innerHTML = '<td></td><td colspan="4">· · ·</td>';
+      tbody.append(gap);
+    }
+    prev = r.position;
     const tr = document.createElement('tr');
     if (r.isPlayer) tr.className = 'me';
     else if (r.isRival) tr.className = 'rival';
@@ -61,6 +72,16 @@ export function showResults(rows, { trackName, reward = null, training = false, 
   if (training) {
     el('res-record').textContent = 'ENTRAÎNEMENT — PAS DE TROPHÉES';
     el('res-record').classList.remove('hidden');
+  }
+  if (event) {
+    if (event.goals.length) {
+      el('res-promo').textContent = `OBJECTIF${event.goals.length > 1 ? 'S' : ''} ATTEINT${event.goals.length > 1 ? 'S' : ''} : ${event.goals.join(' · ')} !`;
+      el('res-promo').classList.remove('hidden');
+    }
+    if (event.record) {
+      el('res-record').textContent = event.record;
+      el('res-record').classList.remove('hidden');
+    }
   }
   if (reward) {
     el('res-gain').textContent = `+${reward.gained}`;

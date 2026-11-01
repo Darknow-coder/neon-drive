@@ -153,6 +153,7 @@ export function buyStyle(save, kind, id) {
   const list = kind === 'finish' ? FINISHES : MOTIFS;
   const item = list.find((x) => x.id === id);
   if (!item) return { ok: false, reason: 'missing' };
+  if (item.exclusive) return { ok: false, reason: 'exclusive' };
   if ((kind === 'finish' ? ownsFinish : ownsMotif)(save, id)) return { ok: false, reason: 'owned' };
   const p = pay(save, item.price);
   if (!p.ok) return p;

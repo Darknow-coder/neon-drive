@@ -203,6 +203,7 @@ export function createShop({ save, onSave, sfx, onClose }) {
       row.className = 'shop-row';
       for (const item of list) {
         const owned = kind === 'finish' ? ownsFinish(save, item.id) : ownsMotif(save, item.id);
+        if (item.exclusive && !owned) continue; // exclusif d'événement : pas en vente
         const equipped = current[kind] === item.id;
         row.append(card({
           color: '#b07aff',

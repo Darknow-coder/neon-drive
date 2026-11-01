@@ -42,6 +42,8 @@ export const MOTIFS = [
   { id: 'checker', name: 'DAMIER', price: 300, desc: 'Le drapeau à damier de la victoire.' },
   { id: 'circuit', name: 'CIRCUIT IMPRIMÉ', price: 350, desc: 'Des pistes électroniques lumineuses.' },
   { id: 'flames', name: 'FLAMMES', price: 400, desc: 'Des flammes néon qui partent du nez.' },
+  // Exclusif : gagné en remportant l'événement GIGA RUSH (jamais en boutique)
+  { id: 'giga', name: 'GIGA RUSH', price: 0, exclusive: true, desc: 'Exclusif : réservé aux vainqueurs de la GIGA RUSH.' },
 ];
 
 // ---------- Offres du jour ----------

@@ -142,7 +142,8 @@ export function createGarage({ save, onSave, onClose, sfx, openShop }) {
     }
     const more = document.createElement('button');
     more.className = 'style-more';
-    more.textContent = `${FINISHES.length + MOTIFS.length - save.cosmetics.finishes.length - save.cosmetics.motifs.length - 3} styles de plus dans la BOUTIQUE ›`;
+    const left = [...FINISHES.filter((f) => !f.exclusive && !ownsFinish(save, f.id)), ...MOTIFS.filter((m) => !m.exclusive && !ownsMotif(save, m.id))].length;
+    more.textContent = left ? `${left} style${left > 1 ? 's' : ''} de plus dans la BOUTIQUE ›` : 'Voir la BOUTIQUE ›';
     more.addEventListener('click', () => { close(); openShop?.('style'); });
     box.append(more);
   }

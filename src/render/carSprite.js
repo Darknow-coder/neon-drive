@@ -277,6 +277,29 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
       }
       break;
     }
+    case 'giga': {
+      // Exclusif GIGA RUSH : grande flèche or → magenta et trait central blanc
+      const gg = ctx.createLinearGradient(hl, 0, -hl, 0);
+      gg.addColorStop(0, '#fff3b0');
+      gg.addColorStop(0.4, '#ffd34d');
+      gg.addColorStop(1, '#ff2bd6');
+      ctx.fillStyle = gg;
+      ctx.globalAlpha = 0.95;
+      for (const x0 of [hl * 0.55, -hl * 0.05]) {
+        ctx.beginPath();
+        ctx.moveTo(x0, 0);
+        ctx.lineTo(x0 - hl * 0.42, -hw);
+        ctx.lineTo(x0 - hl * 0.62, -hw);
+        ctx.lineTo(x0 - hl * 0.2, 0);
+        ctx.lineTo(x0 - hl * 0.62, hw);
+        ctx.lineTo(x0 - hl * 0.42, hw);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-hl, -0.45, L, 0.9);
+      break;
+    }
     default:
       break;
   }

@@ -1695,3 +1695,66 @@ html, body {
   .ach-side { min-width: 90px; }
 }
 @media (max-width: 640px) { .pc-txt { display: none; } .profile-chip { padding: 0 3px; } }
+
+/* =====================================================================
+   ÉVÉNEMENT : GIGA RUSH
+   ===================================================================== */
+.t-event { --tc: #ffd34d; }
+.t-event b { background: linear-gradient(90deg, #ffe680, #ff2bd6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.event-card { width: min(980px, 100%); gap: 12px; }
+.ev-hero { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 18px; align-items: center; padding: 14px; border-radius: 16px;
+  background: linear-gradient(120deg, rgba(255, 211, 77, 0.16), rgba(255, 43, 214, 0.18) 60%, rgba(138, 43, 255, 0.18)); border: 1px solid rgba(255, 211, 77, 0.5);
+  box-shadow: 0 0 26px rgba(255, 43, 214, 0.25); }
+.ev-map { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; border-radius: 12px; background: rgba(7, 4, 26, 0.6); }
+.ev-map img { width: 100%; max-height: 190px; object-fit: contain; filter: drop-shadow(0 0 8px rgba(255, 211, 77, 0.5)); }
+.ev-map span { font-family: var(--font-display); font-size: 11px; letter-spacing: 3px; color: #ffe680; }
+.ev-info { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ev-kicker { font-family: var(--font-display); font-size: 10px; letter-spacing: 4px; color: #ff7ad9; }
+.ev-name { font-family: var(--font-display); font-weight: 900; font-size: 40px; letter-spacing: 4px; line-height: 1;
+  background: linear-gradient(90deg, #fff3b0, #ffd34d 40%, #ff2bd6); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 12px rgba(255, 43, 214, 0.5)); }
+.ev-tag { font-weight: 700; font-size: 16px; color: #ffe680; }
+.ev-desc { margin: 0; font-size: 15px; color: #e8e6ff; line-height: 1.35; }
+.ev-stats { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--muted); }
+.ev-stats b { display: inline-flex; align-items: center; gap: 3px; color: #fff; }
+.ev-stats .ico { width: 15px; height: 15px; }
+.ev-goals-title { font-family: var(--font-display); font-size: 11px; letter-spacing: 3px; color: var(--muted); }
+.ev-goals-title span { color: #ffe680; margin-left: 6px; }
+.ev-goals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.evg { --gc: #c9d2ea; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 8px; border-radius: 14px; text-align: center;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid color-mix(in srgb, var(--gc) 45%, transparent); }
+.evg.g-top10 { --gc: #00f0ff; } .evg.g-top5 { --gc: #b07aff; } .evg.g-podium { --gc: #ff2bd6; } .evg.g-win { --gc: #ffd34d; background: rgba(255, 211, 77, 0.08); box-shadow: 0 0 18px rgba(255, 211, 77, 0.2); }
+.evg-place { font-family: var(--font-display); font-weight: 900; font-size: 16px; letter-spacing: 2px; color: var(--gc); text-shadow: 0 0 10px color-mix(in srgb, var(--gc) 60%, transparent); }
+.evg-label { font-size: 13px; color: var(--muted); min-height: 2.4em; }
+.evg-rew { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 64px; }
+.evg-rew canvas { width: 96px; height: 96px; }
+.evg-pack { font-family: var(--font-display); font-size: 11px; letter-spacing: 1px; padding: 6px 10px; border-radius: 8px; color: var(--pc); border: 1.5px solid var(--pc); box-shadow: 0 0 12px color-mix(in srgb, var(--pc) 45%, transparent); }
+.evg-excl { font-family: var(--font-display); font-size: 9px; letter-spacing: 2px; color: #ffe680; }
+.evg-cr { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; font-size: 16px; color: #7af7ff; }
+.evg-cr .ico { width: 18px; height: 18px; }
+.evg-state { font-family: var(--font-display); font-size: 10px; letter-spacing: 2px; color: var(--muted); }
+.evg.done { border-color: #3dff9e; }
+.evg.done .evg-state { color: #3dff9e; }
+.evg.done .evg-rew { opacity: 0.55; }
+.ev-go { align-self: center; display: inline-flex; align-items: center; gap: 10px; font-size: 17px; padding: 14px 34px; }
+.ev-go .ico { width: 20px; height: 20px; }
+.results-table tr.res-gap td { text-align: center; color: var(--muted); padding: 0; line-height: 1; letter-spacing: 4px; }
+.reward-visual canvas { width: min(260px, 60vw); height: auto; filter: drop-shadow(0 0 18px rgba(255, 211, 77, 0.6)); }
+@media (max-height: 460px) {
+  .event-card { padding: 10px 14px; gap: 8px; }
+  .ev-hero { padding: 8px 10px; gap: 12px; }
+  .ev-map img { max-height: 110px; }
+  .ev-name { font-size: 28px; }
+  .ev-tag { font-size: 14px; }
+  .ev-desc { font-size: 13px; }
+  .evg { padding: 6px; gap: 3px; }
+  .evg-place { font-size: 13px; }
+  .evg-label { font-size: 11px; min-height: 0; }
+  .evg-rew { min-height: 48px; }
+  .evg-rew canvas { width: 64px; height: 64px; }
+  .ev-go { padding: 10px 26px; font-size: 14px; }
+}
+@media (max-width: 700px) {
+  .ev-hero { grid-template-columns: minmax(0, 1fr); }
+  .ev-goals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ev-name { font-size: 30px; }
+}

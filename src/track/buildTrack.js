@@ -129,6 +129,7 @@ export function buildTrack(data) {
     theme: data.theme ?? {},
     // Météo : la pluie réduit l'adhérence de TOUTES les voitures (IA comprises)
     weather: data.weather ?? 'clear',
+    gridCols: data.gridCols ?? 1,
     gripMul: data.weather === 'rain' ? 0.82 : 1,
     obstacles: [],
     zones: [],
@@ -252,12 +253,20 @@ export function queryTrack(track, px, py, hint, out = {}) {
 /** Positions de la grille de départ (2 colonnes, en quinconce, derrière la ligne). */
 export function gridSlots(track, n) {
   const slots = [];
+  const cols = track.gridCols ?? 1;
   for (let k = 0; k < n; k++) {
-    const row = k;
-    const back = 70 + row * 62;
-    const idx = (track.count - Math.round(back / track.spacing)) % track.count;
-    const side = k % 2 === 0 ? -1 : 1;
-    const off = side * track.hw[idx] * 0.42;
+    let back, idx, off;
+    if (cols > 1) {
+      // Grille large (giga course) : plusieurs voitures par rangée, légèrement décalées
+      const row = Math.floor(k / cols), col = k % cols;
+      back = 70 + row * 78 + col * 16;
+      idx = (track.count - Math.round(back / track.spacing)) % track.count;
+      off = ((col + 0.5) / cols - 0.5) * 2 * track.hw[idx] * 0.78;
+    } else {
+      back = 70 + k * 62;
+      idx = (track.count - Math.round(back / track.spacing)) % track.count;
+      off = (k % 2 === 0 ? -1 : 1) * track.hw[idx] * 0.42;
+    }
     slots.push({
       x: track.x[idx] + track.nx[idx] * off,
       y: track.y[idx] + track.ny[idx] * off,

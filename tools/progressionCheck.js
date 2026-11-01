@@ -19,6 +19,9 @@ import { startCup, cupGrid, applyCupRace, standings, finishCup, cupReward, PLAYE
 import { CUP_POINTS } from '../src/data/cup.js';
 import { cleanName, setIdentity, recordRace, addDriving, trackTotals, achievementStatus, achievementsBadge, claimAchievement, claimAllAchievements, unlockedTitles, currentTitle, favorite } from '../src/progression/profile.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_REWARDS, AVATARS, randomName, DEFAULT_TITLE } from '../src/data/profile.js';
+import { eventField, applyEventResult, eventGoalsDone } from '../src/progression/event.js';
+import { EVENT, EVENT_GOALS, EVENT_CREDITS } from '../src/data/event.js';
+import { MOTIFS } from '../src/data/shop.js';
 import { createRecorder, decodeGhost, ghostAt, ghostTimeAtDist } from '../src/race/ghost.js';
 
 let ok = 0, ko = 0;
@@ -452,7 +455,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   st.setItem('neondrive.save', JSON.stringify({ version: 7, trophies: 120, credits: 300, stats: { races: 20, wins: 4, podiums: 9 },
     history: [{ trackId: 'citadel', carId: 'volt', position: 1, gained: 10 }, { trackId: 'citadel', carId: 'nova', position: 2, gained: 7 }] }));
   const d = createSaveStore(st).load().data;
-  check(d.version === 8 && d.career.races === 20 && d.career.wins === 4 && d.career.podiums === 9, 'migration v7 → v8 : carrière');
+  check(d.version === SAVE_VERSION && d.career.races === 20 && d.career.wins === 4 && d.career.podiums === 9, 'migration v7 → v8 : carrière');
   check(d.career.maxTrophies === 120 && d.career.creditsEarned === 300 && d.career.trackRaces.citadel === 2 && d.career.carRaces.volt === 1, 'migration : record, crédits, préférés');
   check(d.profile.name === null && d.profile.avatar === 'bolt', 'migration : profil à créer');
   // Données abîmées
@@ -465,6 +468,41 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const s = defaultSave(); setIdentity(s, { name: 'Code Test' }); s.career.races = 7;
   const back = importSaveCode(exportSaveCode(s));
   check(back.profile.name === 'CODE TEST' && back.career.races === 7, 'profil et carrière dans le code de sauvegarde');
+}
+
+// ---------------------------------------------------------------- Événement GIGA RUSH
+{
+  check(EVENT_CREDITS.length === EVENT.drivers && EVENT_CREDITS.every((c, k) => k === 0 || c <= EVENT_CREDITS[k - 1]), 'crédits : une valeur par place, décroissante');
+  const me = { name: 'TOI', isPlayer: true };
+  for (let i = 0; i < 30; i++) {
+    const f = eventField(['bronze', 'or', 'elite'][i % 3], me, mulberry32(i));
+    const slot = f.indexOf(me) + 1;
+    if (f.length !== EVENT.drivers || slot < EVENT.startFrom || slot > EVENT.startTo || new Set(f.map((e) => e.name)).size !== f.length || f.filter((e) => e.isRival).length !== 1) {
+      check(false, `plateau de la GIGA RUSH (essai ${i})`); break;
+    }
+  }
+  check(true, 'plateau : 20 pilotes différents, rival présent, joueur en milieu de peloton');
+  const s = defaultSave();
+  const c0 = s.credits;
+  let r = applyEventResult(s, 12, mulberry32(1));
+  check(r.credits === EVENT_CREDITS[11] && r.goals.length === 0 && s.event.best === 12 && s.event.played === 1 && s.credits === c0 + r.credits, '12e : crédits seulement');
+  r = applyEventResult(s, 4, mulberry32(2));
+  check(r.goals.map((g) => g.goal.id).join() === 'top10,top5' && r.newBest && s.event.best === 4, '4e : top 10 et top 5 débloqués ensemble');
+  check(r.goals[1].packId === 'medium' && r.goals[1].gains.length > 0, 'pack du top 5 ouvert');
+  r = applyEventResult(s, 7, mulberry32(3));
+  check(r.goals.length === 0 && !r.newBest && s.event.best === 4, 'objectifs jamais récompensés deux fois, record gardé');
+  r = applyEventResult(s, 1, mulberry32(4));
+  check(r.goals.map((g) => g.goal.id).join() === 'podium,win' && s.cosmetics.motifs.includes('giga') && eventGoalsDone(s) === EVENT_GOALS.length, 'victoire : motif exclusif');
+  check(MOTIFS.find((m) => m.id === 'giga').exclusive && buyStyle(s, 'motif', 'giga').ok === false, 'motif exclusif impossible à acheter');
+  const t = defaultSave(); t.credits = 99999;
+  check(buyStyle(t, 'motif', 'giga').reason === 'exclusive' && !t.cosmetics.motifs.includes('giga'), 'motif exclusif refusé même avec des crédits');
+  check(!generateOffers(t, '2026-11-01').some((o) => o.itemId === 'giga'), 'motif exclusif jamais en offre du jour');
+  // Sauvegarde
+  const st = memStorage();
+  st.setItem('neondrive.save', JSON.stringify({ version: 8, event: { best: 99, claimed: ['top10', 3, 'top10'], played: -2 } }));
+  const d = createSaveStore(st).load().data;
+  check(d.version === SAVE_VERSION && d.event.best === null && d.event.claimed.join() === 'top10' && d.event.played === 0, 'événement abîmé réparé');
+  check(!tracksForLeague('elite').some((t) => t.event), 'circuit d\'événement hors courses classées');
 }
 
 console.log(`${ok} vérifications réussies, ${ko} échec(s). Ligues : ${LEAGUES.map((l) => `${l.name} ≥ ${l.min}`).join(', ')}`);

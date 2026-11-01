@@ -35,13 +35,14 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Boutique : cadeau quotidien (cycle 7 jours), 6 offres du jour, packs, finitions et motifs (cosmétiques)
 - [x] Missions : 3 du jour (+ bonus), 1 de la semaine — aucune mission de drift
 
-## Phase 4 — Modes de jeu  ⏳ en cours
+## ✅ Phase 4 — Modes de jeu
 - [x] Contre-la-montre avec fantôme (record + fantôme NEON), 4 médailles par circuit
 - [x] Coupe : 3 courses, mêmes adversaires, points, grille inversée, podium et récompenses
 - [x] Élimination : le dernier sort à chaque tour du leader, alerte DANGER, compte à rebours
 - [x] Nouveau menu principal (vitrine de la voiture, tuiles de modes, barre de navigation)
 - [x] Essentiels : écran de chargement (astuces, version), profil du joueur (pseudo, emblème, titre, statistiques), 15 succès à 3 paliers
-- [ ] Événements hebdomadaires
+- [x] Événement GIGA RUSH (provisoirement permanent) : 20 voitures sur NEON HIGHWAY, circuit géant et large, 4 objectifs dont un motif exclusif
+- [ ] Plus tard (quand le jeu aura des joueurs) : événements qui tournent chaque semaine
 
 ## Phase 5 — Saisons
 - Saisons de ~4 semaines, récompenses de fin de saison, passe de saison gratuit, thème par saison

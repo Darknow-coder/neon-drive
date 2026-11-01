@@ -53,6 +53,11 @@ import { runBoot } from './ui/boot.js';
 import { recordRace, addDriving, trackTotals, playerName, currentTitle, achievementsBadge } from './progression/profile.js';
 import { iconImage } from './ui/icons.js';
 import { minimap } from './ui/timeTrialSelect.js';
+import { createEventScreen } from './ui/event.js';
+import { EVENT } from './data/event.js';
+import { eventField, applyEventResult } from './progression/event.js';
+import { EVENT_TRACKS } from './data/tracks/index.js';
+import { carIcon } from './ui/carIcon.js';
 
 const $ = (id) => document.getElementById(id);
 const show = (id, v = true) => $(id).classList.toggle('hidden', !v);
@@ -157,6 +162,8 @@ function refreshMenu() {
     ? `Reprendre · course ${save.cup.race + 1}/3`
     : `3 courses · ligue ${LEAGUES.find((l) => l.id === leagueFor(save.trophies).id)?.name ?? ''}`;
   $('btn-cup').classList.toggle('live', !!save.cup);
+  // Tuile de l'événement : meilleure place
+  $('event-sub').textContent = save.event.best ? `Événement · record ${save.event.best === 1 ? '1re' : `${save.event.best}e`} place` : `Événement · ${EVENT.drivers} pilotes`;
   // Profil : emblème, pseudo, titre et succès à récupérer
   $('menu-avatar').innerHTML = avatarHtml(save.profile, 'av-s');
   $('menu-name').textContent = playerName(save);
@@ -372,6 +379,69 @@ function backToMenu() {
   if (pending.length) showRewards(save, pending, { sfx, onClose: refreshMenu });
 }
 
+// ---------------------------------------------------------------- ÉVÉNEMENT
+/** GIGA RUSH : 20 voitures sur NEON HIGHWAY (niveau des IA fixé par la ligue). */
+function startEvent() {
+  if (!save.tutorialDone) { startTutorial(); return; }
+  training = false;
+  carId = selectedCar(save);
+  trackId = EVENT.trackId;
+  const league = leagueFor(save.trophies).id;
+  session?.dispose();
+  session = createRaceScene({
+    renderer, input, hud, lowEnd, trackId, carId, league, laps: EVENT.laps,
+    playerColors: liveryFor(save, carId), sfx, settings: save.settings,
+    playerLevel: carLevel(save, carId),
+    field: (playerEntry) => eventField(league, playerEntry),
+    onFinish: (rows) => eventDone(rows),
+  });
+  session.isEvent = true;
+  input.reset();
+  hideResults();
+  show('pause', false);
+  show('start', false);
+  setRaceUi(true);
+  state = 'race';
+  updateMusic();
+  loop.start();
+}
+
+/** Fin de la GIGA RUSH : crédits, objectifs, record, carrière. */
+function eventDone(rows) {
+  state = 'results';
+  setRaceUi(false);
+  sfx.stopCar();
+  const me = rows.find((r) => r.isPlayer);
+  const res = applyEventResult(save, me.position);
+  recordRace(save, { position: me.position, carId, trackId, mode: 'event' });
+  persist();
+  const place = me.position === 1 ? '1re' : `${me.position}e`;
+  const lines = [{ label: `${place} place sur ${rows.length}`, amount: res.credits }];
+  for (const g of res.goals) if (g.credits) lines.push({ label: `Objectif « ${g.goal.label} »`, amount: g.credits });
+  showResults(rows, {
+    trackName: `${EVENT.name} · ${session.trackName}`,
+    credits: { total: lines.reduce((a, l) => a + l.amount, 0), lines },
+    event: {
+      record: res.newBest && save.event.played > 1 ? `NOUVEAU RECORD : ${place} PLACE !` : '',
+      goals: res.goals.map((g) => g.goal.label),
+    },
+  });
+  updateMusic();
+  // Récompenses des objectifs (packs, motif exclusif) : ouvertes par-dessus les résultats
+  const rewards = [];
+  for (const g of res.goals) {
+    if (g.packId) rewards.push({ packId: g.packId, gains: g.gains });
+    if (g.motif) {
+      const visual = carIcon(getCar(carId), { ...liveryFor(save, carId), motif: g.motif }, 260, 166);
+      rewards.push({ title: 'MOTIF EXCLUSIF', visual, note: 'Motif <b>GIGA RUSH</b> débloqué : équipe-le au garage !' });
+    }
+  }
+  if (rewards.length) {
+    setTimeout(() => sfx.unlock(), 700);
+    setTimeout(() => { if (state === 'results') showRewards(save, rewards, { sfx, onClose: refreshMenu }); }, 1800);
+  }
+}
+
 /** Tutoriel : leçon de pilotage en solo. */
 function startTutorial() {
   session?.dispose();
@@ -508,7 +578,7 @@ if (urlParams.has('custom')) {
 
 // Choix du circuit pour l'entraînement
 const pick = $('track-pick');
-for (const t of TRACKS) {
+for (const t of [...TRACKS, ...EVENT_TRACKS]) {
   const b = document.createElement('button');
   b.innerHTML = `${t.name}<small>${t.profile}</small>`;
   b.addEventListener('click', () => {
@@ -559,7 +629,7 @@ $('btn-tuning').addEventListener('click', () => tuning.toggle());
 $('btn-pause').addEventListener('click', () => state === 'race' && pause());
 $('btn-resume').addEventListener('click', resume);
 // « Recommencer » relance le même circuit (sans trophées pour la course abandonnée)
-$('btn-restart').addEventListener('click', () => (session?.isTutorial ? startTutorial() : session?.isTimeTrial ? startTimeTrial(session.trackId) : session?.isElimination ? startElimination(false) : startRace()));
+$('btn-restart').addEventListener('click', () => (session?.isEvent ? startEvent() : session?.isTutorial ? startTutorial() : session?.isTimeTrial ? startTimeTrial(session.trackId) : session?.isElimination ? startElimination(false) : startRace()));
 $('btn-quit').addEventListener('click', () => {
   if (session?.isCup && save.cup) {
     show('pause', false);
@@ -569,15 +639,12 @@ $('btn-quit').addEventListener('click', () => {
 $('btn-cup').addEventListener('click', openCup);
 $('btn-elim').addEventListener('click', () => { enterFullscreenOnMobile(); startElimination(); });
 // « Rejouer » : nouvelle course classée (nouveau tirage) ou même circuit en entraînement
-$('btn-again').addEventListener('click', () => (session?.isElimination ? startElimination() : training ? startTraining() : startRankedRace()));
+$('btn-again').addEventListener('click', () => (session?.isEvent ? startEvent() : session?.isElimination ? startElimination() : training ? startTraining() : startRankedRace()));
 $('btn-training').addEventListener('click', () => showTrainingPicker(true));
 $('btn-garage').addEventListener('click', () => garage.open());
 $('btn-car-show').addEventListener('click', () => garage.open());
-$('btn-event').classList.add('soon');
-$('btn-event').addEventListener('click', () => {
-  $('event-sub').textContent = 'Arrive très bientôt !';
-  sfx.click();
-});
+const eventScreen = createEventScreen({ save, sfx, onPlay: () => { enterFullscreenOnMobile(); startEvent(); }, onClose: refreshMenu });
+$('btn-event').addEventListener('click', () => eventScreen.open());
 $('btn-road').addEventListener('click', () => road.open());
 $('btn-profile').addEventListener('click', () => profile.open(achievementsBadge(save) ? 'ach' : 'stats'));
 $('btn-shop').addEventListener('click', () => shop.open());

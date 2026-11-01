@@ -236,11 +236,16 @@ export function showRewards(save, results, { sfx, onClose } = {}) {
 
   // ---------- Récompense simple ----------
   function showSimple(r) {
-    reset(r.car ? '#ffd34d' : '#00f0ff');
+    reset(r.car || r.visual ? '#ffd34d' : '#00f0ff');
     $('pack-title').textContent = r.car ? 'NOUVELLE VOITURE' : (r.title ?? 'RÉCOMPENSE');
     const big = document.createElement('div');
     big.className = 'reward-big';
-    if (r.car) {
+    if (r.visual) {
+      // Visuel sur mesure (ex. motif exclusif sur la voiture du joueur)
+      big.classList.add('reward-visual');
+      big.append(r.visual);
+      if (r.note) big.insertAdjacentHTML('beforeend', `<div class="reward-note">${r.note}</div>`);
+    } else if (r.car) {
       const card = document.createElement('div');
       card.className = 'fcard flipped epic';
       card.style.setProperty('--rc', '#ffd34d');
@@ -267,7 +272,7 @@ export function showRewards(save, results, { sfx, onClose } = {}) {
     $('pack-wrap').after(big);
     later(() => {
       const rc = big.getBoundingClientRect();
-      fx.burst(rc.left + rc.width / 2, rc.top + rc.height / 2, r.car ? '#ffd34d' : '#00f0ff', 120, 0.9);
+      fx.burst(rc.left + rc.width / 2, rc.top + rc.height / 2, r.car || r.visual ? '#ffd34d' : '#00f0ff', 120, 0.9);
       sfx?.cardFlip?.('epic');
     }, 150);
     later(() => $('pack-ok').classList.remove('hidden'), 700);

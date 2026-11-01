@@ -12,7 +12,7 @@
 
 const KEY = 'neondrive.save';
 const BACKUP_KEY = 'neondrive.save.backup';
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 export function defaultSave() {
   return {
@@ -57,6 +57,8 @@ export function defaultSave() {
     },
     // Succès : nombre de paliers récupérés par succès
     achievements: { claimed: {} },
+    // Événement GIGA RUSH : meilleure place, objectifs récompensés
+    event: { best: null, claimed: [], played: 0 },
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
@@ -205,6 +207,13 @@ function sanitize(raw) {
   for (const [k, v] of Object.entries(raw.achievements?.claimed ?? {})) {
     if (num(v, 0) > 0) s.achievements.claimed[k] = Math.min(3, Math.floor(v));
   }
+  // Événement
+  const ev = raw.event;
+  if (ev && typeof ev === 'object') {
+    if (Number.isInteger(ev.best) && ev.best >= 1 && ev.best <= 20) s.event.best = ev.best;
+    if (Array.isArray(ev.claimed)) s.event.claimed = [...new Set(ev.claimed.filter((x) => typeof x === 'string' && /^[a-z0-9]{2,16}$/.test(x)))];
+    s.event.played = Math.floor(num(ev.played));
+  }
   // Joueur existant (sauvegarde sans ce champ, mais avec des courses) : pas de tutoriel imposé
   s.tutorialDone = typeof raw.tutorialDone === 'boolean' ? raw.tutorialDone : s.stats.races > 0;
   return s;
@@ -267,7 +276,12 @@ function migrate(raw) {
     raw.achievements ??= { claimed: {} };
     raw.version = 8;
   }
-  // Pour le futur : if (raw.version === 8) { …; raw.version = 9; }
+  // Version 8 → 9 : événement GIGA RUSH
+  if (raw.version === 8) {
+    raw.event ??= { best: null, claimed: [], played: 0 };
+    raw.version = 9;
+  }
+  // Pour le futur : if (raw.version === 9) { …; raw.version = 10; }
   return raw;
 }
 

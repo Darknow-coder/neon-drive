@@ -217,7 +217,7 @@
           <button class="mode-tile t-cup" id="btn-cup"><span class="mt-ico" data-ico="cup"></span><b>COUPE</b><small id="cup-sub"></small><em>3 courses aux points contre les mêmes rivaux. Grosse récompense au podium.</em></button>
           <button class="mode-tile t-elim" id="btn-elim"><span class="mt-ico" data-ico="elim"></span><b>ÉLIMINATION</b><small>Le dernier sort</small><em>À chaque tour, la dernière voiture est éliminée. Survis jusqu'au bout !</em></button>
           <button class="mode-tile t-chrono" id="btn-timetrial"><span class="mt-ico" data-ico="chrono"></span><b>CHRONO</b><small id="tt-sub">Contre-la-montre</small><em>Bats ton fantôme et décroche les médailles de chaque circuit.</em></button>
-          <button class="mode-tile t-event" id="btn-event"><span class="mt-ico" data-ico="event"></span><b>ÉVÉNEMENT</b><small id="event-sub">Bientôt</small><em id="event-desc">Un défi spécial chaque semaine, avec une récompense exclusive.</em><span class="badge hidden" id="event-badge">!</span></button>
+          <button class="mode-tile t-event" id="btn-event"><span class="mt-ico" data-ico="event"></span><b>GIGA RUSH</b><small id="event-sub">Événement · 20 pilotes</small><em id="event-desc">20 voitures sur un circuit géant. Gagne-la pour un motif exclusif !</em><span class="badge hidden" id="event-badge">!</span></button>
         </div>
         <button class="training-link" id="btn-training"><span data-ico="train"></span> Entraînement libre ›</button>
       </section>
@@ -308,6 +308,30 @@
   </div>
 
   <!-- Missions -->
+  <!-- Événement : GIGA RUSH -->
+  <div id="event" class="overlay hidden">
+    <div class="overlay-card event-card">
+      <div class="garage-head">
+        <button class="menu-btn small-btn" id="event-back">‹ MENU</button>
+        <div class="overlay-title">ÉVÉNEMENT</div>
+        <div class="shop-wallet"><span class="credit-chip big" id="event-credits"></span></div>
+      </div>
+      <div class="ev-hero">
+        <div class="ev-map" id="ev-map"></div>
+        <div class="ev-info">
+          <div class="ev-kicker">ÉVÉNEMENT SPÉCIAL</div>
+          <div class="ev-name" id="ev-name">GIGA RUSH</div>
+          <div class="ev-tag" id="ev-tag"></div>
+          <p class="ev-desc" id="ev-desc"></p>
+          <div class="ev-stats" id="ev-stats"></div>
+        </div>
+      </div>
+      <div class="ev-goals-title">OBJECTIFS <span id="ev-goals-count"></span></div>
+      <div class="ev-goals" id="ev-goals"></div>
+      <button class="menu-btn primary ev-go" id="ev-go"><span data-ico="play"></span> JOUER LA GIGA RUSH</button>
+    </div>
+  </div>
+
   <!-- Profil -->
   <div id="profile" class="overlay hidden">
     <div class="overlay-card profile-card">

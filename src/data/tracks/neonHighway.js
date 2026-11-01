@@ -1,0 +1,53 @@
+// Circuit ÉVÉNEMENT — NEON HIGHWAY
+// Profil : la giga course. Une autoroute urbaine immense et très large,
+// pensée pour 20 voitures : longues lignes droites pour l'aspiration,
+// grandes courbes rapides, une chicane et une boucle centrale technique.
+// N'apparaît pas en course classée (réservé à l'événement et à l'entraînement).
+
+export default {
+  id: 'neon-highway',
+  name: 'NEON HIGHWAY',
+  profile: 'Géant · 20 pilotes',
+  league: 'bronze',
+  event: true,
+  laps: 2,
+  scale: 1.6,
+  width: 400,
+  gridCols: 4,
+  theme: { style: 'city', left: '#ffd34d', right: '#ff2bd6', kerb: '#ffd34d' },
+  // Départ au milieu de la grande ligne droite du bas (grille de 20 bien alignée)
+  points: [
+    [2000, 3400],
+    [3400, 3400],
+    [4100, 3000],
+    [4250, 2350],
+    [4050, 1850],
+    [4250, 1350],
+    [4000, 800],
+    [3400, 500],
+    [2400, 500],
+    [1900, 800],
+    [2000, 1400],
+    [2600, 1700],
+    [2900, 2200],
+    [2500, 2700],
+    [1700, 2700],
+    [1200, 2300],
+    [1200, 1600],
+    [1050, 1000],
+    [850, 650],
+    [500, 560],
+    [300, 850],
+    [300, 1700],
+    [300, 2700],
+    [600, 3400],
+  ],
+  obstacles: [],
+  zones: [
+    { type: 'boost', at: 0.05, length: 120, offset: -90, width: 80 },
+    { type: 'boost', at: 0.05, length: 120, offset: 90, width: 80 },
+    { type: 'boost', at: 0.4, length: 120, offset: 0, width: 90 },
+    { type: 'boost', at: 0.86, length: 120, offset: -80, width: 80 },
+    { type: 'boost', at: 0.86, length: 120, offset: 80, width: 80 },
+  ],
+};

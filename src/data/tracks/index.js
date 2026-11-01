@@ -9,7 +9,11 @@ import rainline from './rainline.js';
 import duneRunner from './duneRunner.js';
 import orbitalRing from './orbitalRing.js';
 import citadel from './citadel.js';
+import neonHighway from './neonHighway.js';
 
 export const TRACKS = [neonBoulevard, pulsarSpeedway, vortexCity, rainline, duneRunner, orbitalRing, citadel];
 
-export const getTrackData = (id) => TRACKS.find((t) => t.id === id) ?? TRACKS[0];
+// Circuits d'événement : hors courses classées et hors chrono
+export const EVENT_TRACKS = [neonHighway];
+
+export const getTrackData = (id) => TRACKS.find((t) => t.id === id) ?? EVENT_TRACKS.find((t) => t.id === id) ?? TRACKS[0];
