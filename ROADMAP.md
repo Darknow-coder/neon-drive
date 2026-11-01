@@ -46,6 +46,11 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Événement GIGA RUSH (provisoirement permanent) : 20 voitures sur NEON HIGHWAY, circuit géant et large, 4 objectifs dont un motif exclusif
 - [ ] Plus tard (quand le jeu aura des joueurs) : événements qui tournent chaque semaine
 
+## ✅ IA plus vivantes
+- [x] Grosses erreurs des IA (virage raté dans le mur, corde coupée, pilier percuté) : fréquence fixée par la ligue
+      et le profil (jamais selon la position du joueur), annonce quand le rival se plante
+- [x] Correctif : une IA coincée ne se fait plus replacer en boucle
+
 ## ✅ Sensations de jeu
 - [x] Feux de départ et départ canon (même règle pour les IA), patinage si on accélère trop tôt
 - [x] Ralenti + confettis sur une victoire ou un photo-finish, coup de caméra au boost, lignes de vitesse

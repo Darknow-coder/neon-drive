@@ -15,7 +15,10 @@ import { obstacleOffsetAt } from '../track/buildTrack.js';
 import { GLOBAL_TUNING } from '../physics/carPhysics.js';
 import { clamp, damp, smoothstep, createIntentObject } from './aiUtils.js';
 
-export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1, lineMul = 1, driftMul = 1, rng = Math.random }) {
+// Grosses erreurs par minute (multipliées par le taux d'erreurs du profil et de la ligue)
+const BIG_MISTAKE_RATE = 0.36;
+
+export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1, lineMul = 1, driftMul = 1, rng = Math.random, bigMistakes = true }) {
   const line = getRacingLine(track);
   const skill = {
     gripUse: Math.min(0.99, profile.gripUse * pace),
@@ -39,6 +42,8 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
     mistake: null,
     mistakeTime: 0,
     nextMistake: nextMistakeDelay(),
+    big: null,               // grosse erreur en cours (virage raté, corde coupée, pilier)
+    nextBig: 0,
     stuckTime: 0,
     recoverTime: 0,
     boostHold: false,
@@ -48,6 +53,35 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
   function nextMistakeDelay() {
     const rate = Math.max(0.01, profile.mistakeRate * mistakesMul); // par minute
     return (-Math.log(1 - rng()) * 60) / rate;
+  }
+
+  // ---------- Grosses erreurs (vraies sorties de piste) ----------
+  // Rares, tirées au sort à un rythme FIXÉ AVANT LA COURSE (profil + ligue),
+  // sans jamais dépendre de la position du joueur.
+  function nextBigDelay() {
+    if (!bigMistakes) return Infinity;
+    const rate = BIG_MISTAKE_RATE * (profile.mistakeRate ?? 1) * mistakesMul; // par minute
+    if (rate < 0.002) return Infinity;
+    return 3 + (-Math.log(1 - rng()) * 60) / rate;
+  }
+  st.nextBig = nextBigDelay();
+
+  /** Prochain pilier dans les `range` unités devant (ou null). */
+  function pillarAhead(range) {
+    let best = null, bestGap = range;
+    for (const ob of track.obstacles) {
+      let gap = (ob.index - car.trackIndex) * track.spacing;
+      if (gap < 0) gap += track.length;
+      if (gap > 80 && gap < bestGap) { best = ob; bestGap = gap; }
+    }
+    return best;
+  }
+
+  function startBig() {
+    const ob = pillarAhead(1600);
+    const r = rng();
+    const type = ob && r < 0.4 ? 'pillar' : r < 0.75 ? 'overcook' : 'cut';
+    st.big = { type, phase: 'wait', t: 0, wait: 8, ob };
   }
 
   function startMistake() {
@@ -81,6 +115,29 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
       } else if ((st.nextMistake -= dt) <= 0) startMistake();
     }
     const mk = st.mistake ? st.mistake.type : null;
+
+    // Grosse erreur : on attend le bon endroit (entrée de virage, pilier), puis
+    // le pilote rate son coup pendant un court instant.
+    if (world.started && world.time > 4) {
+      if (!st.big && (st.nextBig -= dt) <= 0) startBig();
+      if (st.big) {
+        const b = st.big;
+        b.t += dt;
+        if (b.phase === 'wait') {
+          const ahead = (i + Math.round((speed * 0.55) / track.spacing)) % n;
+          const corner = prof.v[ahead] < speed * 0.8 && speed > vmax * 0.55;
+          const nearPillar = b.type === 'pillar' && b.ob && ((b.ob.index - i + n) % n) * track.spacing < 90 + speed * 0.7;
+          if ((b.type === 'pillar' ? nearPillar : corner)) {
+            b.phase = 'go'; b.t = 0;
+            b.dir = -Math.sign(line.curv[ahead] || 1); // extérieur du virage
+          } else if (b.t > b.wait) { st.big = null; st.nextBig = nextBigDelay(); }
+        } else if (b.t > (b.type === 'pillar' ? 1.1 : 1.3)) {
+          st.big = null;
+          st.nextBig = nextBigDelay();
+        }
+      }
+    }
+    const bigGo = st.big && st.big.phase === 'go' ? st.big : null;
 
     // ---------------- Bloqué contre un mur ? Manœuvre de dégagement ----------------
     const tangentDot = Math.cos(car.angle) * track.tx[i] + Math.sin(car.angle) * track.ty[i];
@@ -208,7 +265,14 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
     const driftNear = car.drifting || prof.drift[j] === 1 || prof.drift[i] === 1;
     if (driftNear) biasTarget += -Math.sign(line.curv[j]) * 32;
     st.bias += (biasTarget - st.bias) * damp(st.obsLat != null ? 4 : 2.2, dt);
-    const latOff = clamp(line.off[j] + st.bias, line.lo[j], line.hi[j]);
+    let latOff = clamp(line.off[j] + st.bias, line.lo[j], line.hi[j]);
+    if (bigGo) {
+      // L'erreur : viser le mur (extérieur ou intérieur) ou droit sur le pilier
+      const hwj = track.hw[j];
+      if (bigGo.type === 'overcook') latOff = bigGo.dir * (hwj + 30);
+      else if (bigGo.type === 'cut') latOff = -bigGo.dir * (hwj + 20);
+      else if (bigGo.ob) latOff = bigGo.ob.offset ?? 0;
+    }
     const tx = track.x[j] + track.nx[j] * latOff;
     const ty = track.y[j] + track.ny[j] * latOff;
 
@@ -257,6 +321,8 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
     const react = Math.round((speed * profile.reaction) / track.spacing);
     let vt = prof.v[aheadIdx(react)];
     if (mk === 'lateBrake') vt *= 1.18;
+    // Virage raté : il ne freine pas du tout
+    if (bigGo && bigGo.type !== 'cut') vt = Math.max(vt, speed * 1.02);
     vt = Math.min(vt, speedCap);
     if (!world.started) vt = 0;
 

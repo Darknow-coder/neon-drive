@@ -236,6 +236,14 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       message = 'TOUS LES ADVERSAIRES SONT ARRIVÉS';
       messageTimer = 9999;
     }
+    // Le rival se plante : on le fait savoir (si rien d'autre n'est affiché)
+    if (rivalCar && !rivalCar.finished && rivalCar.hitThisStep > 220 && rivalCar.ai?.state.big?.phase === 'go'
+      && messageTimer <= 0 && world.time - (scene.rivalCrashAt ?? -99) > 6) {
+      scene.rivalCrashAt = world.time;
+      message = `★ ${rivalCar.name} DANS LE DÉCOR !`;
+      msgTone = 'gold';
+      messageTimer = 1.8;
+    }
     if (messageTimer > 0 && (messageTimer -= realDt) <= 0) { message = ''; msgTone = ''; }
 
     // Fin de course : résultats quand tout le monde est arrivé, ou peu après

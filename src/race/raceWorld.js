@@ -215,7 +215,7 @@ export function createRaceWorld(opts) {
         // Après l'arrivée, la voiture du joueur est conduite automatiquement
         // (tour d'honneur) pendant que les autres terminent.
         if (car.isPlayer && !car.ai) {
-          car.ai = createAiDriver(car, track, { profile: AI_PROFILES.cautious, rng: mulberry32(7) });
+          car.ai = createAiDriver(car, track, { profile: AI_PROFILES.cautious, rng: mulberry32(7), bigMistakes: false });
         }
       }
     }
