@@ -22,6 +22,7 @@ import { mulberry32 } from '../core/math.js';
  * @param opts.laps      nombre de tours
  * @param opts.league    ligue (niveau des IA, fixé pour toute la course)
  * @param opts.seed      graine du hasard (courses reproductibles pour les tests)
+ * @param opts.launchControl départ canon pour le joueur (désactivé en accélération automatique)
  */
 export function createRaceWorld(opts) {
   const track = opts.track ?? buildTrack(opts.trackData);
@@ -30,6 +31,7 @@ export function createRaceWorld(opts) {
   const skill = LEAGUE_SKILL[opts.league ?? 'bronze'];
   const slots = gridSlots(track, opts.entries.length);
   const idle = createIntent();
+  const spinIntent = createIntent();
 
   // Niveau des voitures adverses : fixé par la ligue (comme leur pilotage)
   const aiLevel = AI_CAR_LEVEL[opts.league ?? 'bronze'] ?? 1;
@@ -47,6 +49,8 @@ export function createRaceWorld(opts) {
     car.carHits = 0;
     car.raceStats = { drift: 0, overtakes: 0, pads: 0, lastPos: k + 1 };
     car.isRival = !!e.isRival;
+    car.launch = null;      // qualité du départ : 'perfect' | 'good' | 'spin' | null
+    car.spinTimer = 0;      // patinage après un départ trop tôt
     if (!e.isPlayer) {
       const baseProfile = e.profileData ?? AI_PROFILES[e.profile ?? 'balanced'];
       car.ai = createAiDriver(car, track, {
@@ -75,6 +79,48 @@ export function createRaceWorld(opts) {
     player: cars.find((c) => c.isPlayer) ?? null,
   };
   world.time = -world.countdown;
+
+  // ---------- Départ canon ----------
+  // Même règle pour tous : accélérer pile au feu vert donne une poussée,
+  // accélérer bien trop tôt fait patiner les roues. Le joueur le fait au
+  // bon moment (ou pas) ; chaque IA tire sa qualité de départ au sort.
+  const LAUNCH = { perfectBefore: 0.4, goodBefore: 1.0, goodAfter: 0.25, perfectPush: 1.9, goodPush: 0.8, spin: 0.9 };
+  const launchControl = opts.launchControl !== false;
+  let pressT = null;      // moment où le joueur a enfoncé l'accélérateur (temps de course)
+  let playerJudged = false;
+  function applyLaunch(car, kind) {
+    car.launch = kind;
+    if (kind === 'perfect') car.padTimer = LAUNCH.perfectPush;
+    else if (kind === 'good') car.padTimer = LAUNCH.goodPush;
+    else if (kind === 'spin') car.spinTimer = LAUNCH.spin;
+  }
+  function judgeAi() {
+    for (const car of cars) {
+      if (car.isPlayer) continue;
+      const r = rng();
+      const pPerfect = car.isRival ? 0.4 : 0.22;
+      applyLaunch(car, r < pPerfect ? 'perfect' : r < pPerfect + 0.45 ? 'good' : r < pPerfect + 0.53 ? 'spin' : null);
+    }
+  }
+  function trackPlayerLaunch(intent) {
+    const p = world.player;
+    if (!p || playerJudged || !launchControl) return;
+    const held = (intent?.throttle ?? 0) > 0.5;
+    if (held && pressT === null) pressT = world.time;
+    if (!held && !world.started) pressT = null;
+    if (!world.started) return;
+    // Au feu vert (ou juste après) : verdict
+    if (pressT !== null) {
+      const early = -pressT; // secondes d'avance sur le feu vert (négatif = après)
+      if (early > LAUNCH.goodBefore) applyLaunch(p, 'spin');
+      else if (early > LAUNCH.perfectBefore) applyLaunch(p, 'good');
+      else if (early >= 0) applyLaunch(p, 'perfect');
+      else if (early >= -LAUNCH.goodAfter) applyLaunch(p, 'good'); // juste après le vert : bon départ
+      playerJudged = true;
+    } else if (world.time > LAUNCH.goodAfter) {
+      playerJudged = true; // départ normal
+    }
+  }
 
   // Positions initiales sur le tracé
   for (const car of cars) collideCarWithWalls(car, track);
@@ -114,7 +160,8 @@ export function createRaceWorld(opts) {
   /** Avance la course d'un pas. `playerIntent` = commandes du joueur. */
   function step(dt, playerIntent) {
     world.time += dt;
-    if (!world.started && world.time >= 0) world.started = true;
+    if (!world.started && world.time >= 0) { world.started = true; judgeAi(); }
+    trackPlayerLaunch(playerIntent);
     updateMovingObstacles(track, Math.max(0, world.time));
     updateDraft(dt);
 
@@ -125,11 +172,21 @@ export function createRaceWorld(opts) {
       else if (car.finished && car.isPlayer) input = car.ai ? car.ai.update(dt, world) : coastIntent(car);
       else if (car.isPlayer) input = playerIntent ?? idle;
       else input = car.ai.update(dt, world);
+      // Patinage (départ trop tôt) : l'accélérateur ne mord presque pas
+      if (car.spinTimer > 0) {
+        car.spinTimer -= dt;
+        spinIntent.steer = input.steer; spinIntent.brake = input.brake; spinIntent.boost = 0;
+        spinIntent.throttle = input.throttle * 0.25;
+        input = spinIntent;
+      }
       const surf = surfaceFor(car, track);
       // Plaques de boost utilisées (comptées une fois par passage)
       if (surf.pad && !car.onPad && world.started && !car.finished) car.raceStats.pads++;
       car.onPad = surf.pad;
       stepCar(car, input, dt, surf);
+      // Avant le départ : régime moteur du joueur (son et fumée), sans bouger
+      if (car.isPlayer && !world.started) car.rev = playerIntent?.throttle ?? 0;
+      else car.rev = 0;
     }
     collideCars(cars);
     for (const car of cars) {

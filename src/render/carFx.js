@@ -81,6 +81,28 @@ export function updateCarFx(fx, car, dt, particles, trackRenderer, impactThisSte
     }
   }
 
+  // Patinage au départ (ou moteur qui hurle sur la grille) : fumée des roues arrière
+  if (car.spinTimer > 0 || (car.rev || 0) > 0.6) {
+    fx.spinAcc = (fx.spinAcc || 0) + dt * (car.spinTimer > 0 ? 70 : 18);
+    while (fx.spinAcc >= 1) {
+      fx.spinAcc -= 1;
+      const k = Math.random() < 0.5 ? 0 : 2;
+      particles.spawn(P_SMOKE, wheels[k] + (Math.random() - 0.5) * 6, wheels[k + 1] + (Math.random() - 0.5) * 6,
+        (Math.random() - 0.5) * 60, (Math.random() - 0.5) * 60, 0.5 + Math.random() * 0.5, 8, 30, '#d8d0ff');
+    }
+  }
+
+  // Frottement contre le mur : gerbe d'étincelles continue
+  if (car.wallTouch && car.speed > 150 && impactThisStep <= 90) {
+    fx.scrapeAcc = (fx.scrapeAcc || 0) + dt * Math.min(60, car.speed / 12);
+    while (fx.scrapeAcc >= 1) {
+      fx.scrapeAcc -= 1;
+      particles.spawn(P_SPARK, car.impactX, car.impactY,
+        -car.vx * (0.1 + Math.random() * 0.25) + (Math.random() - 0.5) * 120, -car.vy * (0.1 + Math.random() * 0.25) + (Math.random() - 0.5) * 120,
+        0.15 + Math.random() * 0.2, 1.2 + Math.random(), 0, Math.random() < 0.6 ? '#fff6c2' : '#ffb000');
+    }
+  }
+
   // Étincelles lors d'un choc
   if (impactThisStep > 90) {
     const n = Math.min(26, 4 + Math.floor(impactThisStep / 25));

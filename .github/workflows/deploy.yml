@@ -33,6 +33,7 @@ jobs:
           node tools/progressionCheck.js
           node tools/eliminationCheck.js
           node tools/eventCheck.js 3
+          node tools/launchCheck.js
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -44,6 +44,11 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Événement GIGA RUSH (provisoirement permanent) : 20 voitures sur NEON HIGHWAY, circuit géant et large, 4 objectifs dont un motif exclusif
 - [ ] Plus tard (quand le jeu aura des joueurs) : événements qui tournent chaque semaine
 
+## ✅ Sensations de jeu
+- [x] Feux de départ et départ canon (même règle pour les IA), patinage si on accélère trop tôt
+- [x] Ralenti + confettis sur une victoire ou un photo-finish, coup de caméra au boost, lignes de vitesse
+- [x] Sons : moteur qui chante sur la grille, passages de rapport, pétarades, frottement contre le mur, « whoosh » des dépassements
+
 ## Phase 5 — Saisons
 - Saisons de ~4 semaines, récompenses de fin de saison, passe de saison gratuit, thème par saison
 

@@ -41,7 +41,15 @@ export function createSfx(audio) {
     boostTone.connect(boostToneG); boostToneG.connect(out);
     boost.start(); boostTone.start();
 
-    car = { engGain, engFilter, o1, o2, o3, skidG, skidF, boostG, boostF, boostToneG, boostTone, gear: 0 };
+    // Frottement contre le mur (bruit grinçant)
+    const scrape = ctx.createBufferSource();
+    scrape.buffer = audio.noise; scrape.loop = true;
+    const scrapeF = ctx.createBiquadFilter(); scrapeF.type = 'bandpass'; scrapeF.frequency.value = 3200; scrapeF.Q.value = 4;
+    const scrapeG = ctx.createGain(); scrapeG.gain.value = 0;
+    scrape.connect(scrapeF); scrapeF.connect(scrapeG); scrapeG.connect(out);
+    scrape.start();
+
+    car = { engGain, engFilter, o1, o2, o3, skidG, skidF, boostG, boostF, boostToneG, boostTone, scrapeG, scrapeF, gear: 0, lastThrottle: 0, scrapeHold: 0 };
   }
 
   /** Mise à jour à chaque image avec l'état de la voiture du joueur. */
@@ -55,10 +63,12 @@ export function createSfx(audio) {
       car.skidG.gain.setTargetAtTime(0, t, 0.05);
       car.boostG.gain.setTargetAtTime(0, t, 0.05);
       car.boostToneG.gain.setTargetAtTime(0, t, 0.05);
+      car.scrapeG.gain.setTargetAtTime(0, t, 0.05);
       return;
     }
     // Régime moteur simulé avec 5 rapports
-    const ratio = Math.min(1.35, Math.max(0, c.speed) / c.params.maxSpeed);
+    // Avant le départ, le régime suit l'accélérateur (on fait chanter le moteur)
+    const ratio = Math.max(Math.min(1.35, Math.max(0, c.speed) / c.params.maxSpeed), (c.rev || 0) * 0.58);
     const gears = [0, 0.22, 0.42, 0.62, 0.82, 1.4];
     let g = 0;
     while (g < gears.length - 2 && ratio > gears[g + 1]) g++;
@@ -70,7 +80,28 @@ export function createSfx(audio) {
     car.o2.frequency.setTargetAtTime(f * 1.005, t, k);
     car.o3.frequency.setTargetAtTime(f / 2, t, k);
     car.engFilter.frequency.setTargetAtTime(350 + c.throttle * 1500 + rpm * 500, t, 0.06);
-    car.engGain.gain.setTargetAtTime(0.05 + c.throttle * 0.07 + ratio * 0.03, t, 0.08);
+    const thr = Math.max(c.throttle, c.rev || 0);
+    car.engGain.gain.setTargetAtTime(0.05 + thr * 0.07 + ratio * 0.03, t, 0.08);
+    // Passage de rapport : petite coupure du moteur
+    if (g > car.gear && c.speed > 60) {
+      car.engGain.gain.setTargetAtTime(0.02, t, 0.015);
+      car.engGain.gain.setTargetAtTime(0.05 + thr * 0.07 + ratio * 0.03, t + 0.07, 0.04);
+    }
+    car.gear = g;
+    // Pétarades quand on lâche l'accélérateur à haut régime
+    if (car.lastThrottle > 0.7 && thr < 0.2 && ratio > 0.45) {
+      const n = 2 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < n; i++) {
+        const d = 0.04 + i * (0.05 + Math.random() * 0.06);
+        noiseHit({ vol: 0.16, dur: 0.06, freq: 260 + Math.random() * 300, q: 1.2, type: 'lowpass', delay: d });
+        tone({ freq: 70 + Math.random() * 40, type: 'square', dur: 0.05, vol: 0.06, delay: d });
+      }
+    }
+    car.lastThrottle = thr;
+    // Frottement contre le mur (maintenu un court instant pour éviter les à-coups)
+    car.scrapeHold = c.wallTouch && c.speed > 120 ? 0.12 : Math.max(0, car.scrapeHold - 1 / 60);
+    car.scrapeG.gain.setTargetAtTime(car.scrapeHold > 0 ? Math.min(0.09, c.speed / 9000) : 0, t, 0.03);
+    car.scrapeF.frequency.setTargetAtTime(2400 + Math.min(c.speed, 900) * 1.5, t, 0.05);
 
     const slide = c.drifting ? Math.min(1, 0.4 + c.slip * 1.2) : c.braking && c.speed > 250 ? 0.35 : 0;
     car.skidG.gain.setTargetAtTime(slide * 0.12, t, 0.05);
@@ -161,6 +192,27 @@ export function createSfx(audio) {
       const good = position <= 3;
       const seq = good ? [523, 659, 784, 1046, 1318] : [440, 523, 659];
       seq.forEach((f, i) => tone({ freq: f, type: 'sawtooth', dur: 0.3, vol: 0.07, delay: i * 0.11, reverb: 0.5 }));
+    },
+    /** Résultat du départ canon. */
+    launch(kind) {
+      if (kind === 'perfect') {
+        noiseHit({ vol: 0.25, dur: 0.5, freq: 700, q: 0.6, type: 'lowpass' });
+        [880, 1318, 1760].forEach((f, i) => tone({ freq: f, type: 'triangle', dur: 0.18, vol: 0.08, delay: 0.05 + i * 0.06, reverb: 0.4 }));
+      } else if (kind === 'good') {
+        tone({ freq: 988, type: 'triangle', dur: 0.15, vol: 0.07 });
+      } else if (kind === 'spin') {
+        noiseHit({ vol: 0.22, dur: 0.7, freq: 1500, q: 3 }); // crissement des pneus
+      }
+    },
+    /** Une voiture passe tout près. */
+    whoosh(v = 1) {
+      noiseHit({ vol: 0.18 * v, dur: 0.32, freq: 900, q: 0.7, type: 'bandpass' });
+      noiseHit({ vol: 0.08 * v, dur: 0.25, freq: 2600, q: 1.5, delay: 0.04 });
+    },
+    /** Le boost s'allume. */
+    boostIgnite() {
+      noiseHit({ vol: 0.2, dur: 0.45, freq: 500, q: 0.8, type: 'lowpass' });
+      tone({ freq: 140, type: 'sawtooth', dur: 0.4, vol: 0.06, slide: 2.5 });
     },
     boostPad() { tone({ freq: 300, type: 'sawtooth', dur: 0.35, vol: 0.08, slide: 3 }); },
     boostReady() { tone({ freq: 1318, type: 'sine', dur: 0.12, vol: 0.06 }); tone({ freq: 1760, type: 'sine', dur: 0.15, vol: 0.05, delay: 0.07 }); },

@@ -182,7 +182,12 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     const player = scene.player;
     if (trackRenderer.weather === 'rain') drawRain(ctx, W, H, cam, state.dpr);
-    if (player && player.boosting) drawSpeedLines(ctx, W, H, player);
+    // Lignes de vitesse : en boost, et plus discrètes à très haute vitesse
+    if (player) {
+      const fast = player.speed / player.params.maxSpeed;
+      if (player.boosting) drawSpeedLines(ctx, W, H, player, 1);
+      else if (fast > 0.86) drawSpeedLines(ctx, W, H, player, Math.min(1, (fast - 0.86) / 0.14) * 0.5);
+    }
     // (le vignettage des bords est fait en CSS : .vignette dans main.css)
   }
 
@@ -209,15 +214,17 @@ function makeHeadlightCone() {
   return cv;
 }
 
-function drawSpeedLines(ctx, W, H, car) {
+function drawSpeedLines(ctx, W, H, car, k = 1) {
+  if (k <= 0.02) return;
   const ang = Math.atan2(car.vy, car.vx);
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
-  ctx.strokeStyle = 'rgba(200,160,255,0.22)';
+  ctx.strokeStyle = `rgba(200,160,255,${(0.22 * Math.max(0.5, k)).toFixed(3)})`;
   ctx.lineWidth = 2;
   ctx.beginPath();
   const R = Math.hypot(W, H) / 2;
-  for (let i = 0; i < 18; i++) {
+  const n = Math.round(18 * k);
+  for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2;
     // Plus de lignes sur les côtés, par rapport à la direction de la course
     if (Math.abs(Math.cos(a - ang)) > 0.92) continue;

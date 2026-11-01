@@ -105,6 +105,8 @@ export function collideCarWithWalls(car, track) {
       car.impactY = c.y + wy * c.r;
     }
   }
+  // Contact avec le mur (frottement : étincelles et son)
+  car.wallTouch = strongest > 0 ? 1 : 0;
   if (strongest > 0) {
     car.impact = Math.max(car.impact, strongest);
     if (strongest > 120) car.drifting = false;
@@ -152,6 +154,8 @@ export function collideCarWithObstacles(car, track) {
       }
     }
   }
+  // Contact avec le mur (frottement : étincelles et son)
+  car.wallTouch = strongest > 0 ? 1 : 0;
   if (strongest > 0) {
     car.impact = Math.max(car.impact, strongest);
     if (strongest > 120) car.drifting = false;

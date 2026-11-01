@@ -45,7 +45,7 @@ export function updateCamera(cam, car, dt) {
   cam.x += (car.x + cam.lookX - cam.x) * damp(9, dt);
   cam.y += (car.y + cam.lookY - cam.y) * damp(9, dt);
 
-  const targetZoom = cam.baseZoom * (1 - 0.17 * Math.min(ratio, 1)) * (car.boosting ? 0.93 : 1);
+  const targetZoom = cam.baseZoom * (1 - 0.17 * Math.min(ratio, 1)) * (car.boosting ? 0.93 : 1) * (cam.zoomMul ?? 1);
   cam.zoom += (targetZoom - cam.zoom) * damp(1.8, dt);
 
   // Secousse lors des chocs

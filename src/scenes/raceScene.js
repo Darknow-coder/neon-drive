@@ -11,6 +11,7 @@ import { createTrackRenderer } from '../render/trackRenderer.js';
 import { createParticles } from '../render/particles.js';
 import { createCamera, computeBaseZoom, snapCamera, updateCamera } from '../render/camera.js';
 import { createCarFx, updateCarFx } from '../render/carFx.js';
+import { P_SPARK } from '../render/particles.js';
 import { formatTime } from '../core/math.js';
 import { computeResults, randomGrid } from '../race/results.js';
 
@@ -54,7 +55,9 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   let endTimer = -1; // compte à rebours avant l'affichage des résultats
   let resultsShown = false;
 
-  let world = createRaceWorld({ track, entries, laps, league, countdown });
+  // Départ canon : pas en accélération automatique (le gaz est toujours enfoncé)
+  const launchControl = !settings.controls?.autoGas;
+  let world = createRaceWorld({ track, entries, laps, league, countdown, launchControl });
   let player = world.player;
   const rivalCar = world.cars.find((c) => c.isRival) ?? null;
   const fx = new Map(world.cars.map((c) => [c, createCarFx()]));
@@ -64,6 +67,11 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   let lastCount = 99;     // dernier chiffre du compte à rebours joué
   let lastPad = 0;
   let lastBoost = 0;
+  let msgTone = '';
+  let slowmo = 0;          // ralenti de fin de course (secondes réelles restantes)
+  let launchShown = false;
+  let wasBoosting = false;
+  const passSide = new Map(); // dépassements serrés (son « whoosh »)
 
   const scene = { trackRenderer, cars: world.cars, particles, camera, player, time: 0 };
   sfx?.setRain(track.weather === 'rain');
@@ -90,7 +98,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   function setCarDef(id) {
     // Changement de voiture (panneau ⚙) : on relance la course avec la nouvelle voiture
     carId = id;
-    world = createRaceWorld({ track, entries: entries.map((e) => (e.isPlayer ? { ...e, def: getCar(id) } : e)), laps, league, countdown: 3 });
+    world = createRaceWorld({ track, entries: entries.map((e) => (e.isPlayer ? { ...e, def: getCar(id) } : e)), laps, league, countdown: 3, launchControl });
     player = world.player;
     fx.clear();
     world.cars.forEach((c) => fx.set(c, createCarFx()));
@@ -106,6 +114,10 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
     camera.prevY = camera.y;
     const intent = input.update(dt);
     const lapBefore = player.laps.lap;
+    // Ralenti (victoire ou photo-finish) : le monde avance moins vite
+    const realDt = dt;
+    if (slowmo > 0) { slowmo -= realDt; dt *= 0.28; }
+    camera.zoomMul = slowmo > 0 ? 1.32 : 1;
     world.step(dt, intent);
     scene.time = world.time;
 
@@ -122,7 +134,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
 
     // ---------- Sons ----------
     if (sfx) {
-      sfx.updateCar(player, world.started || world.time > -0.5);
+      sfx.updateCar(player, true);
       if (hit > 120) sfx.hit(hit, true);
       // Chocs des adversaires proches : plus discrets
       for (const car of world.cars) {
@@ -131,21 +143,50 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       const count = world.started ? 0 : Math.ceil(-world.time);
       if (count !== lastCount && count <= 3) sfx.countdown(count);
       lastCount = count;
-      if (player.padTimer > lastPad + 0.2) sfx.boostPad();
+      if (player.padTimer > lastPad + 0.2 && world.time > 0.3) sfx.boostPad();
       lastPad = player.padTimer;
       if (player.boost >= 0.999 && lastBoost < 0.999) sfx.boostReady();
       lastBoost = player.boost;
+      // Dépassement serré : « whoosh » quand une voiture passe tout près
+      if (world.started) {
+        const hx = Math.cos(player.angle), hy = Math.sin(player.angle);
+        for (const car of world.cars) {
+          if (car === player) continue;
+          const dx = car.x - player.x, dy = car.y - player.y;
+          if (dx * dx + dy * dy > 160 * 160) { passSide.delete(car); continue; }
+          const side = Math.sign(dx * hx + dy * hy) || 1;
+          const prev = passSide.get(car);
+          const lat = Math.abs(-dx * hy + dy * hx);
+          const rel = Math.abs((player.vx - car.vx) * hx + (player.vy - car.vy) * hy);
+          if (prev !== undefined && prev !== side && lat < 70 && rel > 60) sfx.whoosh(Math.min(1, rel / 400));
+          passSide.set(car, side);
+        }
+      }
     }
     particles.update(dt);
-    updateCamera(camera, player, dt);
+    // Coup de boost : la caméra recule d'un coup puis revient
+    if (player.boosting && !wasBoosting) {
+      camera.zoom *= 0.93;
+      if (player.padTimer <= 0) sfx?.boostIgnite?.(); // (les plaques et le départ ont leur propre son)
+    }
+    wasBoosting = player.boosting;
+    updateCamera(camera, player, realDt);
 
     // Messages
     if (!world.started) {
-      message = String(Math.ceil(-world.time));
-      messageTimer = 0.1;
-    } else if (world.time < 1) {
+      message = '';
+    } else if (world.time < 1 && !launchShown) {
       message = 'GO !';
+      msgTone = 'green';
       messageTimer = 0.1;
+    }
+    // Verdict du départ canon
+    if (!launchShown && player.launch && world.started) {
+      launchShown = true;
+      const L = { perfect: ['DÉPART PARFAIT !', 'gold'], good: ['BON DÉPART', 'green'], spin: ['PATINAGE !', 'red'] }[player.launch];
+      message = L[0]; msgTone = L[1]; messageTimer = 1.6;
+      sfx?.launch?.(player.launch);
+      if (player.launch === 'perfect' && settings.vibration && navigator.vibrate) navigator.vibrate(40);
     }
     if (!timeTrial && !quietLaps && player.laps.lap > lapBefore && lapBefore >= 1 && !player.finished) {
       const isBest = player.laps.lastLap <= player.laps.bestLap;
@@ -156,14 +197,36 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
     if (player.finished && !scene.announced) {
       scene.announced = true;
       message = `ARRIVÉE — ${player.position}${player.position === 1 ? 'ER' : 'E'} / ${world.cars.length}`;
+      msgTone = '';
       messageTimer = 9999;
       sfx?.finish(player.position);
+      // Photo-finish : une autre voiture franchit la ligne à moins de 0,35 s
+      const close = !solo && world.cars.some((c) => c !== player && (c.finished
+        ? Math.abs(c.finishTime - player.finishTime) < 0.35
+        : c.laps.lap === laps && (track.length - c.trackDist) < Math.max(c.speed, 1) * 0.35));
+      if (!solo && !timeTrial && (player.position === 1 || close)) {
+        slowmo = 1.8;
+        if (player.position === 1) {
+          message = close ? 'VICTOIRE · PHOTO-FINISH !' : 'VICTOIRE !';
+          msgTone = 'victory';
+          // Pluie de confettis néon
+          const cols = ['#ffd34d', '#ff2bd6', '#00f0ff', '#3dff9e', '#ffffff'];
+          for (let i = 0; i < 140; i++) {
+            const a = Math.random() * Math.PI * 2, sp = 120 + Math.random() * 520;
+            particles.spawn(P_SPARK, player.x, player.y, Math.cos(a) * sp + player.vx * 0.3, Math.sin(a) * sp + player.vy * 0.3,
+              0.8 + Math.random() * 0.9, 2 + Math.random() * 2.5, 0, cols[i % cols.length]);
+          }
+        } else {
+          message = `PHOTO-FINISH ! ${player.position}E`;
+          msgTone = 'gold';
+        }
+      }
     } else if (!solo && !player.finished && world.playerPositionLocked() && !scene.lockedMsg) {
       scene.lockedMsg = true;
       message = 'TOUS LES ADVERSAIRES SONT ARRIVÉS';
       messageTimer = 9999;
     }
-    if (messageTimer > 0 && (messageTimer -= dt) <= 0) message = '';
+    if (messageTimer > 0 && (messageTimer -= realDt) <= 0) { message = ''; msgTone = ''; }
 
     // Fin de course : résultats quand tout le monde est arrivé, ou peu après
     // l'arrivée du joueur, ou si le joueur ne peut plus changer de place.
@@ -172,7 +235,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
         if (player.finished) endTimer = 5;
         else if (!solo && world.playerPositionLocked()) endTimer = 4;
       } else {
-        endTimer -= dt;
+        endTimer -= realDt;
         if (endTimer <= 0 || world.finished) {
           resultsShown = true;
           onFinish?.(computeResults(world));
@@ -192,7 +255,10 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       lastMsg: message,
       position: player.position,
       total: world.cars.length,
-      big: !world.started || world.time < 1,
+      big: world.started && world.time < 1 && !player.launch,
+      lights: !world.started ? Math.max(1, Math.ceil(-world.time)) : world.time < 1 ? 0 : null,
+      launchHint: launchControl && !timeTrial && !solo,
+      msgTone,
       rival: rivalCar ? { name: rivalCar.name, position: rivalCar.position } : null,
       timeTrial,
       delta: scene.delta ?? null,

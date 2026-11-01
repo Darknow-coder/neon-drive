@@ -18,6 +18,8 @@ export function createHud() {
     elimLine: document.getElementById('hud-elim'),
     danger: document.getElementById('hud-danger'),
     count: document.getElementById('hud-count'),
+    lights: document.getElementById('hud-lights'),
+    lightsHint: document.getElementById('hud-lights-hint'),
     time: document.getElementById('hud-time'),
     best: document.getElementById('hud-best'),
     speed: document.getElementById('hud-speed'),
@@ -35,7 +37,17 @@ export function createHud() {
 
   return {
     show(v) { el.root.classList.toggle('hidden', !v); },
-    update({ car, lap, laps, lapTime, bestLap, lastMsg, position, total, big, rival = null, timeTrial = false, delta = null, elim = null }) {
+    update({ car, lap, laps, lapTime, bestLap, lastMsg, position, total, big, rival = null, timeTrial = false, delta = null, elim = null, lights = null, launchHint = true, msgTone = '' }) {
+      // Feux de départ : 3 rouges (3, 2, 1) puis tout vert (0)
+      const lKey = lights === null ? 'off' : `${lights}${launchHint ? 'h' : ''}`;
+      if (cache.lKey !== lKey) {
+        cache.lKey = lKey;
+        el.lights.classList.toggle('hidden', lights === null);
+        el.lights.classList.toggle('go', lights === 0);
+        el.lights.querySelectorAll('i').forEach((lamp, k) => lamp.classList.toggle('on', lights !== null && lights > 0 && k < 4 - lights));
+        el.lightsHint.classList.toggle('hidden', !launchHint || lights === 0);
+      }
+      if (cache.tone !== msgTone) { cache.tone = msgTone; el.msg.dataset.tone = msgTone; }
       set('lap', el.lap, lap > 0 ? String(lap) : '–');
       set('laps', el.laps, timeTrial || !laps ? '' : `/${laps}`);
       // Mode Élimination
