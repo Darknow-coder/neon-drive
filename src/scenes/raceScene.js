@@ -204,13 +204,16 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       message = player.laps.lap === laps ? 'DERNIER TOUR !' : `${isBest ? 'MEILLEUR TOUR ' : 'Tour '}${formatTime(player.laps.lastLap)}`;
       messageTimer = 2.5;
       sfx?.lap(isBest);
+      if (player.laps.lap === laps && laps > 1) sfx?.music?.setFinal?.(true);
     }
     if (player.finished && !scene.announced) {
       scene.announced = true;
       message = `ARRIVÉE — ${player.position}${player.position === 1 ? 'ER' : 'E'} / ${world.cars.length}`;
       msgTone = '';
       messageTimer = 9999;
-      sfx?.finish(player.position);
+      // Jingle d'arrivée (dans la tonalité du morceau) ; sans musique : petit son
+      if (sfx?.music?.jingle && !timeTrial) sfx.music.jingle(player.position === 1 ? 'victory' : player.position <= 3 ? 'podium' : 'finish');
+      else sfx?.finish(player.position);
       // Photo-finish : une autre voiture franchit la ligne à moins de 0,35 s
       const close = !solo && world.cars.some((c) => c !== player && (c.finished
         ? Math.abs(c.finishTime - player.finishTime) < 0.35

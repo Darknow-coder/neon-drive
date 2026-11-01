@@ -46,6 +46,12 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Événement GIGA RUSH (provisoirement permanent) : 20 voitures sur NEON HIGHWAY, circuit géant et large, 4 objectifs dont un motif exclusif
 - [ ] Plus tard (quand le jeu aura des joueurs) : événements qui tournent chaque semaine
 
+## ✅ Musique et ambiance
+- [x] 9 morceaux originaux générés par code (menu, ville, désert, orbite, crépuscule, neige, brouillard, orage, GIGA RUSH)
+- [x] Dernier tour : la musique monte (couches, tempo +5 %) ; élimination : au duel final
+- [x] Jingles d'arrivée (victoire, podium, arrivée) dans la tonalité du morceau ; musique douce en pause et aux résultats
+- [x] tools/musicCheck.js : vérifie gammes et accords (aucune note qui frotte sur un temps fort)
+
 ## ✅ Voitures à capacité spéciale
 - [x] PIXIE (mini 3 roues, AGILE), IONIX (électrique, RECHARGE), GOLIATH (muscle car, BÉLIER), HYPERION (prototype, LÉVITATION)
 - [x] Capacités identiques pour le joueur et les IA ; sons de moteur propres ; équilibrage vérifié (tools/carBalance.js, tools/traitCheck.js)

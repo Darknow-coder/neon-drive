@@ -69,12 +69,16 @@ export function createElimination({ onFinish, sfx, ...opts }) {
         const left = world.cars.length;
         if (out.isPlayer) {
           scene.flash(`ÉLIMINÉ ! ${left + 1}E PLACE`, 9999);
+          sfx?.music?.jingle?.(left + 1 <= 3 ? 'podium' : 'finish');
           endTimer = 2.5;
         } else if (left === 1) {
           const win = world.cars[0];
           scene.flash(win.isPlayer ? 'VICTOIRE ! DERNIER SURVIVANT' : `${win.name} GAGNE`, 9999);
+          if (win.isPlayer) sfx?.music?.jingle?.('victory');
           endTimer = 3;
         } else {
+          // Duel final (2 voitures) : la musique monte d'un cran
+          if (left === 2 && !world.player.eliminated) sfx?.music?.setFinal?.(true);
           scene.flash(`${out.isRival ? '★ ' : ''}${out.name} ÉLIMINÉ — ${left} RESTANTS`, 2.5);
         }
       }

@@ -10,6 +10,7 @@ export default {
   profile: 'Géant · 20 pilotes',
   league: 'bronze',
   event: true,
+  music: 'giga',
   laps: 2,
   scale: 1.6,
   width: 400,

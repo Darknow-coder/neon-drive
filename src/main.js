@@ -17,7 +17,7 @@ import { createGarage, carName } from './ui/garage.js';
 import { syncUnlocks, selectedCar, liveryFor } from './progression/garage.js';
 import { createAudio } from './audio/audio.js';
 import { createSfx } from './audio/sfx.js';
-import { createMusic } from './audio/music.js';
+import { createMusic, songForTrack } from './audio/music.js';
 import { createSettingsScreen } from './ui/settings.js';
 import { createTutorial } from './scenes/tutorial.js';
 import { raceCredits, carLevel, claimableCount } from './progression/economy.js';
@@ -105,10 +105,13 @@ const music = createMusic(audio);
 /** Ambiance musicale selon l'écran affiché. */
 function updateMusic() {
   if (!audio.ctx) return;
-  // En course : le morceau dépend de l'environnement du circuit
-  const style = getTrackData(trackId).theme?.style ?? 'city';
-  music.setMode(state === 'race' || state === 'reveal' ? 'race' : 'menu', style);
+  // En course : le morceau dépend du circuit (sa météo ou son décor)
+  const song = songForTrack(getTrackData(trackId));
+  const m = state === 'race' || state === 'reveal' ? 'race' : state === 'pause' ? 'pause' : state === 'results' ? 'results' : 'menu';
+  music.setMode(m, song);
 }
+// La scène de course pilote aussi la musique (dernier tour, jingles)
+sfx.music = music;
 // Sur mobile, le son ne peut démarrer qu'après un geste du joueur
 const unlockAudio = () => {
   audio.unlock();
@@ -835,7 +838,7 @@ runBoot({
 });
 
 // Accès pour les tests automatiques
-window.__ND = { session: () => session, loop: () => loop, perf, state: () => state, save: () => save };
+window.__ND = { audio: () => audio, music: () => music, session: () => session, loop: () => loop, perf, state: () => state, save: () => save };
 
 // Installation comme application + jeu hors ligne (version publiée uniquement)
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
