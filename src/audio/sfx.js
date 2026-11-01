@@ -1,5 +1,13 @@
 // Effets sonores du jeu (générés par code).
 
+const VOICES = {
+  default: { types: ['sawtooth', 'sawtooth', 'square'], pitch: 1 },
+  ionix: { types: ['sine', 'triangle', 'sine'], pitch: 3.2 },
+  goliath: { types: ['sawtooth', 'square', 'square'], pitch: 0.72 },
+  pixie: { types: ['square', 'sawtooth', 'triangle'], pitch: 1.45 },
+  hyperion: { types: ['triangle', 'sawtooth', 'sine'], pitch: 2.1 },
+};
+
 export function createSfx(audio) {
   // ---------- Sons continus de la voiture du joueur ----------
   let car = null; // nœuds créés au premier usage
@@ -75,7 +83,13 @@ export function createSfx(audio) {
     const inGear = (ratio - gears[g]) / (gears[g + 1] - gears[g]);
     const rpm = 0.35 + 0.65 * Math.min(1.2, inGear);
     const base = 46 + g * 6;
-    const f = base + rpm * 95 + (c.boosting ? 25 : 0);
+    // Voix du moteur selon la voiture (électrique : sifflement aigu ; muscle : grave)
+    const voice = VOICES[c.def?.id] ?? VOICES.default;
+    if (car.voiceId !== voice) {
+      car.voiceId = voice;
+      car.o1.type = voice.types[0]; car.o2.type = voice.types[1]; car.o3.type = voice.types[2];
+    }
+    const f = (base + rpm * 95 + (c.boosting ? 25 : 0)) * voice.pitch;
     car.o1.frequency.setTargetAtTime(f, t, k);
     car.o2.frequency.setTargetAtTime(f * 1.005, t, k);
     car.o3.frequency.setTargetAtTime(f / 2, t, k);

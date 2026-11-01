@@ -7,6 +7,7 @@ import { carLevel, fragmentsOf, upgradeCost, upgradeCar, unlockFragments, unlock
 import { MAX_LEVEL } from '../data/economy.js';
 import { ico, credits as cr, iconImage } from './icons.js';
 import { FINISHES, MOTIFS } from '../data/shop.js';
+import { TRAITS } from '../data/cars.js';
 import { ownsFinish, ownsMotif, equipStyle } from '../progression/shop.js';
 
 const $ = (id) => document.getElementById(id);
@@ -155,6 +156,10 @@ export function createGarage({ save, onSave, onClose, sfx, openShop }) {
     refreshSprite();
     $('garage-name').textContent = c.name;
     $('garage-tagline').textContent = c.tagline;
+    // Capacité spéciale
+    const tr = c.trait ? TRAITS[c.trait] : null;
+    $('garage-trait').classList.toggle('hidden', !tr);
+    if (tr) $('garage-trait').innerHTML = `<b>${ico('star')} ${tr.name}</b><span>${tr.desc}</span>`;
     $('garage-count').textContent = `${save.garage.owned.length} / ${CARS.length} voitures`;
     $('garage-credits').innerHTML = cr(save.credits);
     // Niveau, fragments et amélioration / déblocage anticipé

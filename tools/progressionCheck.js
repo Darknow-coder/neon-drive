@@ -138,7 +138,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const l = createSaveStore(st).load();
   check(l.status === 'ok' && l.data.version === SAVE_VERSION && l.data.trophies === 120 && l.data.garage.owned[0] === 'nova', 'migration v1 → v3 sans perte');
   const fresh = syncUnlocks(l.data);
-  check(fresh.map((c) => c.id).join() === 'volt,halo,razor', 'voitures des paliers déjà atteints rendues après migration');
+  check(fresh.map((c) => c.id).join() === 'volt,halo,razor,pixie', 'voitures des paliers déjà atteints rendues après migration');
   st.setItem('neondrive.save', JSON.stringify({ version: 2, trophies: 5, garage: { owned: 'x', liveries: { nova: { body: 'rouge', accent: '#00ff00' } } } }));
   const l2 = createSaveStore(st).load().data;
   check(l2.garage.owned.join() === 'nova' && !l2.garage.liveries.nova.body && l2.garage.liveries.nova.accent === '#00ff00', 'garage abîmé réparé');

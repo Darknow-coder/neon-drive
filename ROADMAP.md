@@ -46,6 +46,10 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Événement GIGA RUSH (provisoirement permanent) : 20 voitures sur NEON HIGHWAY, circuit géant et large, 4 objectifs dont un motif exclusif
 - [ ] Plus tard (quand le jeu aura des joueurs) : événements qui tournent chaque semaine
 
+## ✅ Voitures à capacité spéciale
+- [x] PIXIE (mini 3 roues, AGILE), IONIX (électrique, RECHARGE), GOLIATH (muscle car, BÉLIER), HYPERION (prototype, LÉVITATION)
+- [x] Capacités identiques pour le joueur et les IA ; sons de moteur propres ; équilibrage vérifié (tools/carBalance.js, tools/traitCheck.js)
+
 ## ✅ Mode Carrière
 - [x] 5 chapitres (un par rival et par ligue), 4 défis à étoiles + 1 duel par chapitre (75 étoiles)
 - [x] 7 types de défis : course, remontée, poursuite, course propre, élimination, chrono, duel

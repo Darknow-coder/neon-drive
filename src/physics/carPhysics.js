@@ -79,13 +79,28 @@ function baseParams(stats) {
   };
 }
 
+/** Capacité spéciale : modifie les paramètres (même règle pour tout le monde). */
+function applyTrait(p, trait) {
+  if (trait === 'ram') {
+    // Bélier : très lourd, encaisse les murs
+    p.mass *= 1.45;
+    p.wallRetain = Math.min(0.97, p.wallRetain + 0.08);
+    p.wallDeflect += 0.1;
+  } else if (trait === 'agile') {
+    p.mass *= 0.85;
+    p.turnRate *= 1.06;
+  }
+  return p;
+}
+
 export function createCar(def, { x = 0, y = 0, angle = 0, level = 1 } = {}) {
   return {
     def,
     level,
-    params: statsToParams(def.stats, level),
-    length: 46,
-    width: 24,
+    trait: def.trait ?? null,
+    params: applyTrait(statsToParams(def.stats, level), def.trait),
+    length: def.size?.length ?? 46,
+    width: def.size?.width ?? 24,
     x, y, angle,
     vx: 0, vy: 0,
     yawRate: 0,
@@ -145,7 +160,9 @@ export function stepCar(car, input, dt, surface = NO_SURFACE) {
   const steer = clamp(input.steer, -1, 1);
   const throttle = clamp(input.throttle, 0, 1);
   const brake = clamp(input.brake, 0, 1);
-  car.lastGripMul = surface.gripMul;
+  // Lévitation : la voiture ne subit que 40 % de la perte d'adhérence du sol
+  const gripMul = car.trait === 'hover' ? 1 - (1 - surface.gripMul) * 0.4 : surface.gripMul;
+  car.lastGripMul = gripMul;
 
   const fx = Math.cos(car.angle);
   const fy = Math.sin(car.angle);
@@ -161,6 +178,10 @@ export function stepCar(car, input, dt, surface = NO_SURFACE) {
   const gaugeBoost = !!input.boost && car.boost > 0.01 && vF > -10;
   if (gaugeBoost) car.boost = Math.max(0, car.boost - g.boostDrain * dt);
   car.boosting = gaugeBoost || car.padTimer > 0;
+  // Recharge (électrique) : le boost se remplit en roulant, et plus vite en freinant
+  if (car.trait === 'regen' && !gaugeBoost && vF > 100) {
+    car.boost = Math.min(1, car.boost + dt * (0.014 + (brake > 0.3 && vF > 200 ? 0.1 * brake : 0)));
+  }
   const draft = car.draft || 0; // 0 … 1 (aspiration derrière une autre voiture)
   const vmax = (p.maxSpeed + (car.boosting ? g.boostSpeedAdd : 0) + g.draftSpeedAdd * draft) * surface.speedMul;
 
@@ -188,10 +209,10 @@ export function stepCar(car, input, dt, surface = NO_SURFACE) {
     // 1) La trajectoire tourne, plus ou moins selon la direction
     const authority = 1 - g.highSpeedUndersteer * g.driftUndersteer * clamp(speed / g.understeerRefSpeed, 0, 1.3);
     let turnV = p.turnRate * p.driftTurnBoost * lerp(g.driftTurnMin, 1, k) * authority *
-      (0.5 + 0.5 * surface.gripMul); // sur sol glissant, le drift s'élargit
+      (0.5 + 0.5 * gripMul); // sur sol glissant, le drift s'élargit
     // Les pneus en glisse ne peuvent pas fournir plus que leur adhérence :
     // un drift ne permet pas de tourner plus fort que ce que la voiture tient.
-    const latMax = (p.gripAccel * surface.gripMul * g.driftGripShare) / Math.max(speed, 1);
+    const latMax = (p.gripAccel * gripMul * g.driftGripShare) / Math.max(speed, 1);
     turnV = car.driftDir * Math.min(turnV, latMax);
     const rot = turnV * dt;
     const c = Math.cos(rot), s = Math.sin(rot);
@@ -264,7 +285,7 @@ export function stepCar(car, input, dt, surface = NO_SURFACE) {
 
     // Adhérence latérale (force limitée, comme de vrais pneus).
     // Juste après un drift, l'adhérence revient progressivement.
-    const gripMax = p.gripAccel * surface.gripMul * (1 - 0.55 * car.driftBlend);
+    const gripMax = p.gripAccel * gripMul * (1 - 0.55 * car.driftBlend);
     vR -= Math.sign(vR) * Math.min(Math.abs(vR), gripMax * dt);
 
     // On recompose avec l'orientation d'AVANT la rotation : la vitesse ne suit

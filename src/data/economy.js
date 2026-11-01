@@ -27,7 +27,7 @@ export const AI_CAR_LEVEL = { bronze: 1, argent: 2, or: 3, diamant: 4, elite: 5 
 
 // ---------- Fragments et packs ----------
 // Fragments nécessaires pour débloquer une voiture AVANT son palier de trophées
-export const UNLOCK_FRAGMENTS = { volt: 20, halo: 30, razor: 40, titan: 50, spectre: 60, comet: 80, bastion: 100 };
+export const UNLOCK_FRAGMENTS = { volt: 20, pixie: 25, halo: 30, razor: 40, titan: 50, spectre: 60, ionix: 70, comet: 80, goliath: 90, bastion: 100, hyperion: 120 };
 export const PACKS = {
   small: { name: 'PACK NÉON', fragments: 6, price: 120, color: '#00f0ff' },
   medium: { name: 'PACK PLASMA', fragments: 15, price: 280, color: '#ff2bd6' },
@@ -42,6 +42,7 @@ export const TROPHY_ROAD = [
   { at: 20, reward: { pack: 'small' } },
   { at: 30, reward: { car: 'volt' } },
   { at: 45, reward: { credits: 150 } },
+  { at: 50, reward: { car: 'pixie' } },
   { at: 60, reward: { pack: 'small' } },
   { at: 70, reward: { car: 'halo' } },
   { at: 85, reward: { credits: 200 } },
@@ -53,12 +54,15 @@ export const TROPHY_ROAD = [
   { at: 225, reward: { pack: 'medium' } },
   { at: 250, reward: { car: 'spectre', credits: 200 } },
   { at: 300, reward: { credits: 400 } },
+  { at: 325, reward: { car: 'ionix' } },
   { at: 350, reward: { pack: 'large' } },
   { at: 400, reward: { car: 'comet' } },
   { at: 450, reward: { credits: 500 } },
+  { at: 475, reward: { car: 'goliath' } },
   { at: 500, reward: { pack: 'large' } },
   { at: 600, reward: { car: 'bastion', credits: 400 } },
   { at: 700, reward: { pack: 'large' } },
+  { at: 750, reward: { car: 'hyperion' } },
   { at: 800, reward: { credits: 1000, pack: 'large' } },
   { at: 900, reward: { pack: 'large' } },
   { at: 1000, reward: { credits: 1500, pack: 'large' } },

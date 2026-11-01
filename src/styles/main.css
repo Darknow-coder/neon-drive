@@ -574,7 +574,7 @@ html, body {
 .garage-body { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; align-items: center; }
 .garage-preview { position: relative; display: grid; grid-template-columns: auto 1fr auto; align-items: center; text-align: center; }
 .garage-preview canvas { width: 100%; max-width: 360px; height: auto; aspect-ratio: 3 / 2; justify-self: center; }
-.garage-name, .garage-tagline { grid-column: 1 / -1; }
+.garage-name, .garage-tagline, .garage-trait { grid-column: 1 / -1; }
 .garage-name { font-family: var(--font-display); font-weight: 900; font-size: 26px; letter-spacing: 4px; color: #fff; text-shadow: 0 0 10px var(--cyan); }
 .garage-tagline { font-size: 15px; }
 .garage-nav {
@@ -2060,3 +2060,10 @@ html, body {
 @media (max-width: 640px) { .mode-grid { grid-auto-rows: minmax(72px, auto); } }
 @media (max-height: 460px) { .hero-career .hero-txt b { font-size: 14px; letter-spacing: 1px; } }
 @media (max-width: 640px) { .mode-grid { flex: 0 0 auto; } .menu-right { min-height: auto; } }
+
+/* Garage : capacité spéciale */
+.garage-trait { display: flex; flex-direction: column; gap: 2px; margin: 4px 0; padding: 6px 10px; border-radius: 10px; background: rgba(255, 211, 77, 0.08); border: 1px solid rgba(255, 211, 77, 0.45); }
+.garage-trait b { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-display); font-size: 11px; letter-spacing: 2px; color: #ffe680; }
+.garage-trait b .ico { width: 13px; height: 13px; }
+.garage-trait span { font-size: 13px; color: #d8d4ff; }
+@media (max-height: 460px) { .garage-trait { padding: 3px 8px; margin: 2px 0; } .garage-trait span { font-size: 11px; } }

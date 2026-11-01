@@ -98,6 +98,53 @@ export const CARS = [
     colors: { body: '#dfe3ff', accent: '#ff3b5c', glow: '#ff6b8a' },
     unlock: { type: 'trophies', min: 600 },
   },
+  // ---------- Voitures à capacité spéciale (trait) ----------
+  {
+    id: 'pixie',
+    name: 'PIXIE',
+    tagline: 'Mini à 3 roues, nerveuse et minuscule',
+    stats: { speed: 3, accel: 9, handling: 10, drift: 6, toughness: 2 },
+    trait: 'agile',
+    size: { length: 38, width: 20 },
+    shape: 'mini',
+    design: { lm: 0.8, wm: 0.84, cockpit: 'bubble', wheels: 'trike', livery: 'dots', spoiler: 'none', lights: 'dual', extras: ['antenna'] },
+    colors: { body: '#ff7ad9', accent: '#3dff9e', glow: '#ff7ad9' },
+    unlock: { type: 'trophies', min: 50 },
+  },
+  {
+    id: 'ionix',
+    name: 'IONIX',
+    tagline: 'Électrique : son boost se recharge tout seul',
+    stats: { speed: 6, accel: 7, handling: 6, drift: 4, toughness: 5 },
+    trait: 'regen',
+    shape: 'pod',
+    design: { lm: 1.0, wm: 0.98, cockpit: 'big', wheels: 'covered', livery: 'circuit', spoiler: 'none', lights: 'bar', extras: ['lightbar'] },
+    colors: { body: '#e8f6ff', accent: '#00f0ff', glow: '#00f0ff' },
+    unlock: { type: 'trophies', min: 325 },
+  },
+  {
+    id: 'goliath',
+    name: 'GOLIATH',
+    tagline: 'Muscle car : écarte tout sur son passage',
+    stats: { speed: 9, accel: 4, handling: 4, drift: 4, toughness: 9 },
+    trait: 'ram',
+    size: { length: 51, width: 27 },
+    shape: 'muscle',
+    design: { lm: 1.12, wm: 1.1, cockpit: 'rear', wheels: 'covered', livery: 'single', spoiler: 'wide', lights: 'quad', extras: ['scoop', 'sidepipes'] },
+    colors: { body: '#ff6a00', accent: '#141414', glow: '#ff8a3d' },
+    unlock: { type: 'trophies', min: 475 },
+  },
+  {
+    id: 'hyperion',
+    name: 'HYPERION',
+    tagline: 'Prototype en lévitation : ne craint pas les sols glissants',
+    stats: { speed: 8, accel: 5, handling: 6, drift: 5, toughness: 3 },
+    trait: 'hover',
+    shape: 'proto',
+    design: { lm: 1.12, wm: 0.96, cockpit: 'slit', wheels: 'hover', livery: 'chevron', spoiler: 'none', lights: 'bar', extras: ['fins', 'thrusters'] },
+    colors: { body: '#1b1340', accent: '#7af7ff', glow: '#b07aff' },
+    unlock: { type: 'trophies', min: 750 },
+  },
   {
     id: 'aurora',
     name: 'AURORA',
@@ -109,6 +156,14 @@ export const CARS = [
     unlock: { type: 'pass', tier: 100 },
   },
 ];
+
+// Capacités spéciales (même règle pour le joueur et les IA)
+export const TRAITS = {
+  agile: { name: 'AGILE', desc: 'Toute petite : se faufile dans les trous et tourne sur place.' },
+  regen: { name: 'RECHARGE', desc: 'Le boost se recharge tout seul en roulant, et encore plus en freinant.' },
+  ram: { name: 'BÉLIER', desc: 'Très lourde : écarte les autres voitures et perd peu de vitesse contre les murs.' },
+  hover: { name: 'LÉVITATION', desc: 'Flotte au-dessus du sol : glisse beaucoup moins sous la pluie, la neige et sur le verglas.' },
+};
 
 export const getCar = (id) => CARS.find((c) => c.id === id) ?? CARS[0];
 

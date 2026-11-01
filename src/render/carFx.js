@@ -20,9 +20,9 @@ export function updateCarFx(fx, car, dt, particles, trackRenderer, impactThisSte
   const sliding = car.drifting || Math.abs(car.vR) > 140 || (car.braking && car.speed > 260);
   const wheels = rearWheels(car);
 
-  // Traces de pneus
+  // Traces de pneus (aucune pour une voiture en lévitation)
   fx.skidTimer += dt;
-  if (sliding && car.speed > 80) {
+  if (sliding && car.speed > 80 && car.trait !== 'hover') {
     if (fx.lastWheels && fx.skidTimer > 1 / 30) {
       const a = Math.min(1, 0.35 + Math.abs(car.vR) / 400);
       const lw = fx.lastWheels;

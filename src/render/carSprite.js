@@ -21,6 +21,14 @@ const SHAPES = {
   tank: [[1.0, 0.42], [0.96, 0.5], [0.6, 0.52], [-0.8, 0.52], [-0.95, 0.5], [-1.0, 0.42]],
   // Monoplace : coque étroite (les roues sont à l'extérieur)
   formula: [[1.0, 0.07], [0.7, 0.13], [0.35, 0.2], [-0.1, 0.3], [-0.65, 0.32], [-1.0, 0.26]],
+  // Mini : toute ronde, nez étroit (une seule roue avant)
+  mini: [[1.0, 0.16], [0.86, 0.34], [0.45, 0.48], [-0.3, 0.5], [-0.85, 0.46], [-1.0, 0.3]],
+  // Pod : goutte d'eau lisse (électrique)
+  pod: [[1.0, 0.2], [0.84, 0.38], [0.45, 0.48], [-0.1, 0.5], [-0.65, 0.45], [-1.0, 0.24]],
+  // Muscle : long capot carré, ailes arrière larges
+  muscle: [[1.0, 0.4], [0.96, 0.47], [0.55, 0.47], [0.2, 0.44], [-0.35, 0.47], [-0.75, 0.5], [-1.0, 0.46]],
+  // Prototype : nez en aiguille, larges ailes arrière
+  proto: [[1.0, 0.02], [0.75, 0.13], [0.35, 0.24], [0.0, 0.3], [-0.45, 0.44], [-0.78, 0.53], [-1.0, 0.3]],
 };
 
 function bodyPath(ctx, shape, L, W) {
@@ -139,6 +147,21 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
       ctx.stroke();
       for (const sx of [-1, 1]) tyre(sx * hl * 0.6, sy * (hw + 0.3), 9, 4.6);
     }
+  } else if (d.wheels === 'trike') {
+    // 3 roues : deux à l'arrière bien visibles (la roue avant est dessinée par-dessus)
+    for (const sy of [-1, 1]) tyre(-hl * 0.55, sy * (hw + 2.2), 9, 5.2);
+  } else if (d.wheels === 'hover') {
+    // Lévitation : 4 patins lumineux sous la caisse
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) {
+      const px = sx * hl * 0.55, py = sy * (hw - 1);
+      const hg = ctx.createRadialGradient(px, py, 0, px, py, 7);
+      hg.addColorStop(0, rgba('#ffffff', 0.9)); hg.addColorStop(0.35, rgba(accent, 0.8)); hg.addColorStop(1, rgba(accent, 0));
+      ctx.fillStyle = hg;
+      ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
   } else if (d.wheels === 'exposed') {
     // Suspensions (bras) puis roues bien visibles, façon monoplace
     ctx.strokeStyle = shade(body, -0.3);
@@ -348,6 +371,13 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
       }
       break;
     }
+    case 'dots': {
+      // Pois (mini)
+      for (const [x, y, r] of [[0.55, -0.45, 2.2], [0.1, 0.5, 2.6], [-0.4, -0.35, 2.4], [-0.75, 0.4, 1.8], [0.35, 0.05, 1.4], [-0.15, -0.75, 1.3], [0.7, 0.55, 1.2]]) {
+        ctx.beginPath(); ctx.arc(x * hl, y * hw, r, 0, Math.PI * 2); ctx.fill();
+      }
+      break;
+    }
     case 'giga': {
       // Exclusif GIGA RUSH : grande flèche or → magenta et trait central blanc
       const gg = ctx.createLinearGradient(hl, 0, -hl, 0);
@@ -415,8 +445,66 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
     }
   }
 
+  // ---- Barre LED tout autour (électrique) ----
+  if (ex.has('lightbar')) {
+    ctx.save();
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 2.5 * S;
+    ctx.strokeStyle = shade(accent, 0.3);
+    ctx.lineWidth = 0.7;
+    bodyPath(ctx, shape, L * 0.86, Wd * 0.8);
+    ctx.stroke();
+    // Bandes de « batterie » sur le toit arrière
+    ctx.fillStyle = accent;
+    for (let k = 0; k < 4; k++) ctx.fillRect(-hl * 0.75 + k * 2.4, -hw * 0.22, 1.4, hw * 0.44);
+    ctx.restore();
+  }
+  // ---- Grosse prise d'air sur le capot (muscle car) ----
+  if (ex.has('scoop')) {
+    ctx.fillStyle = shade(body, -0.35);
+    roundRect(ctx, hl * 0.28, -hw * 0.3, hl * 0.42, hw * 0.6, 1.2);
+    ctx.fill();
+    ctx.fillStyle = '#05030c';
+    roundRect(ctx, hl * 0.6, -hw * 0.22, hl * 0.08, hw * 0.44, 0.5);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(200,210,255,0.6)';
+    ctx.lineWidth = 0.35;
+    ctx.beginPath();
+    for (let k = -2; k <= 2; k++) { ctx.moveTo(hl * 0.32, k * hw * 0.09); ctx.lineTo(hl * 0.56, k * hw * 0.09); }
+    ctx.stroke();
+  }
+
   // ---- Cockpit ----
   drawCockpit(ctx, d.cockpit, hl, hw, accent, glow, ex.has('ring'));
+
+  // ---- Roue avant unique (3 roues) : dépasse devant le nez, avec sa fourche ----
+  if (d.wheels === 'trike') {
+    ctx.strokeStyle = shade(accent, 0.2);
+    ctx.lineWidth = 0.9;
+    ctx.beginPath(); ctx.moveTo(hl * 0.7, -2.2); ctx.lineTo(hl + 2, -2.2); ctx.moveTo(hl * 0.7, 2.2); ctx.lineTo(hl + 2, 2.2); ctx.stroke();
+    tyre(hl + 2.2, 0, 7, 3.6);
+  }
+  // ---- Antenne à boule (mini) ----
+  if (ex.has('antenna')) {
+    ctx.strokeStyle = '#cfd6ff';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.moveTo(-hl * 0.55, hw * 0.35); ctx.lineTo(-hl * 0.95, hw * 0.75); ctx.stroke();
+    ctx.save();
+    ctx.shadowColor = accent; ctx.shadowBlur = 2 * S;
+    ctx.fillStyle = accent;
+    ctx.beginPath(); ctx.arc(-hl * 0.95, hw * 0.75, 1.3, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  // ---- Échappements latéraux chromés (muscle car) ----
+  if (ex.has('sidepipes')) {
+    for (const sy of [-1, 1]) {
+      const g2 = ctx.createLinearGradient(0, sy * (hw + 0.2), 0, sy * (hw + 2.2));
+      g2.addColorStop(0, '#ffffff'); g2.addColorStop(1, '#6a6f88');
+      ctx.fillStyle = g2;
+      roundRect(ctx, -hl * 0.45, sy > 0 ? hw - 0.2 : -hw - 1.8, hl * 0.75, 2, 1);
+      ctx.fill();
+    }
+  }
 
   // ---- Aileron avant (monoplace) ----
   if (ex.has('frontwing')) {
@@ -500,6 +588,17 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
   ctx.fillStyle = '#ff4d7d';
   ctx.fillRect(-hl + 0.6, -hw + 1.5, 1.2, 3.2);
   ctx.fillRect(-hl + 0.6, hw - 4.7, 1.2, 3.2);
+  if (ex.has('thrusters')) {
+    // Propulseurs du prototype : deux réacteurs lumineux
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = 4 * S;
+    for (const sy of [-1, 1]) {
+      const tg = ctx.createRadialGradient(-hl - 0.5, sy * hw * 0.42, 0, -hl - 0.5, sy * hw * 0.42, 3);
+      tg.addColorStop(0, '#ffffff'); tg.addColorStop(0.5, accent); tg.addColorStop(1, rgba(accent, 0));
+      ctx.fillStyle = tg;
+      ctx.beginPath(); ctx.arc(-hl - 0.5, sy * hw * 0.42, 3, 0, Math.PI * 2); ctx.fill();
+    }
+  }
   if (ex.has('exhaust')) {
     ctx.shadowColor = glow;
     ctx.shadowBlur = 3 * S;
