@@ -31,6 +31,8 @@ export const FINISHES = [
   { id: 'aurora', name: 'AURORE', price: 0, exclusive: 'season', desc: 'Exclusif Saison 1 : des lumières boréales qui ondulent.' },
   { id: 'obsidian', name: 'OBSIDIENNE', price: 0, exclusive: 'season', desc: 'Exclusif Saison 1 : noir miroir aux reflets de ta couleur.' },
   { id: 'galaxy', name: 'GALAXIE', price: 0, exclusive: 'season', desc: 'Exclusif Saison 1 : une nébuleuse et ses étoiles.' },
+  // Exclusive du mode Carrière
+  { id: 'prism', name: 'PRISME', price: 0, exclusive: 'career', desc: 'Exclusif Carrière (chapitre 4) : des facettes de cristal.' },
 ];
 
 // ---------- Motifs (décorations) ----------
@@ -51,6 +53,8 @@ export const MOTIFS = [
   { id: 'hex', name: 'HEXAGONES', price: 0, exclusive: 'season', desc: 'Exclusif Saison 1 : un nid d\'abeille high-tech.' },
   { id: 'tiger', name: 'TIGRE', price: 0, exclusive: 'season', desc: 'Exclusif Saison 1 : les rayures du fauve.' },
   { id: 'wings', name: 'AILES', price: 0, exclusive: 'season', desc: 'Exclusif Saison 1 : des ailes le long des flancs.' },
+  // Exclusif du mode Carrière
+  { id: 'claws', name: 'GRIFFES', price: 0, exclusive: 'career', desc: 'Exclusif Carrière (chapitre 5) : la marque de NEMESIS.' },
   // Exclusif : gagné en remportant l'événement GIGA RUSH (jamais en boutique)
   { id: 'giga', name: 'GIGA RUSH', price: 0, exclusive: true, desc: 'Exclusif : réservé aux vainqueurs de la GIGA RUSH.' },
 ];

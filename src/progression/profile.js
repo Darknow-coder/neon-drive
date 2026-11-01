@@ -3,6 +3,7 @@
 
 import { ACHIEVEMENTS, ACHIEVEMENT_REWARDS, AVATARS, AVATAR_COLORS, DEFAULT_TITLE, NAME_MIN, NAME_MAX, ownsAvatar } from '../data/profile.js';
 import { seasonTitles, addSeasonXp } from './season.js';
+import { campaignTitles } from './campaign.js';
 import { XP } from '../data/season.js';
 
 /** Nettoie un pseudo ; retourne { name } ou { error }. */
@@ -99,7 +100,7 @@ export function claimAchievement(save, id) {
 
 /** Titres disponibles : celui de départ + ceux des succès terminés. */
 export function unlockedTitles(save) {
-  return [DEFAULT_TITLE, ...seasonTitles(save), ...ACHIEVEMENTS.filter((a) => (save.achievements.claimed[a.id] ?? 0) >= a.tiers.length).map((a) => a.title)];
+  return [DEFAULT_TITLE, ...seasonTitles(save), ...campaignTitles(save), ...ACHIEVEMENTS.filter((a) => (save.achievements.claimed[a.id] ?? 0) >= a.tiers.length).map((a) => a.title)];
 }
 
 export function currentTitle(save) {

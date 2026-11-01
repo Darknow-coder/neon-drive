@@ -5,10 +5,11 @@ import { formatTime } from '../core/math.js';
 import { leagueProgress } from '../data/progression.js';
 import { ico } from './icons.js';
 import { seasonLevel } from '../progression/season.js';
+import { stageGoals } from './career.js';
 
 const el = (id) => document.getElementById(id);
 
-export function showResults(rows, { trackName, reward = null, training = false, credits = null, missions = [], event = null, season = null }) {
+export function showResults(rows, { trackName, reward = null, training = false, credits = null, missions = [], event = null, season = null, career = null }) {
   const me = rows.find((r) => r.isPlayer);
   const p = me ? me.position : rows.length;
   el('res-place').innerHTML = `${p}<sup>${p === 1 ? 'er' : 'e'}</sup>`;
@@ -52,6 +53,18 @@ export function showResults(rows, { trackName, reward = null, training = false, 
     cb.innerHTML = `<span class="ct">${ico('credit', 'big')}+${credits.total}</span>` +
       credits.lines.map((l) => `<span class="cl">${l.label} <b>+${l.amount}</b></span>`).join('') +
       (credits.shopHint ? `<span class="shop-hint">De quoi t'offrir en boutique : <b>${credits.shopHint}</b></span>` : '');
+  }
+
+  // Carrière : étoiles du défi
+  const cb2 = el('res-career');
+  cb2.classList.toggle('hidden', !career);
+  el('btn-menu').textContent = career ? 'CARRIÈRE' : 'MENU';
+  if (career) {
+    const goals = stageGoals(career.stage);
+    cb2.innerHTML = `<div class="rc-stars">${[0, 1, 2].map((k) => `<i class="${k < career.stars ? 'on' : ''} ${k >= career.prev && k < career.stars ? 'new' : ''}" style="animation-delay:${0.25 + k * 0.25}s">${ico('star')}</i>`).join('')}</div>
+      <div class="rc-goals">${goals.map((g, k) => `<span class="${k < career.stars ? 'ok' : ''}">${k < career.stars ? '✓' : '✗'} ${g}</span>`).join('')}</div>
+      ${career.chapterDone ? `<div class="rc-done">CHAPITRE ${career.chapterDone.chapter.n} TERMINÉ ! Récompenses sur l'écran Carrière</div>` : ''}
+      ${career.stars === 0 ? '<div class="rc-fail">Objectif manqué : réessaie !</div>' : ''}`;
   }
 
   // Passe de saison : XP gagnée

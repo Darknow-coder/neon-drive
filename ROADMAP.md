@@ -46,6 +46,13 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Événement GIGA RUSH (provisoirement permanent) : 20 voitures sur NEON HIGHWAY, circuit géant et large, 4 objectifs dont un motif exclusif
 - [ ] Plus tard (quand le jeu aura des joueurs) : événements qui tournent chaque semaine
 
+## ✅ Mode Carrière
+- [x] 5 chapitres (un par rival et par ligue), 4 défis à étoiles + 1 duel par chapitre (75 étoiles)
+- [x] 7 types de défis : course, remontée, poursuite, course propre, élimination, chrono, duel
+- [x] Histoire : dialogues de présentation et de fin pour chaque rival ; NEMESIS en boss final
+- [x] Récompenses : crédits par étoile, packs, titres, emblèmes Masque/Némésis, finition PRISME, motif GRIFFES
+- [x] Outils : tools/careerCheck.js (faisabilité des défis) et tools/careerTargets.js (temps des défis chrono)
+
 ## ✅ IA plus vivantes
 - [x] Grosses erreurs des IA (virage raté dans le mur, corde coupée, pilier percuté) : fréquence fixée par la ligue
       et le profil (jamais selon la position du joueur), annonce quand le rival se plante

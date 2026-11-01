@@ -18,7 +18,7 @@ import { computeResults, randomGrid } from '../race/results.js';
 
 const PLAYER_COLORS = { body: '#00f0ff', accent: '#ff2bd6', glow: '#00f0ff' };
 
-export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, rival = false, playerLevel = 1, timeTrial = false, onRespawn = null, gridOrder = null, quietLaps = false, field = null, onFinish }) {
+export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, rival = false, playerLevel = 1, timeTrial = false, onRespawn = null, gridOrder = null, quietLaps = false, field = null, grid = null, onFinish }) {
   const track = buildTrack(getTrackData(trackId));
   const trackRenderer = createTrackRenderer(track, { lowEnd });
   const particles = createParticles(lowEnd ? 320 : 520);
@@ -37,7 +37,8 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       isRival: true, paceMul: rivalData.paceMul, mistakeMul: rivalData.mistakeMul, skill: rivalData.skill,
     });
   }
-  let entries = solo ? [playerEntry] : randomGrid(aiEntries, playerEntry, { backRows: 3 });
+  // (grid 'last' : le joueur part en dernière position — défis « remontée »)
+  let entries = solo ? [playerEntry] : randomGrid(aiEntries, playerEntry, { backRows: grid === 'last' ? 1 : 3 });
   // Coupe : pilotes et ordre de départ imposés (noms, de la pole à la dernière place)
   if (gridOrder) {
     const rv = rivalFor(league);

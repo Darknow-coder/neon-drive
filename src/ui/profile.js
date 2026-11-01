@@ -196,7 +196,7 @@ export function createProfile({ save, onSave, sfx, onClose }) {
     $('id-preview').innerHTML = `${avatarHtml(draft, 'av-l')}<div class="id-pname">${(cleanName(draft.name).name ?? draft.name.toUpperCase()) || '…'}</div><div class="id-ptitle">${draft.title ?? currentTitle(save)}</div>`;
     $('id-avatars').innerHTML = AVATARS.map((a) => {
       const owned = ownsAvatar(save, a.id);
-      return `<button class="id-av ${a.id === draft.avatar ? 'on' : ''} ${owned ? '' : 'locked'} ${a.exclusive ? 'excl' : ''}" data-av="${a.id}" ${owned ? '' : 'disabled'} title="${owned ? a.name : `${a.name} : niveau ${a.tier} du passe de saison`}" style="--ac:${draft.color}">${avatarSvg(a.id)}${owned ? '' : `<small>NIV ${a.tier}</small>`}</button>`;
+      return `<button class="id-av ${a.id === draft.avatar ? 'on' : ''} ${owned ? '' : 'locked'} ${a.exclusive ? 'excl' : ''}" data-av="${a.id}" ${owned ? '' : 'disabled'} title="${owned ? a.name : a.unlock ? `${a.name} : ${a.unlock}` : `${a.name} : niveau ${a.tier} du passe de saison`}" style="--ac:${draft.color}">${avatarSvg(a.id)}${owned ? '' : `<small>${a.tier ? `NIV ${a.tier}` : 'CARRIÈRE'}</small>`}</button>`;
     }).join('');
     $('id-colors').innerHTML = AVATAR_COLORS.map((c) => `<button class="id-col ${c === draft.color ? 'on' : ''}" data-col="${c}" style="--c:${c}" aria-label="Couleur ${c}"></button>`).join('');
     const titles = unlockedTitles(save);

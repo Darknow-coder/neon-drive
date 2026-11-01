@@ -26,6 +26,9 @@ import { seasonLevel, addSeasonXp, raceXp, doubleRacesLeft, addTimeTrialLapXp, t
 import { SEASON, TIER_REWARDS, XP as SXP, BONUS_XP, tierCost } from '../src/data/season.js';
 import { ownsAvatar } from '../src/data/profile.js';
 import { FINISHES } from '../src/data/shop.js';
+import { CHAPTERS, ALL_STAGES, DUEL_STARS_NEEDED, STAR_CREDITS, stageById } from '../src/data/career.js';
+import { evaluateStage, campaignStatus, applyStageResult, totalStars, timeTargets, campaignBadge, markSeen, campaignTitles, currentChapter, MAX_STARS } from '../src/progression/campaign.js';
+import { getTrackData } from '../src/data/tracks/index.js';
 import { createRecorder, decodeGhost, ghostAt, ghostTimeAtDist } from '../src/race/ghost.js';
 
 let ok = 0, ko = 0;
@@ -520,7 +523,7 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   const fin = ids(FINISHES), mot = ids(MOTIFS), av = ids(AVATARS);
   check(TIER_REWARDS.every(({ reward: r }) => (!r.finish || fin.has(r.finish)) && (!r.motif || mot.has(r.motif)) && (!r.avatar || av.has(r.avatar)) && (!r.car || CARS.some((c) => c.id === r.car)) && (!r.pack || PACKS[r.pack])), 'récompenses valides');
   check(TIER_REWARDS[99].reward.car === 'aurora' && CARS.find((c) => c.id === 'aurora').unlock.type === 'pass', 'AURORA au niveau 100');
-  check(AVATARS.filter((a) => a.exclusive).every((a) => TIER_REWARDS[a.tier - 1].reward.avatar === a.id), 'niveaux des emblèmes exclusifs cohérents');
+  check(AVATARS.filter((a) => a.exclusive === 'season').every((a) => TIER_REWARDS[a.tier - 1].reward.avatar === a.id), 'niveaux des emblèmes exclusifs cohérents');
   // XP du jour
   const s = defaultSave();
   const day = '2026-11-02';
@@ -572,6 +575,67 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   st.setItem('neondrive.save', JSON.stringify({ version: 10, pass: { xp: -5, claimed: [3, 3, 999, 'x'], bonusClaimed: 'a', day: 'hier' }, profile: { avatars: ['phoenix', 3] } }));
   const k = createSaveStore(st).load().data;
   check(k.pass.xp === 0 && k.pass.claimed.join() === '3' && k.pass.bonusClaimed === 0 && k.pass.day === null && k.profile.avatars.join() === 'phoenix', 'passe abîmé réparé');
+}
+
+// ---------------------------------------------------------------- Carrière
+{
+  check(CHAPTERS.length === 5 && CHAPTERS.every((c) => c.stages.length === 4 && c.duel.type === 'duel'), '5 chapitres de 4 défis + 1 duel');
+  check(new Set(ALL_STAGES.map((s) => s.id)).size === ALL_STAGES.length && MAX_STARS === 75, 'défis uniques, 75 étoiles');
+  check(ALL_STAGES.every((s) => getTrackData(s.track).id === s.track && (s.type === 'elim' || s.laps >= 1)), 'circuits et tours valides');
+  check(CHAPTERS.every((c) => c.intro.length && c.outro.length && c.reward.credits > 0), 'dialogues et récompenses présents');
+  // Étoiles par type
+  const st = (id) => stageById(id);
+  check([1, 2, 3, 4].map((p) => evaluateStage(st('c1s1'), { position: p })).join() === '3,2,1,0', 'course : étoiles selon la place');
+  check(evaluateStage(st('c2s1'), { position: 4, rivalBeaten: true }) === 1 && evaluateStage(st('c2s1'), { position: 2, rivalBeaten: true }) === 2
+    && evaluateStage(st('c2s1'), { position: 1, rivalBeaten: true }) === 3 && evaluateStage(st('c2s1'), { position: 2, rivalBeaten: false }) === 0, 'poursuite : rival battu');
+  check(evaluateStage(st('c1s3'), { position: 1, wallHits: 0 }) === 3 && evaluateStage(st('c1s3'), { position: 1, wallHits: 2 }) === 0
+    && evaluateStage(st('c1s3'), { position: 3, wallHits: 0 }) === 2 && evaluateStage(st('c1s3'), { position: 5, wallHits: 0 }) === 1, 'course propre');
+  check([5, 4, 2, 1].map((p) => evaluateStage(st('c1s4'), { position: p })).join() === '0,1,2,3', 'remontée : top 4 / top 2 / victoire');
+  const tt = timeTargets(st('c1s2'));
+  check(tt[0] > tt[1] && tt[1] > tt[2], 'chrono : 3 temps de plus en plus serrés');
+  check(evaluateStage(st('c1s2'), { finished: true, time: tt[2] - 0.1 }) === 3 && evaluateStage(st('c1s2'), { finished: true, time: tt[1] }) === 2
+    && evaluateStage(st('c1s2'), { finished: true, time: tt[0] + 1 }) === 0 && evaluateStage(st('c1s2'), { finished: false, time: 1 }) === 0, 'chrono : étoiles selon le temps');
+  check(evaluateStage(st('c1d'), { position: 1, margin: 0.3 }) === 1 && evaluateStage(st('c1d'), { position: 1, margin: 3 }) === 3 && evaluateStage(st('c1d'), { position: 2, margin: 0 }) === 0, 'duel : victoire et avance');
+  // Déblocages
+  const s = defaultSave();
+  let cs = campaignStatus(s);
+  check(cs[0].unlocked && !cs[1].unlocked && !cs[0].duelUnlocked && campaignBadge(s) === 1, 'chapitre 1 ouvert, duel fermé');
+  markSeen(s, 'ch1');
+  check(campaignBadge(s) === 0, 'pastille effacée une fois le chapitre ouvert');
+  const c0 = s.credits;
+  let r = applyStageResult(s, 'c1s1', { position: 2 });
+  check(r.stars === 2 && r.gained === 2 && s.credits === c0 + 2 * STAR_CREDITS && s.campaign.best.c1s1 === 2, 'étoiles et crédits du défi');
+  r = applyStageResult(s, 'c1s1', { position: 3 });
+  check(r.gained === 0 && s.campaign.stars.c1s1 === 2 && s.campaign.best.c1s1 === 2, 'un moins bon résultat ne retire rien');
+  r = applyStageResult(s, 'c1s1', { position: 1 });
+  check(r.gained === 1 && s.campaign.stars.c1s1 === 3, 'amélioration : seulement la nouvelle étoile payée');
+  applyStageResult(s, 'c1s4', { position: 1 });
+  check(campaignStatus(s)[0].duelUnlocked && totalStars(s) === 6, `duel débloqué à ${DUEL_STARS_NEEDED} étoiles`);
+  r = applyStageResult(s, 'c1d', { position: 2, margin: 0 });
+  check(!r.chapterDone && !s.campaign.done.includes('ch1'), 'duel perdu : chapitre pas terminé');
+  r = applyStageResult(s, 'c1d', { position: 1, margin: 1.5 }, mulberry32(1));
+  check(r.chapterDone && s.campaign.done.includes('ch1') && r.stars === 2, 'duel gagné : chapitre terminé');
+  check(campaignTitles(s).includes('Tombeur de SPARK') && unlookFor(s), 'titre du chapitre');
+  function unlookFor(x) { return unlockedTitles(x).includes('Tombeur de SPARK'); }
+  check(!campaignStatus(s)[1].unlocked && campaignStatus(s)[1].lockReason.includes('ARGENT'), 'chapitre 2 : il faut la ligue Argent');
+  s.trophies = 120;
+  check(campaignStatus(s)[1].unlocked && currentChapter(s).id === 'ch2', 'chapitre 2 ouvert avec la ligue Argent');
+  r = applyStageResult(s, 'c1d', { position: 1, margin: 3 });
+  check(!r.chapterDone && r.stars === 3, 'chapitre pas récompensé deux fois');
+  // Exclusifs des chapitres 3 à 5
+  const all = defaultSave(); all.trophies = 900;
+  for (const ch of CHAPTERS) for (const sg of [...ch.stages, ch.duel]) applyStageResult(all, sg.id, sg.type === 'time' ? { finished: true, time: 1 } : { position: 1, rivalBeaten: true, wallHits: 0, margin: 5 }, mulberry32(3));
+  check(all.campaign.done.length === 5 && totalStars(all) === 75 && all.campaign.allStars, 'carrière complète, 75 étoiles');
+  check(all.profile.avatars.includes('mask') && all.profile.avatars.includes('nemesis') && all.cosmetics.finishes.includes('prism') && all.cosmetics.motifs.includes('claws'), 'exclusifs de la carrière obtenus');
+  check(campaignTitles(all).length === 6 && unlockedTitles(all).includes('Légende de la carrière'), 'titres de la carrière');
+  check(buyStyle(Object.assign(defaultSave(), { credits: 1e6 }), 'finish', 'prism').ok === false, 'finition de carrière pas à vendre');
+  // Sauvegarde
+  const sto = memStorage();
+  sto.setItem('neondrive.save', JSON.stringify({ version: 10, trophies: 5 }));
+  check(createSaveStore(sto).load().data.campaign.done.length === 0, 'migration v10 → v11');
+  sto.setItem('neondrive.save', JSON.stringify({ version: 11, campaign: { stars: { c1s1: 9, c1s2: 2, hack: 3 }, best: { c1s1: -1, c1s2: 30.5 }, done: ['ch1', 'x'], seen: ['ch1', 'ch1'] } }));
+  const d = createSaveStore(sto).load().data.campaign;
+  check(!('c1s1' in d.stars) && d.stars.c1s2 === 2 && !('hack' in d.stars) && d.best.c1s2 === 30.5 && !('c1s1' in d.best) && d.done.join() === 'ch1' && d.seen.length === 1, 'carrière abîmée réparée');
 }
 
 console.log(`${ok} vérifications réussies, ${ko} échec(s). Ligues : ${LEAGUES.map((l) => `${l.name} ≥ ${l.min}`).join(', ')}`);

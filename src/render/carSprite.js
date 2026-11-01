@@ -334,6 +334,20 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
       ctx.globalAlpha = 1;
       break;
     }
+    case 'claws': {
+      // Trois griffures en diagonale (marque de NEMESIS)
+      ctx.globalAlpha = 0.95;
+      for (let k = 0; k < 3; k++) {
+        const x0 = hl * (0.55 - k * 0.2), x1 = -hl * (0.35 + k * 0.18);
+        ctx.beginPath();
+        ctx.moveTo(x0, -hw * 0.95);
+        ctx.quadraticCurveTo((x0 + x1) / 2 + 4, 0, x1, hw * 0.95);
+        ctx.lineTo(x1 + 1.2, hw * 0.95);
+        ctx.quadraticCurveTo((x0 + x1) / 2 + 6.5, 0, x0 + 2.4, -hw * 0.95);
+        ctx.closePath(); ctx.fill();
+      }
+      break;
+    }
     case 'giga': {
       // Exclusif GIGA RUSH : grande flèche or → magenta et trait central blanc
       const gg = ctx.createLinearGradient(hl, 0, -hl, 0);
@@ -517,6 +531,7 @@ function bodyFill(ctx, finish, body, hl, hw) {
     holo: [[0, '#2b6bff'], [1, '#2b6bff']],
     aurora: [[0, '#04201c'], [0.5, '#0b3a40'], [1, '#04201c']],
     galaxy: [[0, '#0a0420'], [0.5, '#1a0b3d'], [1, '#0a0420']],
+    prism: [[0, shade(body, -0.4)], [0.5, mix(body, '#ffffff', 0.35)], [1, shade(body, -0.4)]],
     obsidian: [[0, '#020205'], [0.3, '#0d0d16'], [0.5, '#22222e'], [0.7, '#0d0d16'], [1, '#020205']],
     gold: [[0, '#5a3300'], [0.2, '#c88a10'], [0.4, '#fff1a8'], [0.52, '#ffd34d'], [0.7, '#fff6c8'], [0.85, '#b47a08'], [1, '#5a3300']],
   }[finish] ?? null;
@@ -524,7 +539,7 @@ function bodyFill(ctx, finish, body, hl, hw) {
   return stops ? g : body;
 }
 
-const OVERLAY_FINISHES = new Set(['carbon', 'holo', 'chrome', 'metal', 'aurora', 'galaxy', 'obsidian']);
+const OVERLAY_FINISHES = new Set(['carbon', 'holo', 'chrome', 'metal', 'aurora', 'galaxy', 'obsidian', 'prism']);
 
 function drawFinishOverlay(ctx, finish, body, hl, hw, L, Wd) {
   if (finish === 'aurora') {
@@ -558,6 +573,25 @@ function drawFinishOverlay(ctx, finish, body, hl, hw, L, Wd) {
       const sz = (k % 7 === 0) ? 0.8 : 0.4;
       ctx.fillRect(-hl + ((k * 61) % 100) / 100 * L, -hw + ((k * 37) % 100) / 100 * Wd, sz, sz);
     }
+    return;
+  }
+  if (finish === 'prism') {
+    // Facettes de cristal : triangles clairs/sombres + reflets arc-en-ciel
+    const cols = ['#ffffff', '#7af7ff', '#ff7ad9', '#ffe680'];
+    let k = 0;
+    for (let x = -hl; x < hl; x += 5) {
+      for (let y = -hw; y < hw; y += 5) {
+        const up = (Math.round((x + hl) / 5) + Math.round((y + hw) / 5)) % 2;
+        ctx.fillStyle = up ? rgba(cols[k++ % cols.length], 0.28) : 'rgba(0,0,30,0.22)';
+        ctx.beginPath();
+        if (up) { ctx.moveTo(x, y); ctx.lineTo(x + 5, y); ctx.lineTo(x, y + 5); }
+        else { ctx.moveTo(x + 5, y); ctx.lineTo(x + 5, y + 5); ctx.lineTo(x, y + 5); }
+        ctx.closePath(); ctx.fill();
+      }
+    }
+    const g = ctx.createLinearGradient(-hl, -hw, hl, hw);
+    g.addColorStop(0.35, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,0.45)'); g.addColorStop(0.62, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(-hl, -hw, L, Wd);
     return;
   }
   if (finish === 'obsidian') {

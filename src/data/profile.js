@@ -20,6 +20,9 @@ export const AVATARS = [
   { id: 'planet', name: 'Planète', exclusive: 'season', tier: 25, path: '<circle cx="16" cy="16" r="7.5"/><path d="M4 21c2 3 10 1 17-3.5S30.5 9 28 7c-1.5-1.2-4.5-.6-7.5.8"/><circle cx="25" cy="24" r="1.4" fill="currentColor"/><circle cx="7" cy="8" r="1" fill="currentColor"/>' },
   { id: 'phoenix', name: 'Phénix', exclusive: 'season', tier: 55, path: '<path d="M16 28c-1-5 0-9 0-12"/><path d="M16 16C12 14 6 14 3 9c5 1 8 0 11 2-2-3-2-6 0-8 1 3 2 5 2 8 0-3 1-5 2-8 2 2 2 5 0 8 3-2 6-1 11-2-3 5-9 5-13 7z"/><path d="M13 27h6"/>' },
   { id: 'cup', name: 'Coupe d\'or', exclusive: 'season', tier: 75, path: '<path d="M10 5h12v6a6 6 0 0 1-12 0z"/><path d="M10 7H6v2a4 4 0 0 0 4 4M22 7h4v2a4 4 0 0 1-4 4M16 17v4M11 27h10l-1-6h-8z"/><path d="M16 7.5l.9 1.8 2 .3-1.4 1.4.3 2-1.8-.9-1.8.9.3-2-1.4-1.4 2-.3z" fill="currentColor" stroke="none"/>' },
+  // Exclusifs du mode Carrière
+  { id: 'mask', name: 'Masque', exclusive: 'career', unlock: 'Chapitre 3 de la carrière', path: '<path d="M4 9c4-2 8-2 12 1 4-3 8-3 12-1 0 8-3 13-7 13-3 0-4-3-5-3s-2 3-5 3c-4 0-7-5-7-13z"/><path d="M8 13c1.5-1.2 3.5-1.2 5 0M19 13c1.5-1.2 3.5-1.2 5 0"/>' },
+  { id: 'nemesis', name: 'Némésis', exclusive: 'career', unlock: 'Chapitre 5 de la carrière', path: '<path d="M6 5l5 6M26 5l-5 6"/><path d="M16 8c6 0 9 5 9 10 0 6-4 10-9 10s-9-4-9-10c0-5 3-10 9-10z"/><path d="M11 17l4 2M21 17l-4 2M13 24h6"/>' },
 ];
 /** L'emblème est-il disponible pour ce joueur ? */
 export const ownsAvatar = (save, id) => {

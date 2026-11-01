@@ -60,8 +60,9 @@ export function createRaceWorld(opts) {
         // Un rival a un niveau propre, plus élevé (fixé avant la course)
         pace: skill.pace * (e.paceMul ?? 1),
         mistakesMul: skill.mistakes * (e.mistakeMul ?? 1),
-        lineMul: e.isRival ? 0.5 : skill.line,
-        driftMul: e.isRival ? 1 : skill.drift,
+        lineMul: e.lineMul ?? (e.isRival ? 0.5 : skill.line),
+        driftMul: e.driftMul ?? (e.isRival ? 1 : skill.drift),
+        skillScale: e.skillScale ?? 1,
         rng: mulberry32((rng() * 1e9) | 0),
       });
     }

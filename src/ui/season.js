@@ -51,7 +51,7 @@ function rewardVisual(save, r) {
 }
 
 /** Récompenses obtenues → écrans d'ouverture. Beaucoup d'un coup : regroupées. */
-function toScreens(save, got) {
+export function toScreens(save, got) {
   if (got.length > 3) {
     const out = [];
     let credits = 0;

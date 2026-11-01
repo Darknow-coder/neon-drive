@@ -55,6 +55,10 @@ import { iconImage } from './ui/icons.js';
 import { minimap } from './ui/timeTrialSelect.js';
 import { createEventScreen } from './ui/event.js';
 import { createSeasonScreen } from './ui/season.js';
+import { createCareerScreen } from './ui/career.js';
+import { stageById, DUEL_PACE } from './data/career.js';
+import { RIVALS } from './data/rivals.js';
+import { applyStageResult, campaignBadge, currentChapter, totalStars, MAX_STARS } from './progression/campaign.js';
 import { addSeasonXp, raceXp, seasonLevel, seasonBadge } from './progression/season.js';
 import { XP } from './data/season.js';
 import { EVENT } from './data/event.js';
@@ -170,6 +174,10 @@ function refreshMenu() {
   const pb = seasonBadge(save);
   $('pass-badge').textContent = String(pb);
   $('pass-badge').classList.toggle('hidden', !pb);
+  // Carrière : chapitre en cours et étoiles
+  const curCh = currentChapter(save);
+  $('menu-career-sub').innerHTML = `Chapitre ${curCh.n} · ${totalStars(save)}/${MAX_STARS} ★`;
+  $('career-badge').classList.toggle('hidden', !campaignBadge(save));
   // Tuile de l'événement : meilleure place
   $('event-sub').textContent = save.event.best ? `Événement · record ${save.event.best === 1 ? '1re' : `${save.event.best}e`} place` : `Événement · ${EVENT.drivers} pilotes`;
   // Profil : emblème, pseudo, titre et succès à récupérer
@@ -189,6 +197,8 @@ const missions = createMissions({ save, onSave: persist, sfx, onClose: refreshMe
 const road = createRoad({ save, onSave: persist, sfx, onClose: refreshMenu });
 const profile = createProfile({ save, onSave: persist, sfx, onClose: refreshMenu });
 const seasonScreen = createSeasonScreen({ save, onSave: persist, sfx, onClose: refreshMenu });
+const careerScreen = createCareerScreen({ save, onSave: persist, sfx, onClose: refreshMenu, onPlay: (id) => { enterFullscreenOnMobile(); startCareerStage(id); } });
+let lastCareer = null; // résultat du dernier défi (pour l'écran Carrière)
 
 function startRace() {
   // Le circuit n'est construit qu'au lancement (et l'ancien est libéré) :
@@ -390,6 +400,87 @@ function backToMenu() {
   state = 'menu';
   updateMusic();
   if (pending.length) showRewards(save, pending, { sfx, onClose: refreshMenu });
+}
+
+// ---------------------------------------------------------------- CARRIÈRE
+/** Lance un défi de la carrière (niveau des IA : celui de la ligue du chapitre). */
+function startCareerStage(id) {
+  const stage = stageById(id);
+  if (!stage) return;
+  if (!save.tutorialDone) { startTutorial(); return; }
+  const ch = stage.chapter;
+  training = false;
+  carId = selectedCar(save);
+  trackId = stage.track;
+  session?.dispose();
+  const common = {
+    renderer, input, hud, lowEnd, trackId, carId, league: ch.league,
+    playerColors: liveryFor(save, carId), sfx, settings: save.settings, playerLevel: carLevel(save, carId),
+    onFinish: (rows) => careerDone(stage, rows),
+  };
+  const rv = Object.values(RIVALS).find((r) => r.id === ch.rival);
+  if (stage.type === 'elim') session = createElimination(common);
+  else if (stage.type === 'time') session = createRaceScene({ ...common, laps: stage.laps, solo: true });
+  else if (stage.type === 'duel') {
+    // Duel : le rival en pole, toi juste derrière, en 1 contre 1
+    session = createRaceScene({
+      ...common, laps: stage.laps,
+      field: (pe) => [{ def: getCar(rv.car), name: rv.name, profile: rv.profile, colors: rv.colors, isRival: true,
+        paceMul: rv.paceMul, skillScale: DUEL_PACE, mistakeMul: rv.mistakeMul, skill: rv.skill }, pe],
+    });
+  } else session = createRaceScene({ ...common, laps: stage.laps, rival: true, grid: stage.type === 'last' ? 'last' : null });
+  session.careerStage = stage.id;
+  input.reset();
+  hideResults();
+  show('pause', false);
+  show('start', false);
+  setRaceUi(true);
+  state = 'race';
+  updateMusic();
+  loop.start();
+}
+
+/** Fin d'un défi : étoiles, crédits, récompenses de chapitre, XP de saison. */
+function careerDone(stage, rows) {
+  state = 'results';
+  setRaceUi(false);
+  sfx.stopCar();
+  const me = rows.find((r) => r.isPlayer) ?? { position: rows.length, finished: false, stats: { wallHits: 1 }, time: null };
+  const rv = rows.find((r) => r.isRival);
+  const result = {
+    position: me.position, finished: me.finished,
+    rivalBeaten: !!rv && me.position < rv.position,
+    wallHits: me.stats.wallHits,
+    time: me.finished ? me.time : null,
+    margin: me.position === 1 && rows[1] ? rows[1].gap : 0,
+  };
+  const res = applyStageResult(save, stage.id, result);
+  let season = null;
+  if (stage.type !== 'time') {
+    recordRace(save, { position: me.position, carId, trackId, mode: 'career' });
+    season = addSeasonXp(save, raceXp('career', me.position, rows.length), { race: true });
+  } else season = addSeasonXp(save, res.stars * 20 + 20);
+  persist();
+  lastCareer = res;
+  const lines = [];
+  if (res.credits) lines.push({ label: `${res.gained} nouvelle${res.gained > 1 ? 's' : ''} étoile${res.gained > 1 ? 's' : ''}`, amount: res.credits });
+  if (res.allStars) lines.push({ label: 'Toutes les étoiles !', amount: res.allStars.credits });
+  showResults(rows, {
+    trackName: `${stage.title} · ${session.trackName}`,
+    credits: lines.length ? { total: lines.reduce((a, l) => a + l.amount, 0), lines } : null,
+    season,
+    career: res,
+  });
+  if (res.stars >= 1 && res.gained) setTimeout(() => sfx.unlock(), 500);
+  updateMusic();
+}
+
+/** Retour à l'écran Carrière après un défi. */
+function backToCareer() {
+  const after = lastCareer;
+  lastCareer = null;
+  backToMenu();
+  careerScreen.open(after);
 }
 
 // ---------------------------------------------------------------- ÉVÉNEMENT
@@ -644,17 +735,18 @@ $('btn-tuning').addEventListener('click', () => tuning.toggle());
 $('btn-pause').addEventListener('click', () => state === 'race' && pause());
 $('btn-resume').addEventListener('click', resume);
 // « Recommencer » relance le même circuit (sans trophées pour la course abandonnée)
-$('btn-restart').addEventListener('click', () => (session?.isEvent ? startEvent() : session?.isTutorial ? startTutorial() : session?.isTimeTrial ? startTimeTrial(session.trackId) : session?.isElimination ? startElimination(false) : startRace()));
+$('btn-restart').addEventListener('click', () => (session?.careerStage ? startCareerStage(session.careerStage) : session?.isEvent ? startEvent() : session?.isTutorial ? startTutorial() : session?.isTimeTrial ? startTimeTrial(session.trackId) : session?.isElimination ? startElimination(false) : startRace()));
 $('btn-quit').addEventListener('click', () => {
   if (session?.isCup && save.cup) {
     show('pause', false);
     cupRaceDone(computeResults(session.world), true);
-  } else backToMenu();
+  } else if (session?.careerStage) backToCareer();
+  else backToMenu();
 });
 $('btn-cup').addEventListener('click', openCup);
 $('btn-elim').addEventListener('click', () => { enterFullscreenOnMobile(); startElimination(); });
 // « Rejouer » : nouvelle course classée (nouveau tirage) ou même circuit en entraînement
-$('btn-again').addEventListener('click', () => (session?.isEvent ? startEvent() : session?.isElimination ? startElimination() : training ? startTraining() : startRankedRace()));
+$('btn-again').addEventListener('click', () => (session?.careerStage ? startCareerStage(session.careerStage) : session?.isEvent ? startEvent() : session?.isElimination ? startElimination() : training ? startTraining() : startRankedRace()));
 $('btn-training').addEventListener('click', () => showTrainingPicker(true));
 $('btn-garage').addEventListener('click', () => garage.open());
 $('btn-car-show').addEventListener('click', () => garage.open());
@@ -682,7 +774,8 @@ const settingsScreen = createSettingsScreen({
 $('btn-settings').addEventListener('click', () => settingsScreen.open());
 $('btn-pause-settings').addEventListener('click', () => settingsScreen.open({ inRace: true }));
 $('btn-train-back').addEventListener('click', () => showTrainingPicker(false));
-$('btn-menu').addEventListener('click', backToMenu);
+$('btn-menu').addEventListener('click', () => (session?.careerStage ? backToCareer() : backToMenu()));
+$('btn-career').addEventListener('click', () => careerScreen.open());
 
 // Si Android efface le dessin du jeu (manque de mémoire graphique),
 // on reconstruit les images au lieu de rester sur un écran noir.

@@ -61,7 +61,10 @@ const STATS = line('<path d="M5 27h22"/><path d="M8 27V17h4v10M14 27V9h4v18M20 2
 
 const PASS = line('<path d="M4 9a2 2 0 0 1 2-2h20a2 2 0 0 1 2 2v3a3 3 0 0 0 0 6v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-3a3 3 0 0 0 0-6z"/><path d="M12 7v16" stroke-dasharray="2 2.5"/><path d="M19.5 11.5l1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3z" fill="currentColor" stroke="none"/>');
 
-const SVGS = { pass: PASS, dice: DICE, edit: EDIT, medal: MEDAL, stats: STATS, trophy: TROPHY, credit: CREDIT, lock: LOCK, shop: SHOP, missions: MISSIONS, road: ROAD, garage: GARAGE, cup: CUP, elim: ELIM, chrono: CHRONO, event: EVENT, gear: GEAR, play: PLAY, train: TRAIN };
+const STAR = '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M16 3l3.9 8 8.8 1.2-6.4 6.2 1.6 8.8L16 23l-7.9 4.2 1.6-8.8-6.4-6.2 8.8-1.2z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
+const CAREER = line('<path d="M6 27V5"/><path d="M6 6h16l-3 5 3 5H6"/><path d="M11 27h12"/>');
+
+const SVGS = { star: STAR, career: CAREER, pass: PASS, dice: DICE, edit: EDIT, medal: MEDAL, stats: STATS, trophy: TROPHY, credit: CREDIT, lock: LOCK, shop: SHOP, missions: MISSIONS, road: ROAD, garage: GARAGE, cup: CUP, elim: ELIM, chrono: CHRONO, event: EVENT, gear: GEAR, play: PLAY, train: TRAIN };
 
 /** Icône en ligne (HTML). `cls` : classe supplémentaire (taille…). */
 export function ico(name, cls = '') {

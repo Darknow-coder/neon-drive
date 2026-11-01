@@ -18,11 +18,12 @@ import { clamp, damp, smoothstep, createIntentObject } from './aiUtils.js';
 // Grosses erreurs par minute (multipliées par le taux d'erreurs du profil et de la ligue)
 const BIG_MISTAKE_RATE = 0.36;
 
-export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1, lineMul = 1, driftMul = 1, rng = Math.random, bigMistakes = true }) {
+export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1, lineMul = 1, driftMul = 1, rng = Math.random, bigMistakes = true, skillScale = 1 }) {
   const line = getRacingLine(track);
+  // skillScale : réglage fin APRÈS le plafond (ex. rival un peu moins affûté en duel)
   const skill = {
-    gripUse: Math.min(0.99, profile.gripUse * pace),
-    brakeUse: Math.min(0.95, profile.brakeUse * pace),
+    gripUse: Math.min(0.99, profile.gripUse * pace) * skillScale,
+    brakeUse: Math.min(0.95, profile.brakeUse * pace) * skillScale,
     driftUse: profile.driftUse * driftMul,
     steerUse: Math.min(1, 0.6 + 0.4 * pace),
   };

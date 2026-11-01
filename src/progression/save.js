@@ -12,7 +12,7 @@
 
 const KEY = 'neondrive.save';
 const BACKUP_KEY = 'neondrive.save.backup';
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 export function defaultSave() {
   return {
@@ -61,6 +61,8 @@ export function defaultSave() {
     event: { best: null, claimed: [], played: 0 },
     // Passe de saison : XP, niveaux récupérés, coffres bonus, bonus du jour
     pass: { season: 's1', xp: 0, claimed: [], bonusClaimed: 0, day: null, dayRaces: 0, ttXp: 0 },
+    // Mode Carrière : étoiles et meilleurs résultats par défi, chapitres terminés / ouverts
+    campaign: { stars: {}, best: {}, done: [], seen: [], allStars: false },
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
@@ -227,6 +229,17 @@ function sanitize(raw) {
     s.pass.dayRaces = Math.floor(num(pa.dayRaces));
     s.pass.ttXp = Math.floor(num(pa.ttXp));
   }
+  // Carrière
+  const cp = raw.campaign;
+  if (cp && typeof cp === 'object') {
+    const okId = (x) => typeof x === 'string' && /^c[1-9][a-z0-9]{1,4}$/.test(x);
+    for (const [k, v] of Object.entries(cp.stars ?? {})) if (okId(k) && Number.isInteger(v) && v >= 1 && v <= 3) s.campaign.stars[k] = v;
+    for (const [k, v] of Object.entries(cp.best ?? {})) if (okId(k) && typeof v === 'number' && isFinite(v) && v >= 0) s.campaign.best[k] = v;
+    for (const key of ['done', 'seen']) {
+      if (Array.isArray(cp[key])) s.campaign[key] = [...new Set(cp[key].filter((x) => typeof x === 'string' && /^ch[1-9]$/.test(x)))];
+    }
+    s.campaign.allStars = !!cp.allStars;
+  }
   // Joueur existant (sauvegarde sans ce champ, mais avec des courses) : pas de tutoriel imposé
   s.tutorialDone = typeof raw.tutorialDone === 'boolean' ? raw.tutorialDone : s.stats.races > 0;
   return s;
@@ -299,7 +312,12 @@ function migrate(raw) {
     raw.pass ??= { season: 's1', xp: 0, claimed: [], bonusClaimed: 0, day: null, dayRaces: 0, ttXp: 0 };
     raw.version = 10;
   }
-  // Pour le futur : if (raw.version === 10) { …; raw.version = 11; }
+  // Version 10 → 11 : mode Carrière
+  if (raw.version === 10) {
+    raw.campaign ??= { stars: {}, best: {}, done: [], seen: [], allStars: false };
+    raw.version = 11;
+  }
+  // Pour le futur : if (raw.version === 11) { …; raw.version = 12; }
   return raw;
 }
 
