@@ -13,6 +13,8 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Réglages selon les retours (son, difficulté, conduite)
 
 ## Phase 2 — Contenu (en continu)  ⏳ en cours
+- [x] 5 nouveaux circuits (un par ligue), chacun avec sa météo : SAKURA AVENUE (crépuscule), FROSTLINE (neige),
+      SIROCCO (tempête de sable + rafales), PHANTOM BAY (brouillard), THUNDER PEAK (orage)
 - [x] Environnements visuels : ville, désert néon, station orbitale
 - [x] Météo : pluie (adhérence réduite pour tous, effets visuels et sonores)
 - [x] 3 nouveaux circuits : RAINLINE (Argent), DUNE RUNNER (Or), ORBITAL RING (Diamant)
