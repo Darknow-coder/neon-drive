@@ -46,6 +46,13 @@ son et musique générés par code, application installable et hors ligne.
 - [x] Événement GIGA RUSH (provisoirement permanent) : 20 voitures sur NEON HIGHWAY, circuit géant et large, 4 objectifs dont un motif exclusif
 - [ ] Plus tard (quand le jeu aura des joueurs) : événements qui tournent chaque semaine
 
+## ✅ Défi du jour
+- [x] Un défi par jour, le même pour tout le monde (tiré au sort à partir de la date) : circuit (parfois à l'envers),
+      météo surprise, format (course, remontée, élimination, chrono), voiture imposée, règle spéciale
+      (sans boost, turbo infini, verglas, même voiture pour tous)
+- [x] 3 étoiles, essais illimités, série de jours avec récompenses sur 7 jours
+- [x] tools/dailyCheck.js : vérifie les prochains défis (circuits à l'envers valides, courses jouables, temps calculables)
+
 ## ✅ Musique et ambiance
 - [x] 9 morceaux originaux générés par code (menu, ville, désert, orbite, crépuscule, neige, brouillard, orage, GIGA RUSH)
 - [x] Dernier tour : la musique monte (couches, tempo +5 %) ; élimination : au duel final

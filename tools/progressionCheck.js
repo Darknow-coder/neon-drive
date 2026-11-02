@@ -29,6 +29,8 @@ import { FINISHES } from '../src/data/shop.js';
 import { CHAPTERS, ALL_STAGES, DUEL_STARS_NEEDED, STAR_CREDITS, stageById } from '../src/data/career.js';
 import { evaluateStage, campaignStatus, applyStageResult, totalStars, timeTargets, campaignBadge, markSeen, campaignTitles, currentChapter, MAX_STARS } from '../src/progression/campaign.js';
 import { getTrackData } from '../src/data/tracks/index.js';
+import { dailyChallenge, applyDailyResult, refreshDaily, currentStreak, evaluateDaily, previousDay, dailyBadge, streakReward } from '../src/progression/daily.js';
+import { STREAK_REWARDS, DAILY_STAR_CREDITS } from '../src/data/daily.js';
 import { createRecorder, decodeGhost, ghostAt, ghostTimeAtDist } from '../src/race/ghost.js';
 
 let ok = 0, ko = 0;
@@ -636,6 +638,50 @@ check(tracksForLeague('elite').length >= tracksForLeague('bronze').length, 'les 
   sto.setItem('neondrive.save', JSON.stringify({ version: 11, campaign: { stars: { c1s1: 9, c1s2: 2, hack: 3 }, best: { c1s1: -1, c1s2: 30.5 }, done: ['ch1', 'x'], seen: ['ch1', 'ch1'] } }));
   const d = createSaveStore(sto).load().data.campaign;
   check(!('c1s1' in d.stars) && d.stars.c1s2 === 2 && !('hack' in d.stars) && d.best.c1s2 === 30.5 && !('c1s1' in d.best) && d.done.join() === 'ch1' && d.seen.length === 1, 'carrière abîmée réparée');
+}
+
+// ---------------------------------------------------------------- Défi du jour
+{
+  const a = dailyChallenge('2026-11-05'), b = dailyChallenge('2026-11-05'), c = dailyChallenge('2026-11-06');
+  check(JSON.stringify(a) === JSON.stringify(b), 'même défi pour une même date (le même pour tout le monde)');
+  check(JSON.stringify(a) !== JSON.stringify(c), 'défi différent le lendemain');
+  check(previousDay('2026-03-01') === '2026-02-28' && previousDay('2026-01-01') === '2025-12-31', 'jour précédent');
+  let ok2 = true;
+  for (let k = 1; k <= 60; k++) {
+    const ch = dailyChallenge(`2027-01-${String((k % 28) + 1).padStart(2, '0')}`);
+    if (ch.format === 'time' && !ch.car) ok2 = false;
+    if (ch.rule === 'oneCar' && (!ch.car || ch.format === 'time')) ok2 = false;
+    if (ch.car === 'aurora') ok2 = false;
+  }
+  check(ok2, 'règles cohérentes (chrono : voiture imposée ; jamais la voiture du passe)');
+  // Étoiles et série
+  const race = { ...dailyChallenge('2026-11-05'), format: 'race', places: [3, 2, 1] };
+  check([1, 2, 3, 4].map((p) => evaluateDaily(race, { position: p })).join() === '3,2,1,0', 'étoiles selon la place');
+  const tt = { ...race, format: 'time' };
+  check(evaluateDaily(tt, { finished: true, time: 40 }, [50, 45, 41]) === 3 && evaluateDaily(tt, { finished: true, time: 46 }, [50, 45, 41]) === 1 && evaluateDaily(tt, { finished: false, time: 1 }, [50, 45, 41]) === 0, 'étoiles du chrono');
+  const s = defaultSave();
+  check(dailyBadge(s, '2026-11-05') === 1, 'pastille : défi à faire');
+  const c0 = s.credits;
+  let r = applyDailyResult(s, { ...race, day: '2026-11-05' }, { position: 5 }, mulberry32(1));
+  check(r.stars === 0 && s.daily.streak === 0 && !r.streakReward && s.credits === c0, 'défi raté : rien');
+  r = applyDailyResult(s, { ...race, day: '2026-11-05' }, { position: 2 }, mulberry32(1));
+  check(r.stars === 2 && r.gained === 2 && s.daily.streak === 1 && r.streakReward && dailyBadge(s, '2026-11-05') === 0, 'défi réussi : série 1 + récompense');
+  const c1 = s.credits;
+  r = applyDailyResult(s, { ...race, day: '2026-11-05' }, { position: 1 }, mulberry32(1));
+  check(r.gained === 1 && !r.streakReward && s.credits === c1 + DAILY_STAR_CREDITS && s.daily.best === 1, 'amélioration : une étoile en plus, pas de 2e récompense de série');
+  r = applyDailyResult(s, { ...race, day: '2026-11-06' }, { position: 3 }, mulberry32(2));
+  check(s.daily.day === '2026-11-06' && r.stars === 1 && r.gained === 1 && s.daily.streak === 2, 'lendemain : défi neuf, série 2');
+  check(currentStreak(s, '2026-11-07') === 2 && currentStreak(s, '2026-11-08') === 0, 'série perdue si un jour est manqué');
+  r = applyDailyResult(s, { ...race, day: '2026-11-08' }, { position: 1 }, mulberry32(3));
+  check(s.daily.streak === 1, 'série qui repart à 1');
+  check(streakReward(7) === STREAK_REWARDS[6] && streakReward(8) === STREAK_REWARDS[0], 'cycle de 7 jours');
+  // Sauvegarde
+  const sto = memStorage();
+  sto.setItem('neondrive.save', JSON.stringify({ version: 11 }));
+  check(createSaveStore(sto).load().data.daily.streak === 0, 'migration v11 → v12');
+  sto.setItem('neondrive.save', JSON.stringify({ version: 12, daily: { day: 'x', stars: 7, best: -2, targets: [1, 2], streak: 5, lastDone: '2026-11-01' } }));
+  const d = createSaveStore(sto).load().data.daily;
+  check(d.day === null && d.stars === 0 && d.best === null && d.targets === null && d.streak === 5 && d.lastDone === '2026-11-01', 'défi abîmé réparé');
 }
 
 console.log(`${ok} vérifications réussies, ${ko} échec(s). Ligues : ${LEAGUES.map((l) => `${l.name} ≥ ${l.min}`).join(', ')}`);

@@ -24,6 +24,8 @@ import { windAt } from '../data/weather.js';
  * @param opts.league    ligue (niveau des IA, fixé pour toute la course)
  * @param opts.seed      graine du hasard (courses reproductibles pour les tests)
  * @param opts.launchControl départ canon pour le joueur (désactivé en accélération automatique)
+ * @param opts.rules     règles spéciales pour TOUTES les voitures (défi du jour) :
+ *                       { noBoost: jauge de boost désactivée, turbo: jauge qui se remplit toute seule }
  */
 export function createRaceWorld(opts) {
   const track = opts.track ?? buildTrack(opts.trackData);
@@ -32,6 +34,7 @@ export function createRaceWorld(opts) {
   const skill = LEAGUE_SKILL[opts.league ?? 'bronze'];
   const slots = gridSlots(track, opts.entries.length);
   const idle = createIntent();
+  const rules = opts.rules ?? {};
   const spinIntent = createIntent();
 
   // Niveau des voitures adverses : fixé par la ligue (comme leur pilotage)
@@ -167,6 +170,9 @@ export function createRaceWorld(opts) {
     trackPlayerLaunch(playerIntent);
     updateMovingObstacles(track, Math.max(0, world.time));
     updateDraft(dt);
+    // Règles spéciales (identiques pour tout le monde)
+    if (rules.noBoost) for (const car of cars) car.boost = 0;
+    else if (rules.turbo && world.started) for (const car of cars) car.boost = Math.min(1, car.boost + dt * 0.22);
     // Vent (tempête de sable) : la même poussée pour toutes les voitures
     if (track.windSeed !== null && track.windSeed !== undefined && world.started) {
       windAt(track.windSeed, world.time, world.wind);

@@ -12,7 +12,7 @@
 
 const KEY = 'neondrive.save';
 const BACKUP_KEY = 'neondrive.save.backup';
-export const SAVE_VERSION = 11;
+export const SAVE_VERSION = 12;
 
 export function defaultSave() {
   return {
@@ -63,6 +63,8 @@ export function defaultSave() {
     pass: { season: 's1', xp: 0, claimed: [], bonusClaimed: 0, day: null, dayRaces: 0, ttXp: 0 },
     // Mode Carrière : étoiles et meilleurs résultats par défi, chapitres terminés / ouverts
     campaign: { stars: {}, best: {}, done: [], seen: [], allStars: false },
+    // Défi du jour : étoiles et meilleur résultat du jour, série de jours réussis
+    daily: { day: null, stars: 0, best: null, targets: null, streak: 0, lastDone: null, total: 0 },
     // Prévu pour plus tard : fragments, améliorations, saisons, monnaie…
     createdAt: Date.now(),
   };
@@ -240,6 +242,18 @@ function sanitize(raw) {
     }
     s.campaign.allStars = !!cp.allStars;
   }
+  // Défi du jour
+  const dl = raw.daily;
+  if (dl && typeof dl === 'object') {
+    const isDay = (d) => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d);
+    if (isDay(dl.day)) s.daily.day = dl.day;
+    if (isDay(dl.lastDone)) s.daily.lastDone = dl.lastDone;
+    if (Number.isInteger(dl.stars) && dl.stars >= 0 && dl.stars <= 3) s.daily.stars = dl.stars;
+    if (typeof dl.best === 'number' && isFinite(dl.best) && dl.best > 0) s.daily.best = dl.best;
+    if (Array.isArray(dl.targets) && dl.targets.length === 3 && dl.targets.every((x) => typeof x === 'number' && x > 0)) s.daily.targets = dl.targets.slice();
+    s.daily.streak = Math.floor(num(dl.streak));
+    s.daily.total = Math.floor(num(dl.total));
+  }
   // Joueur existant (sauvegarde sans ce champ, mais avec des courses) : pas de tutoriel imposé
   s.tutorialDone = typeof raw.tutorialDone === 'boolean' ? raw.tutorialDone : s.stats.races > 0;
   return s;
@@ -317,7 +331,12 @@ function migrate(raw) {
     raw.campaign ??= { stars: {}, best: {}, done: [], seen: [], allStars: false };
     raw.version = 11;
   }
-  // Pour le futur : if (raw.version === 11) { …; raw.version = 12; }
+  // Version 11 → 12 : défi du jour
+  if (raw.version === 11) {
+    raw.daily ??= { day: null, stars: 0, best: null, targets: null, streak: 0, lastDone: null, total: 0 };
+    raw.version = 12;
+  }
+  // Pour le futur : if (raw.version === 12) { …; raw.version = 13; }
   return raw;
 }
 

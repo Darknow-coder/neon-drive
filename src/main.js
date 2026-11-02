@@ -56,6 +56,14 @@ import { minimap } from './ui/timeTrialSelect.js';
 import { createEventScreen } from './ui/event.js';
 import { createSeasonScreen } from './ui/season.js';
 import { createCareerScreen } from './ui/career.js';
+import { createDailyScreen, dailyGoals, ensureTargets } from './ui/daily.js';
+import { starsHtml } from './ui/career.js';
+import { ico } from './ui/icons.js';
+import { dailyChallenge, challengeRules, applyDailyResult, refreshDaily, dailyBadge, challengeSummary, currentStreak } from './progression/daily.js';
+import { DAILY_DONE_XP } from './data/daily.js';
+import { DAILY_TIME_LEVEL } from './race/dailyRef.js';
+import { registerTempTrack } from './data/tracks/index.js';
+import { AI_CAR_LEVEL } from './data/economy.js';
 import { stageById, DUEL_PACE } from './data/career.js';
 import { RIVALS } from './data/rivals.js';
 import { applyStageResult, campaignBadge, currentChapter, totalStars, MAX_STARS } from './progression/campaign.js';
@@ -177,6 +185,13 @@ function refreshMenu() {
   const pb = seasonBadge(save);
   $('pass-badge').textContent = String(pb);
   $('pass-badge').classList.toggle('hidden', !pb);
+  // Défi du jour
+  refreshDaily(save);
+  const dch = dailyChallenge();
+  $('menu-daily-sub').textContent = challengeSummary(dch);
+  const streak = currentStreak(save);
+  $('menu-daily-stars').innerHTML = `${streak ? `<em>${ico('flame')}${streak}</em>` : ''}${starsHtml(save.daily.stars)}`;
+  $('daily-badge').classList.toggle('hidden', !dailyBadge(save));
   // Carrière : chapitre en cours et étoiles
   const curCh = currentChapter(save);
   $('menu-career-sub').innerHTML = `Chapitre ${curCh.n} · ${totalStars(save)}/${MAX_STARS} ★`;
@@ -202,6 +217,8 @@ const profile = createProfile({ save, onSave: persist, sfx, onClose: refreshMenu
 const seasonScreen = createSeasonScreen({ save, onSave: persist, sfx, onClose: refreshMenu });
 const careerScreen = createCareerScreen({ save, onSave: persist, sfx, onClose: refreshMenu, onPlay: (id) => { enterFullscreenOnMobile(); startCareerStage(id); } });
 let lastCareer = null; // résultat du dernier défi (pour l'écran Carrière)
+const dailyScreen = createDailyScreen({ save, onSave: persist, sfx, onClose: refreshMenu, onPlay: () => { enterFullscreenOnMobile(); startDaily(); } });
+let lastDaily = null;
 
 function startRace() {
   // Le circuit n'est construit qu'au lancement (et l'ancien est libéré) :
@@ -403,6 +420,74 @@ function backToMenu() {
   state = 'menu';
   updateMusic();
   if (pending.length) showRewards(save, pending, { sfx, onClose: refreshMenu });
+}
+
+// ---------------------------------------------------------------- DÉFI DU JOUR
+function startDaily() {
+  if (!save.tutorialDone) { startTutorial(); return; }
+  const ch = dailyChallenge();
+  registerTempTrack(ch.track);
+  ensureTargets(save, ch, persist);
+  training = false;
+  const league = leagueFor(save.trophies).id;
+  trackId = ch.id;
+  // Voiture imposée : prêtée, au même niveau que les adversaires (ou niveau fixe en chrono)
+  carId = ch.car ?? selectedCar(save);
+  const level = ch.car ? (ch.format === 'time' ? DAILY_TIME_LEVEL : AI_CAR_LEVEL[league]) : carLevel(save, carId);
+  const colors = save.garage.owned.includes(carId) ? liveryFor(save, carId) : getCar(carId).colors;
+  session?.dispose();
+  const common = {
+    renderer, input, hud, lowEnd, trackId, carId, league, playerColors: colors, sfx, settings: save.settings, playerLevel: level,
+    rules: challengeRules(ch), aiCar: ch.rule === 'oneCar' ? ch.car : null,
+    onFinish: (rows) => dailyDone(ch, rows),
+  };
+  if (ch.format === 'elim') session = createElimination(common);
+  else if (ch.format === 'time') session = createRaceScene({ ...common, laps: ch.laps, solo: true });
+  else session = createRaceScene({ ...common, laps: ch.laps, rival: true, grid: ch.format === 'last' ? 'last' : null });
+  session.isDaily = true;
+  input.reset();
+  hideResults();
+  show('pause', false);
+  show('start', false);
+  setRaceUi(true);
+  state = 'race';
+  updateMusic();
+  loop.start();
+}
+
+function dailyDone(ch, rows) {
+  state = 'results';
+  setRaceUi(false);
+  sfx.stopCar();
+  const me = rows.find((r) => r.isPlayer) ?? { position: rows.length, finished: false, time: null };
+  const res = applyDailyResult(save, ch, { position: me.position, finished: me.finished, time: me.finished ? me.time : null });
+  let season;
+  if (ch.format !== 'time') {
+    recordRace(save, { position: me.position, carId, trackId: ch.base, mode: 'daily' });
+    season = addSeasonXp(save, raceXp('daily', me.position, rows.length) + (res.streakReward ? DAILY_DONE_XP : 0), { race: true });
+  } else season = addSeasonXp(save, res.stars * 25 + (res.streakReward ? DAILY_DONE_XP : 0));
+  persist();
+  lastDaily = res;
+  const lines = [];
+  if (res.credits) lines.push({ label: `${res.gained} nouvelle${res.gained > 1 ? 's' : ''} étoile${res.gained > 1 ? 's' : ''}`, amount: res.credits });
+  showResults(rows, {
+    trackName: `DÉFI DU JOUR · ${ch.track.name}`,
+    credits: lines.length ? { total: lines.reduce((a, l) => a + l.amount, 0), lines } : null,
+    season,
+    career: {
+      stars: res.stars, prev: res.prev, goals: dailyGoals(ch, save.daily.targets), backLabel: 'DÉFI',
+      extra: res.streakReward ? `SÉRIE : ${res.streak} JOUR${res.streak > 1 ? 'S' : ''} ! Récompense sur l'écran du défi` : res.newBest ? 'NOUVEAU MEILLEUR RÉSULTAT DU JOUR !' : '',
+    },
+  });
+  if (res.gained) setTimeout(() => sfx.unlock(), 500);
+  updateMusic();
+}
+
+function backToDaily() {
+  const after = lastDaily;
+  lastDaily = null;
+  backToMenu();
+  dailyScreen.open(after);
 }
 
 // ---------------------------------------------------------------- CARRIÈRE
@@ -738,18 +823,19 @@ $('btn-tuning').addEventListener('click', () => tuning.toggle());
 $('btn-pause').addEventListener('click', () => state === 'race' && pause());
 $('btn-resume').addEventListener('click', resume);
 // « Recommencer » relance le même circuit (sans trophées pour la course abandonnée)
-$('btn-restart').addEventListener('click', () => (session?.careerStage ? startCareerStage(session.careerStage) : session?.isEvent ? startEvent() : session?.isTutorial ? startTutorial() : session?.isTimeTrial ? startTimeTrial(session.trackId) : session?.isElimination ? startElimination(false) : startRace()));
+$('btn-restart').addEventListener('click', () => (session?.isDaily ? startDaily() : session?.careerStage ? startCareerStage(session.careerStage) : session?.isEvent ? startEvent() : session?.isTutorial ? startTutorial() : session?.isTimeTrial ? startTimeTrial(session.trackId) : session?.isElimination ? startElimination(false) : startRace()));
 $('btn-quit').addEventListener('click', () => {
   if (session?.isCup && save.cup) {
     show('pause', false);
     cupRaceDone(computeResults(session.world), true);
   } else if (session?.careerStage) backToCareer();
+  else if (session?.isDaily) backToDaily();
   else backToMenu();
 });
 $('btn-cup').addEventListener('click', openCup);
 $('btn-elim').addEventListener('click', () => { enterFullscreenOnMobile(); startElimination(); });
 // « Rejouer » : nouvelle course classée (nouveau tirage) ou même circuit en entraînement
-$('btn-again').addEventListener('click', () => (session?.careerStage ? startCareerStage(session.careerStage) : session?.isEvent ? startEvent() : session?.isElimination ? startElimination() : training ? startTraining() : startRankedRace()));
+$('btn-again').addEventListener('click', () => (session?.isDaily ? startDaily() : session?.careerStage ? startCareerStage(session.careerStage) : session?.isEvent ? startEvent() : session?.isElimination ? startElimination() : training ? startTraining() : startRankedRace()));
 $('btn-training').addEventListener('click', () => showTrainingPicker(true));
 $('btn-garage').addEventListener('click', () => garage.open());
 $('btn-car-show').addEventListener('click', () => garage.open());
@@ -777,7 +863,8 @@ const settingsScreen = createSettingsScreen({
 $('btn-settings').addEventListener('click', () => settingsScreen.open());
 $('btn-pause-settings').addEventListener('click', () => settingsScreen.open({ inRace: true }));
 $('btn-train-back').addEventListener('click', () => showTrainingPicker(false));
-$('btn-menu').addEventListener('click', () => (session?.careerStage ? backToCareer() : backToMenu()));
+$('btn-menu').addEventListener('click', () => (session?.isDaily ? backToDaily() : session?.careerStage ? backToCareer() : backToMenu()));
+$('btn-daily').addEventListener('click', () => dailyScreen.open());
 $('btn-career').addEventListener('click', () => careerScreen.open());
 
 // Si Android efface le dessin du jeu (manque de mémoire graphique),

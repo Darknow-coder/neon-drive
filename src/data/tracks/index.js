@@ -27,4 +27,24 @@ export const TRACKS = [
 // Circuits d'événement : hors courses classées et hors chrono
 export const EVENT_TRACKS = [neonHighway];
 
-export const getTrackData = (id) => TRACKS.find((t) => t.id === id) ?? EVENT_TRACKS.find((t) => t.id === id) ?? TRACKS[0];
+// Circuits temporaires (défi du jour : circuit à l'envers, météo surprise…)
+const TEMP = new Map();
+export function registerTempTrack(data) { TEMP.set(data.id, data); return data; }
+
+export const getTrackData = (id) => TRACKS.find((t) => t.id === id) ?? EVENT_TRACKS.find((t) => t.id === id) ?? TEMP.get(id) ?? TRACKS[0];
+
+/**
+ * Variante d'un circuit : à l'envers et/ou avec une autre météo.
+ * (Les piliers et zones sont replacés au même endroit du tracé.)
+ */
+export function trackVariant(base, { reverse = false, weather = null, id, name } = {}) {
+  const d = { ...base, id: id ?? `${base.id}-v`, name: name ?? base.name, variantOf: base.id };
+  if (reverse) {
+    d.points = [base.points[0], ...base.points.slice(1).reverse()];
+    const flip = (a) => (1 - a + 1) % 1;
+    d.obstacles = (base.obstacles ?? []).map((o) => ({ ...o, at: flip(o.at), offset: -(o.offset ?? 0) }));
+    d.zones = (base.zones ?? []).map((z) => ({ ...z, at: flip(z.at), offset: -(z.offset ?? 0) }));
+  }
+  if (weather) d.weather = weather === 'clear' ? undefined : weather;
+  return d;
+}

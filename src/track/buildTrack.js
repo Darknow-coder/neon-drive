@@ -131,7 +131,7 @@ export function buildTrack(data) {
     // Météo : la pluie réduit l'adhérence de TOUTES les voitures (IA comprises)
     weather: data.weather ?? 'clear',
     gridCols: data.gridCols ?? 1,
-    gripMul: weatherOf(data.weather).grip,
+    gripMul: weatherOf(data.weather).grip * (data.gripMul ?? 1),
     windSeed: data.weather === 'sand' ? [...(data.id ?? 'x')].reduce((a, c) => a + c.charCodeAt(0), 0) : null,
     obstacles: [],
     zones: [],

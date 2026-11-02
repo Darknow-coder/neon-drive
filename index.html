@@ -225,6 +225,12 @@
           <span class="badge hidden" id="career-badge">!</span>
         </button>
         </div>
+        <button class="daily-banner badge-host" id="btn-daily">
+          <span class="db-ico" data-ico="calendar"></span>
+          <span class="db-txt"><b>DÉFI DU JOUR</b><small id="menu-daily-sub"></small></span>
+          <span class="db-stars" id="menu-daily-stars"></span>
+          <span class="badge hidden" id="daily-badge">!</span>
+        </button>
         <div class="mode-grid">
           <button class="mode-tile t-cup" id="btn-cup"><span class="mt-ico" data-ico="cup"></span><b>COUPE</b><small id="cup-sub"></small><em>3 courses aux points contre les mêmes rivaux. Grosse récompense au podium.</em></button>
           <button class="mode-tile t-elim" id="btn-elim"><span class="mt-ico" data-ico="elim"></span><b>ÉLIMINATION</b><small>Le dernier sort</small><em>À chaque tour, la dernière voiture est éliminée. Survis jusqu'au bout !</em></button>
@@ -343,6 +349,35 @@
       <div class="ev-goals-title">OBJECTIFS <span id="ev-goals-count"></span></div>
       <div class="ev-goals" id="ev-goals"></div>
       <button class="menu-btn primary ev-go" id="ev-go"><span data-ico="play"></span> JOUER LA GIGA RUSH</button>
+    </div>
+  </div>
+
+  <!-- Défi du jour -->
+  <div id="daily" class="overlay hidden">
+    <div class="overlay-card daily-card">
+      <div class="garage-head">
+        <button class="menu-btn small-btn" id="daily-back">‹ MENU</button>
+        <div class="overlay-title">DÉFI DU JOUR</div>
+        <div class="shop-wallet"><span class="credit-chip big" id="daily-credits"></span></div>
+      </div>
+      <div class="dy-body">
+        <section class="dy-main">
+          <div class="dy-date" id="dy-date"></div>
+          <div class="dy-title" id="dy-title"></div>
+          <div class="dy-chips" id="dy-chips"></div>
+          <div class="dy-row">
+            <div class="dy-map" id="dy-map"></div>
+            <div class="dy-car" id="dy-car"></div>
+          </div>
+          <div class="dy-desc" id="dy-desc"></div>
+        </section>
+        <section class="dy-side">
+          <div class="dy-goals" id="dy-goals"></div>
+          <button class="menu-btn primary dy-go" id="dy-go"><span data-ico="play"></span> RELEVER LE DÉFI</button>
+          <div class="dy-timer" id="dy-timer"></div>
+        </section>
+      </div>
+      <div class="dy-streak" id="dy-streak"></div>
     </div>
   </div>
 

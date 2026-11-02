@@ -58,11 +58,12 @@ export function showResults(rows, { trackName, reward = null, training = false, 
   // Carrière : étoiles du défi
   const cb2 = el('res-career');
   cb2.classList.toggle('hidden', !career);
-  el('btn-menu').textContent = career ? 'CARRIÈRE' : 'MENU';
+  el('btn-menu').textContent = career ? (career.backLabel ?? 'CARRIÈRE') : 'MENU';
   if (career) {
-    const goals = stageGoals(career.stage);
+    const goals = career.goals ?? stageGoals(career.stage);
     cb2.innerHTML = `<div class="rc-stars">${[0, 1, 2].map((k) => `<i class="${k < career.stars ? 'on' : ''} ${k >= career.prev && k < career.stars ? 'new' : ''}" style="animation-delay:${0.25 + k * 0.25}s">${ico('star')}</i>`).join('')}</div>
       <div class="rc-goals">${goals.map((g, k) => `<span class="${k < career.stars ? 'ok' : ''}">${k < career.stars ? '✓' : '✗'} ${g}</span>`).join('')}</div>
+      ${career.extra ? `<div class="rc-done">${career.extra}</div>` : ''}
       ${career.chapterDone ? `<div class="rc-done">CHAPITRE ${career.chapterDone.chapter.n} TERMINÉ ! Récompenses sur l'écran Carrière</div>` : ''}
       ${career.stars === 0 ? '<div class="rc-fail">Objectif manqué : réessaie !</div>' : ''}`;
   }

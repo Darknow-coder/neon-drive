@@ -2067,3 +2067,90 @@ html, body {
 .garage-trait b .ico { width: 13px; height: 13px; }
 .garage-trait span { font-size: 13px; color: #d8d4ff; }
 @media (max-height: 460px) { .garage-trait { padding: 3px 8px; margin: 2px 0; } .garage-trait span { font-size: 11px; } }
+
+/* =====================================================================
+   DÉFI DU JOUR
+   ===================================================================== */
+.daily-banner { position: relative; display: flex; align-items: center; gap: 10px; padding: 7px 14px; border-radius: 14px; cursor: pointer; text-align: left; color: #fff; min-width: 0;
+  border: 1.5px solid #3dff9e; background: linear-gradient(100deg, rgba(61, 255, 158, 0.22), rgba(0, 240, 255, 0.12) 55%, rgba(14, 8, 40, 0.85)); box-shadow: 0 0 16px rgba(61, 255, 158, 0.25); transition: transform 0.12s; }
+.daily-banner:hover { transform: translateY(-2px); }
+.db-ico { width: 34px; height: 34px; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #3dff9e; color: #062016; }
+.db-ico .ico { width: 22px; height: 22px; }
+.db-txt { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.db-txt b { font-family: var(--font-display); font-weight: 900; font-size: 14px; letter-spacing: 2px; }
+.db-txt small { font-size: 12px; color: #c8ffe4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.db-stars { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.db-stars em { display: inline-flex; align-items: center; gap: 2px; font-style: normal; font-weight: 800; color: #ffb36b; }
+.db-stars em .ico { width: 18px; height: 18px; }
+.db-stars .stars i { width: 16px; height: 16px; }
+.daily-banner .badge { top: -6px; right: -6px; }
+@media (max-height: 460px) {
+  .daily-banner { padding: 3px 10px; gap: 8px; border-radius: 11px; }
+  .db-ico { width: 24px; height: 24px; border-radius: 7px; } .db-ico .ico { width: 16px; height: 16px; }
+  .db-txt b { font-size: 11px; } .db-txt small { font-size: 10px; }
+  .db-stars .stars i { width: 13px; height: 13px; }
+}
+.daily-card { width: min(1060px, 100%); gap: 10px; }
+.dy-body { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; }
+.dy-main { display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 16px; background: linear-gradient(130deg, rgba(61, 255, 158, 0.12), rgba(0, 240, 255, 0.08) 50%, rgba(14, 8, 40, 0.6)); border: 1px solid rgba(61, 255, 158, 0.4); min-width: 0; }
+.dy-date { font-family: var(--font-display); font-size: 10px; letter-spacing: 3px; color: #3dff9e; }
+.dy-title { font-family: var(--font-display); font-weight: 900; font-size: 28px; letter-spacing: 3px; color: #fff; text-shadow: 0 0 14px rgba(61, 255, 158, 0.6); }
+.dy-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.dyc { font-family: var(--font-display); font-size: 10px; letter-spacing: 1px; padding: 5px 9px; border-radius: 8px; color: #0b0628; }
+.dyc.fmt { background: #7af7ff; } .dyc.twist { background: #ffb36b; } .dyc.wx { background: #c8d8ff; } .dyc.rule { background: #ff7ad9; }
+.dy-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 10px; align-items: center; }
+.dy-map { display: flex; justify-content: center; padding: 6px; border-radius: 12px; background: rgba(7, 4, 26, 0.6); }
+.dy-map canvas { width: 100%; max-height: 170px; object-fit: contain; }
+.dy-car { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.dy-car canvas { width: 90px; height: 90px; filter: drop-shadow(0 0 10px rgba(122, 247, 255, 0.5)); }
+.dy-car small { display: block; font-family: var(--font-display); font-size: 8px; letter-spacing: 2px; color: var(--muted); }
+.dy-car b { display: block; font-family: var(--font-display); font-size: 17px; letter-spacing: 2px; color: #fff; }
+.dy-car i { font-style: normal; font-size: 12px; color: #ffe680; }
+.dy-desc { display: flex; flex-direction: column; gap: 2px; font-size: 14px; color: #d8d4ff; }
+.dy-desc span::before { content: '› '; color: #3dff9e; }
+.dy-side { display: flex; flex-direction: column; gap: 10px; justify-content: center; min-width: 0; }
+.dy-goals { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px; border-radius: 16px; background: rgba(255, 211, 77, 0.07); border: 1px solid rgba(255, 211, 77, 0.4); }
+.dy-goals .stars.big i { width: 40px; height: 40px; }
+.dyg { display: flex; flex-direction: column; gap: 4px; font-size: 15px; color: #bdb8e8; }
+.dyg span { display: inline-flex; align-items: center; gap: 6px; }
+.dyg .ico { width: 15px; height: 15px; color: rgba(255, 255, 255, 0.25); }
+.dyg span.ok { color: #ffe680; } .dyg span.ok .ico { color: #ffd34d; }
+.dy-best { font-size: 13px; color: #7af7ff; } .dy-best b { color: #fff; }
+.dy-starcr { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
+.dy-starcr .ico { width: 13px; height: 13px; }
+.dy-go { display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 17px; padding: 14px 20px; }
+.dy-go .ico { width: 20px; height: 20px; }
+.dy-timer { text-align: center; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dy-streak { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 14px; background: rgba(255, 138, 61, 0.07); border: 1px solid rgba(255, 138, 61, 0.35); }
+.dys-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.dys-head b { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-display); font-size: 13px; letter-spacing: 2px; color: #ffb36b; }
+.dys-head b .ico { width: 18px; height: 18px; }
+.dys-head span { font-size: 13px; color: var(--muted); }
+.dys-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.dys-d { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 4px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); text-align: center; }
+.dys-d small { font-family: var(--font-display); font-size: 8px; letter-spacing: 1px; color: var(--muted); }
+.dys-d span { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px; font-size: 12px; font-weight: 800; color: #7af7ff; }
+.dys-d span .ico { width: 13px; height: 13px; }
+.dys-d.got { border-color: #3dff9e; background: rgba(61, 255, 158, 0.12); }
+.dys-d.got small { color: #3dff9e; }
+.dys-d.next { border-color: #ffb36b; box-shadow: 0 0 12px rgba(255, 138, 61, 0.45); animation: tileglow 2s ease-in-out infinite; }
+.dys-d.big { border-color: rgba(255, 211, 77, 0.6); }
+@media (max-height: 460px) {
+  .daily-card { padding: 10px 14px; gap: 6px; }
+  .dy-body { gap: 10px; }
+  .dy-main { padding: 8px 10px; gap: 5px; }
+  .dy-title { font-size: 20px; }
+  .dy-map canvas { max-height: 100px; }
+  .dy-car canvas { width: 60px; height: 60px; }
+  .dy-desc { font-size: 11px; }
+  .dy-goals { padding: 8px; gap: 4px; }
+  .dy-goals .stars.big i { width: 28px; height: 28px; }
+  .dyg { font-size: 12px; }
+  .dy-go { padding: 9px 14px; font-size: 14px; }
+  .dy-streak { padding: 6px 10px; }
+  .dys-d { padding: 3px 2px; } .dys-d span { font-size: 10px; }
+}
+@media (max-width: 760px) {
+  .dy-body { grid-template-columns: minmax(0, 1fr); }
+  .dys-days { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}

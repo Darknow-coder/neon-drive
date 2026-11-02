@@ -18,7 +18,7 @@ import { computeResults, randomGrid } from '../race/results.js';
 
 const PLAYER_COLORS = { body: '#00f0ff', accent: '#ff2bd6', glow: '#00f0ff' };
 
-export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, rival = false, playerLevel = 1, timeTrial = false, onRespawn = null, gridOrder = null, quietLaps = false, field = null, grid = null, onFinish }) {
+export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, laps = 3, league = 'bronze', playerColors = PLAYER_COLORS, sfx = null, settings = { vibration: true }, solo = false, countdown = 3, rival = false, playerLevel = 1, timeTrial = false, onRespawn = null, gridOrder = null, quietLaps = false, field = null, grid = null, rules = null, aiCar = null, onFinish }) {
   const track = buildTrack(getTrackData(trackId));
   const trackRenderer = createTrackRenderer(track, { lowEnd });
   const particles = createParticles(lowEnd ? 320 : 520);
@@ -27,13 +27,14 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   // Grille tirée au sort : le joueur part dans l'une des 3 dernières places
   // (mode « solo » : sans adversaires, pour le tutoriel)
   const playerEntry = { def: getCar(carId), name: 'TOI', isPlayer: true, colors: playerColors, level: playerLevel };
-  let aiEntries = AI_DRIVERS.map((d) => ({ def: getCar(d.car), name: d.name, profile: d.profile, colors: d.colors }));
+  // (aiCar : toutes les IA dans la même voiture — défi du jour)
+  let aiEntries = AI_DRIVERS.map((d) => ({ def: getCar(aiCar ?? d.car), name: d.name, profile: d.profile, colors: d.colors }));
   // Course classée : le rival de la ligue remplace un pilote habituel (au hasard)
   const rivalData = rival || gridOrder ? rivalFor(league) : null;
   if (rivalData) {
     aiEntries.splice(Math.floor(Math.random() * aiEntries.length), 1);
     aiEntries.push({
-      def: getCar(rivalData.car), name: rivalData.name, profile: rivalData.profile, colors: rivalData.colors,
+      def: getCar(aiCar ?? rivalData.car), name: rivalData.name, profile: rivalData.profile, colors: rivalData.colors,
       isRival: true, paceMul: rivalData.paceMul, mistakeMul: rivalData.mistakeMul, skill: rivalData.skill,
     });
   }
@@ -59,7 +60,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
 
   // Départ canon : pas en accélération automatique (le gaz est toujours enfoncé)
   const launchControl = !settings.controls?.autoGas;
-  let world = createRaceWorld({ track, entries, laps, league, countdown, launchControl });
+  let world = createRaceWorld({ track, entries, laps, league, countdown, launchControl, rules });
   let player = world.player;
   const rivalCar = world.cars.find((c) => c.isRival) ?? null;
   const fx = new Map(world.cars.map((c) => [c, createCarFx()]));
