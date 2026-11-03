@@ -132,6 +132,9 @@
         </div>
         <div class="small" id="save-io-msg"></div>
       </div>
+      <div class="set-section">EN LIGNE</div>
+      <div class="row-btns"><button class="menu-btn" id="btn-online-delete">SUPPRIMER MON PROFIL EN LIGNE</button></div>
+      <div class="small muted" id="online-delete-msg">Efface ton profil du classement et tes amis. Ta partie sur cet appareil n'est pas touchée.</div>
       <div class="about" id="about">NEON//DRIVE</div>
       <button class="menu-btn primary" id="settings-close">OK</button>
     </div>
@@ -202,7 +205,7 @@
             <div class="league-next" id="menu-league-next"></div>
             <div class="menu-rival" id="menu-rival"></div>
           </div>
-          <button class="rank-chip" id="btn-ranking" aria-label="Classement mondial"><span data-ico="podium"></span><b id="menu-rank">CLASSEMENT</b></button>
+          <button class="rank-chip" id="btn-ranking" aria-label="Classement mondial"><span data-ico="podium"></span><b id="menu-rank">CLASSEMENT</b><span class="badge hidden" id="rank-badge"></span></button>
         </div>
         <button class="car-show" id="btn-car-show" aria-label="Ouvrir le garage">
           <canvas id="menu-car-canvas" width="440" height="300"></canvas>
@@ -366,8 +369,10 @@
         <button class="rk-tab on" data-tab="world">MONDE</button>
         <button class="rk-tab" data-tab="league" id="rk-league-tab">MA LIGUE</button>
         <button class="rk-tab" data-tab="around">AUTOUR DE MOI</button>
+        <button class="rk-tab badge-host" data-tab="friends">AMIS<span class="badge hidden" id="rk-friends-badge"></span></button>
       </div>
       <div class="rk-list" id="rk-list"></div>
+      <div class="pcard hidden" id="pcard"></div>
     </div>
   </div>
 

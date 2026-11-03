@@ -58,7 +58,7 @@ import { createSeasonScreen } from './ui/season.js';
 import { createCareerScreen } from './ui/career.js';
 import { createDailyScreen, dailyGoals, ensureTargets } from './ui/daily.js';
 import { createRankingScreen } from './ui/ranking.js';
-import { syncProfile, onOnlineChange } from './online/sync.js';
+import { syncProfile, onOnlineChange, deleteOnlineProfile } from './online/sync.js';
 import { cached as onlineCached } from './online/api.js';
 import { starsHtml } from './ui/career.js';
 import { ico } from './ui/icons.js';
@@ -195,6 +195,7 @@ function refreshMenu() {
   // Classement mondial (dernière place connue)
   const om = onlineCached();
   $('menu-rank').textContent = om?.rank ? `#${Number(om.rank).toLocaleString('fr-FR')}` : 'CLASSEMENT';
+  setFriendBadges(om?.incoming ?? 0);
   // Défi du jour
   refreshDaily(save);
   const dch = dailyChallenge();
@@ -227,7 +228,10 @@ const profile = createProfile({ save, onSave: persist, sfx, onClose: refreshMenu
 const seasonScreen = createSeasonScreen({ save, onSave: persist, sfx, onClose: refreshMenu });
 const careerScreen = createCareerScreen({ save, onSave: persist, sfx, onClose: refreshMenu, onPlay: (id) => { enterFullscreenOnMobile(); startCareerStage(id); } });
 let lastCareer = null; // résultat du dernier défi (pour l'écran Carrière)
-const rankingScreen = createRankingScreen({ save, sfx, onClose: refreshMenu });
+function setFriendBadges(n) {
+  for (const id of ['rank-badge', 'rk-friends-badge']) { $(id).textContent = String(n); $(id).classList.toggle('hidden', !n); }
+}
+const rankingScreen = createRankingScreen({ save, sfx, onClose: refreshMenu, onFriendsChange: setFriendBadges });
 onOnlineChange(() => { if (state === 'menu') refreshMenu(); });
 const dailyScreen = createDailyScreen({ save, onSave: persist, sfx, onClose: refreshMenu, onPlay: () => { enterFullscreenOnMobile(); startDaily(); } });
 let lastDaily = null;
@@ -877,7 +881,16 @@ $('btn-pause-settings').addEventListener('click', () => settingsScreen.open({ in
 $('btn-train-back').addEventListener('click', () => showTrainingPicker(false));
 $('btn-menu').addEventListener('click', () => (session?.isDaily ? backToDaily() : session?.careerStage ? backToCareer() : backToMenu()));
 $('btn-daily').addEventListener('click', () => dailyScreen.open());
-$('btn-ranking').addEventListener('click', () => rankingScreen.open());
+$('btn-ranking').addEventListener('click', () => rankingScreen.open(onlineCached()?.incoming ? 'friends' : 'world'));
+// Supprimer son profil en ligne (Réglages)
+$('btn-online-delete').addEventListener('click', async () => {
+  const b = $('btn-online-delete');
+  if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'CONFIRMER LA SUPPRESSION ?'; return; }
+  b.disabled = true;
+  try { await deleteOnlineProfile(); $('online-delete-msg').textContent = 'Profil en ligne supprimé. Il sera recréé (sans amis) au prochain lancement du jeu.'; }
+  catch { $('online-delete-msg').textContent = 'Pas de connexion : réessaie plus tard.'; b.disabled = false; }
+  b.dataset.confirm = ''; b.textContent = 'SUPPRIMER MON PROFIL EN LIGNE';
+});
 $('btn-career').addEventListener('click', () => careerScreen.open());
 
 // Si Android efface le dessin du jeu (manque de mémoire graphique),
@@ -931,11 +944,18 @@ runBoot({
     }],
   ],
   onEnter: () => {
+    // Lien d'ami (…?ami=CODE) : on ouvre l'onglet AMIS avec le code rempli
+    const friendCode = (urlParams.get('ami') || '').toUpperCase();
+    const hasLink = /^[0-9A-F]{6}$/.test(friendCode);
+    if (hasLink) history.replaceState(null, '', location.pathname);
+    if (hasLink && save.profile.name) setTimeout(() => rankingScreen.open('friends', friendCode), 2200);
     // Connexion au classement en arrière-plan (sans bloquer)
     if (!skipIntro) setTimeout(() => syncProfile(save, { now: true }), 1200);
     if (!skipIntro) setTimeout(() => sfx.unlock(), 60);
     // Premier lancement : choix du pseudo
-    if (!save.profile.name && !skipIntro) profile.openIdentity({ welcome: true });
+    if (!save.profile.name && !skipIntro) {
+      profile.openIdentity({ welcome: true, onDone: hasLink ? () => setTimeout(() => rankingScreen.open('friends', friendCode), 1500) : null });
+    }
   },
 });
 
