@@ -88,7 +88,11 @@ son et musique générés par code, application installable et hors ligne.
 ## Phase 5 (suite) — Saisons
 - Saisons de ~4 semaines, récompenses de fin de saison, passe de saison gratuit, thème par saison
 
-## Phase 6 — En ligne
+## Phase 6 — En ligne  ⏳ en cours
+- [x] Serveur Supabase (gratuit) : comptes invisibles, profils publics, anti-triche côté serveur, filtre de pseudos
+- [x] Classement des trophées : monde, ma ligue, autour de moi ; place mondiale dans le menu
+- [ ] Amis (code ami, classement entre amis, profil des amis)
+- [ ] Clubs
 - Classements mondiaux (base de données gratuite, vérification des temps par rejeu du fantôme)
 - Fantômes d'autres joueurs, défis entre amis par code
 - (Plus tard, éventuellement) multijoueur en temps réel
