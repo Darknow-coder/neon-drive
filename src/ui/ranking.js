@@ -37,6 +37,8 @@ export function createRankingScreen({ save, sfx, onClose, onFriendsChange }) {
   let tab = 'world';
   let busy = false;
   let pendingCode = null;
+  let again = false;      // un onglet a été touché pendant un chargement : on recharge après
+  let lastMsg = null;     // message de l'ajout d'ami (gardé après rechargement)
 
   function row(p, mine) {
     const lg = LEAGUES.find((l) => l.id === p.league) ?? LEAGUES[0];
@@ -82,7 +84,7 @@ export function createRankingScreen({ save, sfx, onClose, onFriendsChange }) {
           <button class="menu-btn primary" id="fr-add-btn">AJOUTER</button>
           <button class="menu-btn" id="fr-share">PARTAGER MON CODE</button>
         </div>
-        <div class="fr-msg" id="fr-msg"></div>
+        <div class="fr-msg ${lastMsg?.cls ?? ''}" id="fr-msg">${lastMsg?.html ?? ''}</div>
       </div>
       ${incoming.length ? `<div class="fr-sec">DEMANDES REÇUES (${incoming.length})</div>${incoming.map((f) => `
         <div class="fr-req">${avatarHtml({ avatar: f.avatar, color: f.color }, 'av-s')}
@@ -95,6 +97,8 @@ export function createRankingScreen({ save, sfx, onClose, onFriendsChange }) {
           <button class="menu-btn fr-cancel" data-id="${f.id}">ANNULER</button></div>`).join('')}` : ''}`;
     bindRows(list);
     const msg = $('fr-msg');
+    lastMsg = null;
+    const say = (html, cls) => { msg.innerHTML = html; msg.className = `fr-msg ${cls}`; lastMsg = { html, cls }; };
     const add = async () => {
       const code = $('fr-code').value.trim().toUpperCase();
       if (!/^[0-9A-F]{6}$/.test(code)) { msg.textContent = 'Un code ami fait 6 caractères (chiffres et lettres A à F).'; msg.className = 'fr-msg err'; return; }
@@ -102,8 +106,7 @@ export function createRankingScreen({ save, sfx, onClose, onFriendsChange }) {
       try {
         const r = await rpc('add_friend', { p_code: code });
         pendingCode = null;
-        msg.innerHTML = (ADD_MSG[r.status] ?? (() => 'Erreur.'))(r);
-        msg.className = `fr-msg ${['sent', 'accepted'].includes(r.status) ? 'ok' : 'err'}`;
+        say((ADD_MSG[r.status] ?? (() => 'Erreur.'))(r), ['sent', 'accepted'].includes(r.status) ? 'ok' : 'err');
         if (['sent', 'accepted'].includes(r.status)) { sfx?.unlock?.(); setTimeout(load, 1400); }
       } catch { msg.textContent = 'Pas de connexion : réessaie.'; msg.className = 'fr-msg err'; }
     };
@@ -177,8 +180,9 @@ export function createRankingScreen({ save, sfx, onClose, onFriendsChange }) {
 
   // ------------------------------------------------------------ Chargement
   async function load() {
-    if (busy) return;
+    if (busy) { again = true; return; }
     busy = true;
+    again = false;
     const list = $('rk-list');
     list.innerHTML = '<div class="rk-wait">Chargement…</div>';
     document.querySelectorAll('.rk-tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
@@ -202,6 +206,7 @@ export function createRankingScreen({ save, sfx, onClose, onFriendsChange }) {
       $('rk-retry').onclick = () => load();
     } finally {
       busy = false;
+      if (again) load();
     }
   }
 

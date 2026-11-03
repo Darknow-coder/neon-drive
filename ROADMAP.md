@@ -91,7 +91,8 @@ son et musique générés par code, application installable et hors ligne.
 ## Phase 6 — En ligne  ⏳ en cours
 - [x] Serveur Supabase (gratuit) : comptes invisibles, profils publics, anti-triche côté serveur, filtre de pseudos
 - [x] Classement des trophées : monde, ma ligue, autour de moi ; place mondiale dans le menu
-- [ ] Amis (code ami, classement entre amis, profil des amis)
+- [x] Amis : code ami et lien à partager, demandes (accepter / refuser), classement entre amis, fiche pilote
+- [x] Vie privée : « Supprimer mon profil en ligne » dans les Réglages
 - [ ] Clubs
 - Classements mondiaux (base de données gratuite, vérification des temps par rejeu du fantôme)
 - Fantômes d'autres joueurs, défis entre amis par code
