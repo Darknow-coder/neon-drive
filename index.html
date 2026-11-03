@@ -202,6 +202,7 @@
             <div class="league-next" id="menu-league-next"></div>
             <div class="menu-rival" id="menu-rival"></div>
           </div>
+          <button class="rank-chip" id="btn-ranking" aria-label="Classement mondial"><span data-ico="podium"></span><b id="menu-rank">CLASSEMENT</b></button>
         </div>
         <button class="car-show" id="btn-car-show" aria-label="Ouvrir le garage">
           <canvas id="menu-car-canvas" width="440" height="300"></canvas>
@@ -349,6 +350,24 @@
       <div class="ev-goals-title">OBJECTIFS <span id="ev-goals-count"></span></div>
       <div class="ev-goals" id="ev-goals"></div>
       <button class="menu-btn primary ev-go" id="ev-go"><span data-ico="play"></span> JOUER LA GIGA RUSH</button>
+    </div>
+  </div>
+
+  <!-- Classement en ligne -->
+  <div id="ranking" class="overlay hidden">
+    <div class="overlay-card ranking-card">
+      <div class="garage-head">
+        <button class="menu-btn small-btn" id="ranking-back">‹ MENU</button>
+        <div class="overlay-title">CLASSEMENT</div>
+        <div class="rk-total" id="rk-total"></div>
+      </div>
+      <div class="rk-me" id="rk-me"></div>
+      <div class="rk-tabs">
+        <button class="rk-tab on" data-tab="world">MONDE</button>
+        <button class="rk-tab" data-tab="league" id="rk-league-tab">MA LIGUE</button>
+        <button class="rk-tab" data-tab="around">AUTOUR DE MOI</button>
+      </div>
+      <div class="rk-list" id="rk-list"></div>
     </div>
   </div>
 

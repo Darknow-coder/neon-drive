@@ -68,7 +68,9 @@ const CALENDAR = line('<rect x="5" y="7" width="22" height="20" rx="3"/><path d=
 
 const FLAME = '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="fl" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff2b5a"/><stop offset="0.55" stop-color="#ff8a3d"/><stop offset="1" stop-color="#ffe680"/></linearGradient></defs><path d="M16 30c-6 0-10-4-10-9.5 0-5.5 4.6-8 5.7-13.5 3.3 2.2 4.7 5 4.7 7.7 1.3-1.2 2.4-3.3 2.4-5.7 4.4 3.3 7.2 7.5 7.2 11.5 0 5.5-4 9.5-10 9.5z" fill="url(#fl)"/><path d="M16 27c-2.4 0-4-1.6-4-3.7 0-2.2 1.8-3.3 2.3-5.5 1.3.9 1.9 2 1.9 3.1.6-.5 1-1.3 1-2.3 1.8 1.3 2.8 3 2.8 4.7 0 2.1-1.6 3.7-4 3.7z" fill="#fff3b0"/></svg>';
 
-const SVGS = { flame: FLAME, calendar: CALENDAR, star: STAR, career: CAREER, pass: PASS, dice: DICE, edit: EDIT, medal: MEDAL, stats: STATS, trophy: TROPHY, credit: CREDIT, lock: LOCK, shop: SHOP, missions: MISSIONS, road: ROAD, garage: GARAGE, cup: CUP, elim: ELIM, chrono: CHRONO, event: EVENT, gear: GEAR, play: PLAY, train: TRAIN };
+const PODIUM = line('<path d="M4 27h24"/><path d="M12 27V12h8v15M4 27v-9h8M20 27v-6h8v6"/><path d="M16 4l1.2 2.4 2.6.4-1.9 1.8.5 2.6L16 10l-2.4 1.2.5-2.6-1.9-1.8 2.6-.4z" fill="currentColor" stroke="none"/>');
+
+const SVGS = { podium: PODIUM, flame: FLAME, calendar: CALENDAR, star: STAR, career: CAREER, pass: PASS, dice: DICE, edit: EDIT, medal: MEDAL, stats: STATS, trophy: TROPHY, credit: CREDIT, lock: LOCK, shop: SHOP, missions: MISSIONS, road: ROAD, garage: GARAGE, cup: CUP, elim: ELIM, chrono: CHRONO, event: EVENT, gear: GEAR, play: PLAY, train: TRAIN };
 
 /** Icône en ligne (HTML). `cls` : classe supplémentaire (taille…). */
 export function ico(name, cls = '') {

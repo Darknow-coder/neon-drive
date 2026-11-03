@@ -6,13 +6,25 @@ import { seasonTitles, addSeasonXp } from './season.js';
 import { campaignTitles } from './campaign.js';
 import { XP } from '../data/season.js';
 
+// Filtre anti-insultes (le même que sur le serveur : supabase/schema.sql)
+const BAD = ['connard', 'connasse', 'salope', 'putain', 'encule', 'merde', 'couille', 'niquer', 'batard', 'salaud',
+  'nazi', 'hitler', 'fuck', 'shit', 'bitch', 'cunt', 'nigger', 'nigga', 'whore', 'slut', 'porn'];
+const SHORT = ['pute', 'bite', 'nique', 'fdp', 'ntm', 'pd', 'dick', 'sex', 'sexe', 'viol', 'tg'];
+export function politeName(n) {
+  const low = n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/0/g, 'o').replace(/1/g, 'i').replace(/3/g, 'e').replace(/4/g, 'a').replace(/5/g, 's').replace(/7/g, 't').replace(/[@]/g, 'a').replace(/[$]/g, 's');
+  const flat = low.replace(/[ _.-]/g, '');
+  if (BAD.some((w) => flat.includes(w))) return false;
+  return !low.split(/[ _.-]+/).some((w) => SHORT.includes(w));
+}
+
 /** Nettoie un pseudo ; retourne { name } ou { error }. */
 export function cleanName(raw) {
   const name = String(raw ?? '').replace(/\s+/g, ' ').trim().toUpperCase();
   if (name.length < NAME_MIN) return { error: `Au moins ${NAME_MIN} caractères.` };
   if (name.length > NAME_MAX) return { error: `${NAME_MAX} caractères maximum.` };
   if (!/^[A-Z0-9À-ÖØ-Þ _.-]+$/.test(name)) return { error: 'Lettres, chiffres, espace, - _ . seulement.' };
-  if (name === 'TOI') return { error: 'Choisis un autre pseudo.' };
+  if (name === 'TOI' || !politeName(name)) return { error: 'Choisis un autre pseudo.' };
   return { name };
 }
 

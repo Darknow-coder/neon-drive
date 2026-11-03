@@ -57,6 +57,9 @@ import { createEventScreen } from './ui/event.js';
 import { createSeasonScreen } from './ui/season.js';
 import { createCareerScreen } from './ui/career.js';
 import { createDailyScreen, dailyGoals, ensureTargets } from './ui/daily.js';
+import { createRankingScreen } from './ui/ranking.js';
+import { syncProfile, onOnlineChange } from './online/sync.js';
+import { cached as onlineCached } from './online/api.js';
 import { starsHtml } from './ui/career.js';
 import { ico } from './ui/icons.js';
 import { dailyChallenge, challengeRules, applyDailyResult, refreshDaily, dailyBadge, challengeSummary, currentStreak } from './progression/daily.js';
@@ -97,8 +100,12 @@ const save = loaded.data;
 let saveStatus = loaded.status;
 // Crédits gagnés et record de trophées : suivis à chaque sauvegarde
 let lastCredits = save.credits;
+let lastOnlineSig = '';
 function persist() {
   lastCredits = trackTotals(save, lastCredits);
+  // Classement en ligne : profil envoyé quand les trophées, le pseudo ou l'emblème changent
+  const sig = `${save.trophies}|${save.career.races}|${save.profile.name}|${save.profile.avatar}|${save.profile.color}|${save.profile.title}|${save.selectedCar}`;
+  if (sig !== lastOnlineSig) { lastOnlineSig = sig; syncProfile(save); }
   setPlayerLabel(save.profile.name);
   if (!store.save(save) && store.available) saveStatus = 'failed';
 }
@@ -185,6 +192,9 @@ function refreshMenu() {
   const pb = seasonBadge(save);
   $('pass-badge').textContent = String(pb);
   $('pass-badge').classList.toggle('hidden', !pb);
+  // Classement mondial (dernière place connue)
+  const om = onlineCached();
+  $('menu-rank').textContent = om?.rank ? `#${Number(om.rank).toLocaleString('fr-FR')}` : 'CLASSEMENT';
   // Défi du jour
   refreshDaily(save);
   const dch = dailyChallenge();
@@ -217,6 +227,8 @@ const profile = createProfile({ save, onSave: persist, sfx, onClose: refreshMenu
 const seasonScreen = createSeasonScreen({ save, onSave: persist, sfx, onClose: refreshMenu });
 const careerScreen = createCareerScreen({ save, onSave: persist, sfx, onClose: refreshMenu, onPlay: (id) => { enterFullscreenOnMobile(); startCareerStage(id); } });
 let lastCareer = null; // résultat du dernier défi (pour l'écran Carrière)
+const rankingScreen = createRankingScreen({ save, sfx, onClose: refreshMenu });
+onOnlineChange(() => { if (state === 'menu') refreshMenu(); });
 const dailyScreen = createDailyScreen({ save, onSave: persist, sfx, onClose: refreshMenu, onPlay: () => { enterFullscreenOnMobile(); startDaily(); } });
 let lastDaily = null;
 
@@ -865,6 +877,7 @@ $('btn-pause-settings').addEventListener('click', () => settingsScreen.open({ in
 $('btn-train-back').addEventListener('click', () => showTrainingPicker(false));
 $('btn-menu').addEventListener('click', () => (session?.isDaily ? backToDaily() : session?.careerStage ? backToCareer() : backToMenu()));
 $('btn-daily').addEventListener('click', () => dailyScreen.open());
+$('btn-ranking').addEventListener('click', () => rankingScreen.open());
 $('btn-career').addEventListener('click', () => careerScreen.open());
 
 // Si Android efface le dessin du jeu (manque de mémoire graphique),
@@ -918,6 +931,8 @@ runBoot({
     }],
   ],
   onEnter: () => {
+    // Connexion au classement en arrière-plan (sans bloquer)
+    if (!skipIntro) setTimeout(() => syncProfile(save, { now: true }), 1200);
     if (!skipIntro) setTimeout(() => sfx.unlock(), 60);
     // Premier lancement : choix du pseudo
     if (!save.profile.name && !skipIntro) profile.openIdentity({ welcome: true });
