@@ -3,7 +3,7 @@
 // ⚠ À relire si le jeu change (nouvelles données collectées, publicité, achats…).
 
 // Contact pour toute question ou demande sur les données (null = page GitHub du jeu)
-export const LEGAL_CONTACT = null;
+export const LEGAL_CONTACT = 'neon.drive.support@gmail.com';
 export const LEGAL_UPDATED = '4 novembre 2026';
 const REPO = 'https://github.com/Darknow-coder/neon-drive';
 
@@ -39,11 +39,11 @@ export const LEGAL = {
 
 <h3>5. Qui y a accès ?</h3>
 <ul>
-<li><b>Supabase</b> (base de données et comptes anonymes), qui stocke les données en ligne pour le compte de l'éditeur ;</li>
+<li><b>Supabase</b> (base de données et comptes anonymes), qui stocke les données en ligne pour le compte de l'éditeur, sur des serveurs situés à <b>Francfort (Allemagne)</b>, dans l'Union européenne ;</li>
 <li><b>GitHub Pages</b> (hébergement du site), qui reçoit les adresses IP des visiteurs pour afficher les pages ;</li>
 <li>les autres joueurs, pour les informations publiques listées ci-dessus.</li>
 </ul>
-<p>Ces prestataires peuvent être situés hors de l'Union européenne ; ils s'engagent alors à protéger les données selon les règles européennes (clauses contractuelles types). Les polices et images du jeu sont hébergées avec le jeu : aucune donnée n'est envoyée à Google ou à un réseau publicitaire.</p>
+<p>Les données du classement et des amis restent donc <b>dans l'Union européenne</b>. Ces deux entreprises étant américaines, elles s'engagent à protéger les données selon les règles européennes (clauses contractuelles types). Les polices et images du jeu sont hébergées avec le jeu : aucune donnée n'est envoyée à Google ou à un réseau publicitaire.</p>
 
 <h3>6. Combien de temps ?</h3>
 <p>Ton profil en ligne est conservé tant que tu joues. Tu peux le supprimer à tout moment. Les profils inactifs depuis plus de <b>2 ans</b> peuvent être supprimés. Les données sur ton appareil restent jusqu'à ce que tu les effaces (Réglages → Compte, ou en vidant les données du navigateur).</p>
@@ -105,7 +105,7 @@ export const LEGAL = {
 <p><b>GitHub Pages</b> — GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis — <a href="https://github.com" target="_blank" rel="noopener">github.com</a>.</p>
 
 <h3>Base de données (classement et amis)</h3>
-<p><b>Supabase</b> — Supabase, Inc., San Francisco, États-Unis — <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a>.</p>
+<p><b>Supabase</b> — Supabase, Inc., San Francisco, États-Unis — serveurs situés à Francfort (Allemagne) — <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a>.</p>
 
 <h3>Crédits</h3>
 <p>Jeu, circuits, voitures, musiques et effets sonores : créations originales (la musique et les sons sont générés par le jeu lui-même). Polices : <b>Orbitron</b> et <b>Rajdhani</b>, sous licence libre SIL Open Font License, intégrées au jeu.</p>
