@@ -25,7 +25,7 @@ export function keyName(code) {
   return code.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Numpad/, 'PAVÉ ').toUpperCase();
 }
 
-export function createSettingsScreen({ save, onChange, onImport, onTutorial, onClose, onIdentity, onReset, accountInfo, input }) {
+export function createSettingsScreen({ save, onChange, onImport, onTutorial, onTour, onClose, onIdentity, onReset, accountInfo, input }) {
   const settings = save.settings;
   const pct = (v) => `${Math.round(v * 100)} %`;
   let tab = 'sound';
@@ -195,6 +195,7 @@ export function createSettingsScreen({ save, onChange, onImport, onTutorial, onC
   $('save-io-cancel').addEventListener('click', () => { io.classList.add('hidden'); pending = null; });
 
   $('btn-tutorial-again').addEventListener('click', () => { close(); onTutorial?.(); });
+  $('btn-tour-again').addEventListener('click', () => { close(); onTour?.(); });
   $('settings-close').addEventListener('click', () => close());
 
   function open({ inRace = false } = {}) {
@@ -204,7 +205,7 @@ export function createSettingsScreen({ save, onChange, onImport, onTutorial, onC
     refresh();
     io.classList.add('hidden');
     // Pendant une course : pas d'import, de tutoriel, de remise à zéro ni de changement de pseudo
-    for (const id of ['save-import', 'btn-tutorial-again', 'set-reset', 'set-identity']) $(id).disabled = inRace;
+    for (const id of ['save-import', 'btn-tutorial-again', 'btn-tour-again', 'set-reset', 'set-identity']) $(id).disabled = inRace;
     $('settings').classList.remove('hidden');
   }
   function close() { waiting = null; input?.cancelCapture(); defBtn.dataset.confirm = ''; defBtn.textContent = 'Rétablir les réglages par défaut'; $('settings').classList.add('hidden'); onClose?.(); }

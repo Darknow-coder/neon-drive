@@ -39,6 +39,7 @@ export function defaultSave() {
       display: { units: 'kmh', names: true, reduceFlash: false, reduceMotion: false },
     },
     tutorialDone: false,
+    tourDone: false,       // visite guidée du menu (après le tutoriel)
     rivalsBeaten: {},        // { idRival: nombre de victoires contre lui }
     credits: 0,              // monnaie gagnée en course (crédits NEON)
     cars: { levels: {}, fragments: {} }, // niveaux d'amélioration et fragments par voiture
@@ -292,6 +293,8 @@ function sanitize(raw) {
   }
   // Joueur existant (sauvegarde sans ce champ, mais avec des courses) : pas de tutoriel imposé
   s.tutorialDone = typeof raw.tutorialDone === 'boolean' ? raw.tutorialDone : s.stats.races > 0;
+  // Visite du menu : les joueurs qui ont déjà fini le tutoriel ne la voient pas d'office
+  s.tourDone = typeof raw.tourDone === 'boolean' ? raw.tourDone : s.tutorialDone;
   return s;
 }
 

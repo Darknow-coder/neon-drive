@@ -21,6 +21,7 @@ import { createSfx } from './audio/sfx.js';
 import { createMusic, songForTrack } from './audio/music.js';
 import { createSettingsScreen } from './ui/settings.js';
 import { createTutorial } from './scenes/tutorial.js';
+import { createMenuTour } from './ui/menuTour.js';
 import { raceCredits, carLevel, claimableCount } from './progression/economy.js';
 import { createRoad } from './ui/road.js';
 import { createShop } from './ui/shop.js';
@@ -663,6 +664,20 @@ function eventDone(rows) {
   }
 }
 
+// ---------------------------------------------------------------- VISITE DU MENU
+const menuTour = createMenuTour({
+  sfx,
+  onDone: () => { save.tourDone = true; persist(); },
+  onRace: () => $('btn-start').click(),
+});
+/** Lance la visite quand le menu est vraiment libre (aucune fenêtre ouverte). */
+function maybeStartTour(force = false, tries = 0) {
+  if ((!force && save.tourDone) || menuTour.active) return;
+  const busy = state !== 'menu' || document.querySelector('.overlay:not(.hidden)') || !$('menu-training').classList.contains('hidden') || $('boot');
+  if (busy) { if (tries < 40) setTimeout(() => maybeStartTour(force, tries + 1), 500); return; }
+  setTimeout(() => menuTour.start(), 350);
+}
+
 /** Tutoriel : leçon de pilotage en solo. */
 function startTutorial() {
   session?.dispose();
@@ -678,7 +693,7 @@ function startTutorial() {
     onDone: () => {
       save.tutorialDone = true;
       persist();
-      setTimeout(backToMenu, 300);
+      setTimeout(() => { backToMenu(); maybeStartTour(); }, 300);
     },
   });
   input.reset();
@@ -943,6 +958,7 @@ const settingsScreen = createSettingsScreen({
     location.reload();
   },
   onTutorial: () => startTutorial(),
+  onTour: () => maybeStartTour(true),
 });
 $('btn-settings').addEventListener('click', () => settingsScreen.open());
 // ---------------- Confidentialité ----------------
@@ -1042,6 +1058,8 @@ runBoot({
     // Connexion au classement en arrière-plan (sans bloquer)
     if (!skipIntro) setTimeout(() => syncProfile(save, { now: true }).then((me) => me && uploadPending(save)), 1200);
     if (!skipIntro) setTimeout(() => sfx.unlock(), 60);
+    // Visite du menu interrompue (jeu fermé pendant la visite) : on la reprend
+    if (save.tutorialDone && !save.tourDone && !skipIntro) maybeStartTour();
     // Premier lancement : choix du pseudo
     if (!save.profile.name && !skipIntro) {
       profile.openIdentity({ welcome: true, onDone: hasLink ? () => setTimeout(() => rankingScreen.open('friends', friendCode), 1500) : null });
