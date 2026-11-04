@@ -70,17 +70,25 @@ export async function runBoot({ tasks, version, touch, skip = false, onEnter }) 
   go.textContent = touch ? 'TOUCHE L\'ÉCRAN POUR JOUER' : 'CLIQUE OU APPUIE SUR UNE TOUCHE';
   go.classList.remove('hidden');
 
+  // On attend le CLIC (doigt relevé) et non le simple contact : sinon, sur
+  // téléphone, le clic qui suit le contact « traverse » l'écran de chargement
+  // et ouvre ce qui se trouve dessous (garage, coupe…).
   await new Promise((resolve) => {
     const done = (e) => {
       if (e.type === 'keydown' && ['Tab', 'Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
-      el.removeEventListener('pointerdown', done);
+      e.preventDefault?.();
+      e.stopPropagation?.();
+      el.removeEventListener('click', done);
       window.removeEventListener('keydown', done);
       resolve();
     };
-    el.addEventListener('pointerdown', done);
+    el.addEventListener('click', done);
     window.addEventListener('keydown', done);
   });
   clearInterval(tipTimer);
+  // Pendant le fondu, l'écran de chargement continue d'avaler les appuis
+  const swallow = (e) => { e.preventDefault(); e.stopPropagation(); };
+  for (const t of ['click', 'pointerdown', 'pointerup', 'touchstart', 'touchend']) el.addEventListener(t, swallow, { capture: true, passive: false });
   el.classList.add('out');
   setTimeout(() => el.remove(), 650);
   onEnter?.();

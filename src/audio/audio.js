@@ -5,7 +5,7 @@
 //          [effets]  ─┴─► compresseur ─► haut-parleurs
 // Si le navigateur ne gère pas le son, tout devient silencieux sans erreur.
 
-export function createAudio(settings) {
+export function createAudio(settings, { lowEnd = false } = {}) {
   let ctx = null;
   let master, musicBus, sfxBus, comp, noiseBuf, reverb;
 
@@ -14,7 +14,9 @@ export function createAudio(settings) {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
     try {
-      ctx = new AC({ latencyHint: 'interactive' });
+      // Téléphone : tampon audio plus grand (« playback ») → plus de grésillements
+      // quand le processeur est occupé (un peu plus de latence, inaudible pour la musique)
+      ctx = new AC({ latencyHint: lowEnd ? 'playback' : 'interactive' });
     } catch {
       return null;
     }
@@ -38,7 +40,8 @@ export function createAudio(settings) {
 
     // Réverbération générée (réponse impulsionnelle synthétique)
     reverb = ctx.createConvolver();
-    const len = Math.floor(ctx.sampleRate * 2.2);
+    // (réverbération plus courte sur téléphone : c'est l'effet le plus gourmand)
+    const len = Math.floor(ctx.sampleRate * (lowEnd ? 1.1 : 2.2));
     const ir = ctx.createBuffer(2, len, ctx.sampleRate);
     for (let ch = 0; ch < 2; ch++) {
       const data = ir.getChannelData(ch);
@@ -78,5 +81,6 @@ export function createAudio(settings) {
     get reverb() { return reverb; },
     get noise() { return noiseBuf; },
     settings,
+    lowEnd,
   };
 }

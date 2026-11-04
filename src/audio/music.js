@@ -266,7 +266,7 @@ export function createMusic(audio) {
     f.connect(gn); gn.connect(bus);
     const rv = ctx.createGain(); rv.gain.value = 0.6; gn.connect(rv); rv.connect(audio.reverb);
     for (const n of notes) {
-      for (const det of [-8, 8]) {
+      for (const det of (audio.lowEnd ? [0] : [-8, 8])) {
         const o = ctx.createOscillator();
         o.type = 'sawtooth';
         o.frequency.value = mtof(n);
@@ -317,18 +317,21 @@ export function createMusic(audio) {
     f.frequency.value = 3200;
     f.connect(gn); gn.connect(bus); gn.connect(delay);
     const rv = ctx.createGain(); rv.gain.value = 0.5; gn.connect(rv); rv.connect(audio.reverb);
-    for (const [type, det] of [[song.leadWaves[0], -6], [song.leadWaves[1], 6]]) {
+    const voices = audio.lowEnd ? [[song.leadWaves[0], 0]] : [[song.leadWaves[0], -6], [song.leadWaves[1], 6]];
+    for (const [type, det] of voices) {
       const o = ctx.createOscillator();
       o.type = type;
       o.frequency.value = mtof(note);
       o.detune.value = det;
-      // léger vibrato
-      const lfo = ctx.createOscillator(); lfo.frequency.value = 5.5;
-      const lg = ctx.createGain(); lg.gain.value = 6;
-      lfo.connect(lg); lg.connect(o.detune);
       o.connect(f);
       o.start(t); o.stop(t + STEP * 2.2);
-      lfo.start(t); lfo.stop(t + STEP * 2.2);
+      // léger vibrato (pas sur téléphone : un oscillateur de plus par note)
+      if (!audio.lowEnd) {
+        const lfo = ctx.createOscillator(); lfo.frequency.value = 5.5;
+        const lg = ctx.createGain(); lg.gain.value = 6;
+        lfo.connect(lg); lg.connect(o.detune);
+        lfo.start(t); lfo.stop(t + STEP * 2.2);
+      }
     }
   }
 
@@ -429,7 +432,9 @@ export function createMusic(audio) {
     const ctx = audio.ctx;
     if (!ctx || ctx.state !== 'running') return;
     if (nextTime < ctx.currentTime) nextTime = ctx.currentTime + 0.05; // rattrapage après une pause
-    while (nextTime < ctx.currentTime + 0.15) {
+    // Notes programmées 0,4 s à l'avance (0,15 s sur PC) : même si l'écran
+    // saccade un instant, la musique ne manque jamais de notes.
+    while (nextTime < ctx.currentTime + (audio.lowEnd ? 0.4 : 0.15)) {
       scheduleStep(step, nextTime);
       step++;
       nextTime += STEP;

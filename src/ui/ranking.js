@@ -145,9 +145,9 @@ export function createRankingScreen({ save, sfx, onClose, onFriendsChange }) {
       const rate = p.races ? Math.round((p.wins / p.races) * 100) : 0;
       box.innerHTML = `<div class="pc-inner" style="--lc:${lg.color}">
         <button class="pc-close" aria-label="Fermer">✕</button>
-        <div class="pc-head">${avatarHtml({ avatar: p.avatar, color: p.color }, 'av-l')}
+        <div class="pc-left"><div class="pc-head">${avatarHtml({ avatar: p.avatar, color: p.color }, 'av-l')}
           <div><b>${esc(p.name)}<i>${tagOf(p.tag)}</i></b><small>${esc(p.title)}</small><span class="pc-seen">${mine ? 'C\'est toi !' : ago(p.last_seen)}</span></div></div>
-        <div class="pc-league"><span class="rk-lg" style="--lc:${lg.color}">${lg.name}</span><span class="rk-tro">${ico('trophy')}<b>${fmt(p.trophies)}</b></span><span class="pc-rank">#${fmt(p.rank)} mondial</span></div>
+        <div class="pc-league"><span class="pc-lg" style="--lc:${lg.color}">${lg.name}</span><span class="rk-tro">${ico('trophy')}<b>${fmt(p.trophies)}</b></span><span class="pc-rank">#${fmt(p.rank)} mondial</span></div></div>
         <div class="pc-body"><div class="pc-car"></div>
           <div class="pc-stats">
             <span><b>${fmt(p.races)}</b>courses</span><span><b>${fmt(p.wins)}</b>victoires</span>

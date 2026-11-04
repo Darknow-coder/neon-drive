@@ -114,7 +114,7 @@ setPlayerLabel(save.profile.name);
 if (syncUnlocks(save).length) persist();
 
 // ---------------- Son ----------------
-const audio = createAudio(save.settings);
+const audio = createAudio(save.settings, { lowEnd });
 const sfx = createSfx(audio);
 const music = createMusic(audio);
 /** Ambiance musicale selon l'écran affiché. */
