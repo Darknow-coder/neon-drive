@@ -135,8 +135,51 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
   }
 
   // ----- Ombres au pied des piliers (le pilier lui-même est dessiné en direct) -----
+  // Avertissement au sol avant un pilier : flèches jaunes qui s'écartent (« passe à gauche ou à droite »)
+  function drawPillarWarnings(ob) {
+    const n = track.count;
+    const at = (dist) => ((ob.index - Math.round(dist / track.spacing)) % n + n) % n;
+    const P = (i, off, fwd) => [track.x[i] + track.nx[i] * off + track.tx[i] * fwd, track.y[i] + track.ny[i] * off + track.ty[i] * fwd];
+    cctx.save();
+    cctx.lineCap = 'round'; cctx.lineJoin = 'round';
+    if (ob.move) {
+      // Pilier mobile : panneau « danger » au milieu de son rail, 220 unités avant
+      const i = at(220), [cx, cy] = P(i, ob.baseOffset, 0);
+      const a = Math.atan2(track.ty[i], track.tx[i]);
+      cctx.translate(cx, cy); cctx.rotate(a + Math.PI / 2);
+      cctx.fillStyle = 'rgba(255,225,77,0.16)'; cctx.strokeStyle = 'rgba(255,225,77,0.75)'; cctx.lineWidth = 4;
+      cctx.beginPath(); cctx.moveTo(0, -30); cctx.lineTo(28, 20); cctx.lineTo(-28, 20); cctx.closePath(); cctx.fill(); cctx.stroke();
+      cctx.fillStyle = 'rgba(255,225,77,0.85)';
+      cctx.fillRect(-3, -14, 6, 20); cctx.beginPath(); cctx.arc(0, 13, 3.4, 0, Math.PI * 2); cctx.fill();
+      cctx.restore();
+      return;
+    }
+    const hw = track.hw[ob.index];
+    [300, 220, 140].forEach((dist, k) => {
+      const i = at(dist);
+      const alpha = 0.35 + k * 0.2;
+      cctx.strokeStyle = `rgba(255,225,77,${alpha})`;
+      cctx.lineWidth = 7;
+      for (const side of [-1, 1]) {
+        // Pas de flèche vers un côté trop étroit pour passer
+        const room = side < 0 ? ob.baseOffset + hw - ob.r : hw - ob.baseOffset - ob.r;
+        if (room < 34) continue;
+        const spread = Math.min(46, room * 0.55);
+        const a = P(i, ob.baseOffset, -18), b = P(i, ob.baseOffset + side * spread, 24);
+        const ux = b[0] - a[0], uy = b[1] - a[1], ul = Math.hypot(ux, uy);
+        const hx = ux / ul, hy = uy / ul;
+        cctx.beginPath(); cctx.moveTo(...a); cctx.lineTo(...b);
+        // pointe de flèche
+        cctx.moveTo(b[0] - hx * 14 + hy * 9, b[1] - hy * 14 - hx * 9); cctx.lineTo(...b); cctx.lineTo(b[0] - hx * 14 - hy * 9, b[1] - hy * 14 + hx * 9);
+        cctx.stroke();
+      }
+    });
+    cctx.restore();
+  }
+
   function drawPillarBases() {
     for (const ob of track.obstacles) {
+      drawPillarWarnings(ob);
       if (ob.move) {
         // Rail sur lequel coulisse le pilier (indique son trajet)
         const i = ob.index;
@@ -686,6 +729,11 @@ export function createTrackRenderer(track, { lowEnd = false } = {}) {
     }
     for (const ob of track.obstacles) {
       if (!inView(ob.x, ob.y, ob.r * 3)) continue;
+      // Halo qui pulse : le pilier se repère de loin
+      const pulse = 0.5 + 0.5 * Math.sin(t * 5 + ob.index);
+      ctx.strokeStyle = `rgba(255,225,77,${0.25 + 0.4 * pulse})`;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(ob.x, ob.y, ob.r + 9 + pulse * 6, 0, Math.PI * 2); ctx.stroke();
       const s = (ob.r * 2 + 40) / 2;
       ctx.drawImage(pillarSprite, ob.x - s * (ob.r / 26), ob.y - s * (ob.r / 26), s * 2 * (ob.r / 26), s * 2 * (ob.r / 26));
     }

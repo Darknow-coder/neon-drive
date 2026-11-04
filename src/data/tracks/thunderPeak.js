@@ -13,8 +13,8 @@ export default {
   theme: { style: 'storm', left: '#ffe14d', right: '#8a2bff', kerb: '#ffe14d' },
   points: [[1700, 2730], [2500, 2750], [3500, 2500], [3700, 1900], [3350, 1450], [3700, 1000], [3300, 500], [2500, 450], [2100, 900], [1500, 700], [900, 400], [400, 900], [700, 1500], [400, 2100], [900, 2700]],
   obstacles: [
-    { type: 'pillar', at: 0.42, offset: 0, r: 22, move: { amp: 60, period: 3.2, phase: 0 } },
-    { type: 'pillar', at: 0.8, offset: 0, r: 22 },
+    { type: 'pillar', at: 0.445, offset: 0, r: 16, move: { amp: 60, period: 3.2, phase: 0 } },
+    { type: 'pillar', at: 0.7725, offset: 0, r: 16 },
   ],
   zones: [
     { type: 'boost', at: 0.05, length: 100, offset: 0, width: 80 },

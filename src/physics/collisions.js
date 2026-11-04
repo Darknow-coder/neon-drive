@@ -118,6 +118,7 @@ export function collideCarWithWalls(car, track) {
 export function collideCarWithObstacles(car, track) {
   let strongest = 0;
   const near = 60; // on ne teste que les obstacles proches sur le tracé
+  if (car.pillarGrace > 0) car.pillarGrace--;
   for (const ob of track.obstacles) {
     let d = Math.abs(ob.index - car.trackIndex);
     d = Math.min(d, track.count - d);
@@ -138,20 +139,35 @@ export function collideCarWithObstacles(car, track) {
       const pvy = car.vy + car.yawRate * c.ox;
       const vn = pvx * wx + pvy * wy;
       if (vn <= 0) continue;
-      const j = (1 + RESTITUTION) * vn;
-      car.vx -= wx * j;
-      car.vy -= wy * j;
-      const torque = (c.ox * wy - c.oy * wx) * j;
-      car.yawRate -= torque * 0.0006 / car.params.mass;
-      // Un pilier ralentit un peu plus qu'un mur (choc frontal fréquent)
-      const keep = car.params.wallRetain;
-      car.vx *= 0.5 + keep * 0.5;
-      car.vy *= 0.5 + keep * 0.5;
+      // Juste après un choc avec ce pilier : la voiture glisse le long, sans nouvelle pénalité
+      if (car.pillarGrace > 0 && car.lastPillar === ob) break; // (la position a déjà été corrigée)
+      car.lastPillar = ob;
+      car.pillarGrace = 30; // ≈ 0,25 s (pas physiques à 120 Hz)
+      // Arcade : un pilier DÉVIE la voiture sur le côté au lieu de la stopper.
+      // De face on garde ≈ 75 % de sa vitesse, en frôlant presque tout.
+      const speedBefore = Math.hypot(car.vx, car.vy);
+      const impactRatio = Math.min(1, vn / (speedBefore + 1));
+      // Direction de sortie : la trajectoire d'avant, tournée vers le côté où se trouve
+      // la voiture par rapport au pilier (15° en frôlant, 40° en plein centre)
+      const dx0 = car.vx / (speedBefore || 1), dy0 = car.vy / (speedBefore || 1);
+      const lat = (ob.x - car.x) * -dy0 + (ob.y - car.y) * dx0; // > 0 : pilier à droite
+      const side = lat > 0 ? -1 : 1;
+      const centred = 1 - Math.min(1, Math.abs(lat) / min);
+      const deflect = (0.26 + 0.44 * centred) * side;
+      const target = speedBefore * (1 - (0.22 + (1 - car.params.wallRetain) * 0.08) * impactRatio);
+      const na = Math.atan2(dy0, dx0) + deflect;
+      car.vx = Math.cos(na) * target;
+      car.vy = Math.sin(na) * target;
+      // La carrosserie suit sa nouvelle trajectoire (pas de toupie)
+      let da = Math.atan2(car.vy, car.vx) - car.angle;
+      da = Math.atan2(Math.sin(da), Math.cos(da));
+      if (Math.abs(da) < Math.PI / 2) car.yawRate = car.yawRate * 0.4 + da * 3 * impactRatio;
       if (vn > strongest) {
         strongest = vn;
         car.impactX = c.x + wx * c.r;
         car.impactY = c.y + wy * c.r;
       }
+      break; // un seul contact par pilier
     }
   }
   // Contact avec le mur (frottement : étincelles et son)

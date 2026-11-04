@@ -35,11 +35,11 @@ export default {
     [850, 2350],
   ],
   obstacles: [
-    // Deux piliers sur la ligne droite de départ : il faut choisir son côté
-    { type: 'pillar', at: 0.045, offset: 0, r: 26 },
+    // Pilier au bout de la ligne droite de départ (une fois le peloton étiré) : il faut choisir son côté
+    { type: 'pillar', at: 0.075, offset: 0, r: 18 },
     // Pilier à l'entrée de l'épingle du haut
-    { type: 'pillar', at: 0.36, offset: -15, r: 24 },
-    { type: 'pillar', at: 0.6, offset: 15, r: 24 },
+    { type: 'pillar', at: 0.33, offset: -15, r: 17 },
+    { type: 'pillar', at: 0.6025, offset: 15, r: 17 },
   ],
   zones: [
     { type: 'boost', at: 0.012, length: 100, offset: 55, width: 70 },

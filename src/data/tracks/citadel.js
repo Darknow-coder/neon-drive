@@ -35,9 +35,9 @@ export default {
     [850, 2350],
   ],
   obstacles: [
-    { type: 'pillar', at: 0.09, offset: 0, r: 24, move: { amp: 62, period: 3.2, phase: 0 } },
-    { type: 'pillar', at: 0.47, offset: 0, r: 22, move: { amp: 55, period: 2.6, phase: 1.5 } },
-    { type: 'pillar', at: 0.8, offset: 0, r: 22, move: { amp: 60, period: 3.0, phase: 3.0 } },
+    { type: 'pillar', at: 0.09, offset: 0, r: 17, move: { amp: 62, period: 3.2, phase: 0 } },
+    { type: 'pillar', at: 0.485, offset: 0, r: 16, move: { amp: 55, period: 2.6, phase: 1.5 } },
+    { type: 'pillar', at: 0.86, offset: 0, r: 16, move: { amp: 60, period: 3.0, phase: 3.0 } },
   ],
   zones: [
     { type: 'boost', at: 0.16, length: 110, offset: 0, width: 80 },

@@ -33,9 +33,9 @@ export default {
     [900, 2250],
   ],
   obstacles: [
-    { type: 'pillar', at: 0.05, offset: 0, r: 24 },
-    { type: 'pillar', at: 0.47, offset: 0, r: 22 },
-    { type: 'pillar', at: 0.74, offset: 0, r: 22 },
+    { type: 'pillar', at: 0.0775, offset: 0, r: 17 },
+    { type: 'pillar', at: 0.455, offset: 0, r: 16 },
+    { type: 'pillar', at: 0.7425, offset: 0, r: 16 },
   ],
   zones: [
     { type: 'boost', at: 0.12, length: 100, offset: 0, width: 70 },
