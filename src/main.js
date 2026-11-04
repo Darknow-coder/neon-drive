@@ -154,12 +154,13 @@ let carId = getCar(selectedCar(save)).id;
 
 const input = createInput({
   touchRoot,
+  // (actions : touches réglables du clavier ou boutons de la manette)
   onAction(code) {
-    if (code === 'KeyR' && state === 'race') session?.respawn();
+    if (code === 'respawn' && state === 'race') session?.respawn();
     if (code === 'KeyT' && devMode) tuning?.toggle();
-    if (code === 'Escape' || code === 'KeyP') {
+    if (code === 'pause') {
       if (state === 'race') pause();
-      else if (state === 'pause') resume();
+      else if (state === 'pause' && $('settings').classList.contains('hidden')) resume();
     }
   },
 });
@@ -181,6 +182,7 @@ function applyControls() {
   touchRoot.style.setProperty('--bs', String(c.size));
   touchRoot.style.setProperty('--bo', String(c.opacity ?? 0.85));
   input.setOptions({ autoGas: c.autoGas, steer: c.steer ?? 'normal' });
+  if (save.settings.keys) input.setKeys(save.settings.keys);
   input.remeasure?.();
 }
 applyControls();
@@ -407,6 +409,7 @@ function handleRaceFinish(rows, { trophyTable } = {}) {
 
 function pause() {
   state = 'pause';
+  input.setPausedPoll(true);
   loop.stop();
   input.reset();
   sfx.stopCar();
@@ -420,6 +423,7 @@ function pause() {
 }
 
 function resume() {
+  input.setPausedPoll(false);
   show('pause', false);
   state = 'race';
   updateMusic();
@@ -427,6 +431,7 @@ function resume() {
 }
 
 function backToMenu() {
+  input.setPausedPoll(false);
   loop.stop();
   // Packs gagnés en contre-la-montre : on les ouvre maintenant
   const pending = session?.isTimeTrial ? session.pendingRewards.splice(0) : [];
@@ -824,6 +829,7 @@ const QKEY = 'neondrive.quality';
 let quality = (() => { try { return Number(localStorage.getItem(QKEY)) || 1; } catch { return 1; } })();
 /** Qualité choisie dans les réglages : auto (s'adapte), haute (pleine résolution), économie. */
 function applyGraphics() {
+  applyPrefs(save.settings); // (avant le redimensionnement : le zoom en dépend)
   const mode = q === 'high' ? 'high' : save.settings.graphics.quality;
   if (mode === 'high') renderer.setQuality(1);
   else if (mode === 'eco') renderer.setQuality(0.6);
@@ -911,6 +917,7 @@ const ttSelect = createTimeTrialSelect({ save, onStart: (id) => { enterFullscree
 $('btn-timetrial').addEventListener('click', () => ttSelect.open());
 const settingsScreen = createSettingsScreen({
   save,
+  input,
   onChange: (commit) => { audio.applyVolumes(); applyControls(); applyGraphics(); if (commit) persist(); },
   onIdentity: () => profile.openIdentity({ onDone: () => settingsScreen.open() }),
   onReset: () => {

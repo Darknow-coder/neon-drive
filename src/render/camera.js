@@ -22,7 +22,7 @@ export function createCamera() {
 export function computeBaseZoom(cssW, cssH) {
   const long = Math.max(cssW, cssH);
   const short = Math.min(cssW, cssH);
-  return Math.min(long / 1000, short / 500);
+  return Math.min(long / 1000, short / 500) * prefs.zoom;
 }
 
 export function snapCamera(cam, car) {

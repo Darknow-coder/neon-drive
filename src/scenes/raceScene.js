@@ -140,8 +140,9 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       if (near) updateCarFx(fx.get(car), car, dt, particles, trackRenderer, car.hitThisStep);
     }
     const hit = player.hitThisStep;
-    if (hit > 260 && settings.vibration && world.time - lastVibrate > 0.25 && navigator.vibrate) {
-      navigator.vibrate(Math.min(60, hit / 10));
+    if (hit > 260 && settings.vibration && world.time - lastVibrate > 0.25) {
+      navigator.vibrate?.(Math.min(60, hit / 10));
+      input.rumble?.(Math.min(1, hit / 700), Math.min(160, hit / 4)); // manette
       lastVibrate = world.time;
     }
 

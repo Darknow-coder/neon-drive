@@ -32,7 +32,9 @@ export function defaultSave() {
       master: 1, engine: 0.8,
       controls: { swapped: false, autoGas: false, size: 1, opacity: 0.85, steer: 'normal' },
       // Graphismes : qualité auto / haute / économie, limite d'images, effets, secousses, compteur
-      graphics: { quality: 'auto', fps: 60, effects: 'full', shake: true, showFps: false },
+      graphics: { quality: 'auto', fps: 60, effects: 'full', shake: true, showFps: false, zoom: 'normal' },
+      // Touches du clavier (null = touches par défaut, voir core/input.js)
+      keys: null,
       // Affichage et accessibilité
       display: { units: 'kmh', names: true, reduceFlash: false, reduceMotion: false },
     },
@@ -118,6 +120,16 @@ function sanitize(raw) {
       if (g.fps === 30 || g.fps === 60) s.settings.graphics.fps = g.fps;
       if (['full', 'low'].includes(g.effects)) s.settings.graphics.effects = g.effects;
       for (const k of ['shake', 'showFps']) if (typeof g[k] === 'boolean') s.settings.graphics[k] = g[k];
+      if (['near', 'normal', 'far'].includes(g.zoom)) s.settings.graphics.zoom = g.zoom;
+    }
+    const ks = raw.settings.keys;
+    if (ks && typeof ks === 'object') {
+      const okCode = (c) => c === null || (typeof c === 'string' && /^[A-Za-z0-9]{1,24}$/.test(c));
+      const out = {};
+      for (const a of ['left', 'right', 'gas', 'brake', 'boost', 'respawn', 'pause']) {
+        if (Array.isArray(ks[a]) && ks[a].length === 3 && ks[a].every(okCode)) out[a] = ks[a].slice();
+      }
+      if (Object.keys(out).length === 7) s.settings.keys = out;
     }
     const dsp = raw.settings.display;
     if (dsp && typeof dsp === 'object') {

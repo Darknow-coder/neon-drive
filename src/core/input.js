@@ -10,13 +10,32 @@ export function createIntent() {
   return { steer: 0, throttle: 0, brake: 0, boost: false };
 }
 
-const KEYMAP = {
-  ArrowLeft: 'left', KeyA: 'left', KeyQ: 'left',
-  ArrowRight: 'right', KeyD: 'right',
-  ArrowUp: 'gas', KeyW: 'gas', KeyZ: 'gas',
-  ArrowDown: 'brake', KeyS: 'brake', Space: 'brake',
-  ShiftLeft: 'boost', ShiftRight: 'boost', KeyB: 'boost',
+// Touches par défaut (3 emplacements par action). Ce sont des touches
+// PHYSIQUES : « KeyA » est la touche A d'un clavier QWERTY, c'est-à-dire Q
+// sur un clavier AZERTY (d'où ZQSD qui marche tout seul).
+export const DEFAULT_KEYS = {
+  left: ['ArrowLeft', 'KeyA', null],
+  right: ['ArrowRight', 'KeyD', null],
+  gas: ['ArrowUp', 'KeyW', null],
+  brake: ['ArrowDown', 'KeyS', 'Space'],
+  boost: ['ShiftLeft', 'KeyB', 'ShiftRight'],
+  respawn: ['KeyR', null, null],
+  pause: ['KeyP', null, null], // (Échap met toujours en pause)
 };
+const DRIVE = ['left', 'right', 'gas', 'brake', 'boost'];
+let KEYMAP = {};
+function buildKeymap(bindings) {
+  KEYMAP = {};
+  for (const [action, list] of Object.entries(bindings)) for (const code of list) if (code) KEYMAP[code] = action;
+}
+buildKeymap(DEFAULT_KEYS);
+
+// ---------- Manette (Xbox / PlayStation / générique, disposition « standard ») ----------
+//   stick gauche ou croix : direction · gâchette droite ou A/✕ : accélérer
+//   gâchette gauche ou B/○ : freiner (+ tourner = drift) · RB / X/□ : boost
+//   Y/△ ou Select : replacer la voiture · Start / Options : pause
+const PAD = { gas: [7, 0], brake: [6, 1], boost: [5, 2, 4], respawn: [3, 8], pause: [9], left: [14], right: [15] };
+const DEADZONE = 0.16;
 
 export function createInput({ touchRoot, onAction } = {}) {
   const keys = new Set();
@@ -28,17 +47,20 @@ export function createInput({ touchRoot, onAction } = {}) {
   const options = { autoGas: false, steer: 'normal' };
 
   // ----- Clavier -----
+  let capture = null; // attente d'une touche à associer (réglages)
   window.addEventListener('keydown', (e) => {
+    if (capture) { e.preventDefault(); e.stopPropagation(); const cb = capture; capture = null; cb(e.code); return; }
     // Saisie dans un champ de texte (pseudo, code de sauvegarde) : on laisse écrire
     if (e.target?.closest?.('input, textarea')) return;
     const a = KEYMAP[e.code];
-    if (a) {
+    if (a && DRIVE.includes(a)) {
       keys.add(a);
       e.preventDefault();
     } else if (!e.repeat && onAction) {
-      onAction(e.code);
+      // replacer / pause (touches réglables) ou touche spéciale (Échap, T…)
+      onAction(a === 'respawn' ? 'respawn' : a === 'pause' || e.code === 'Escape' ? 'pause' : e.code);
     }
-  });
+  }, true);
   window.addEventListener('keyup', (e) => {
     const a = KEYMAP[e.code];
     if (a) keys.delete(a);
@@ -136,13 +158,65 @@ export function createInput({ touchRoot, onAction } = {}) {
     touchRoot.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
+  // ---------- Manette ----------
+  const pad = { connected: false, name: '', steer: 0, gas: 0, brake: 0, boost: false, prev: {} };
+  function readPad() {
+    const list = navigator.getGamepads ? navigator.getGamepads() : [];
+    const gp = [...list].find((g) => g && g.connected);
+    pad.connected = !!gp;
+    if (!gp) { pad.steer = pad.gas = pad.brake = 0; pad.boost = false; return null; }
+    pad.name = gp.id;
+    const btn = (i) => { const b = gp.buttons[i]; return b ? (typeof b === 'object' ? b.value || (b.pressed ? 1 : 0) : b) : 0; };
+    const any = (list2) => Math.max(0, ...list2.map(btn));
+    // Stick gauche : zone morte + courbe douce (précis au centre)
+    let x = gp.axes[0] ?? 0;
+    x = Math.abs(x) < DEADZONE ? 0 : Math.sign(x) * ((Math.abs(x) - DEADZONE) / (1 - DEADZONE));
+    x = Math.sign(x) * Math.pow(Math.abs(x), 1.35);
+    const dpad = any(PAD.right) - any(PAD.left);
+    pad.steer = Math.abs(dpad) > 0 ? dpad : x;
+    pad.gas = any(PAD.gas);
+    pad.brake = any(PAD.brake);
+    pad.boost = any(PAD.boost) > 0.5;
+    // Boutons « une fois » (replacer, pause) : sur l'appui seulement
+    for (const act of ['respawn', 'pause']) {
+      const down = any(PAD[act]) > 0.5;
+      if (down && !pad.prev[act]) onAction?.(act);
+      pad.prev[act] = down;
+    }
+    return gp;
+  }
+  // Pendant la pause (la course est arrêtée), on surveille quand même Start
+  setInterval(() => { if (pad.connected && pausedPoll) readPad(); }, 80);
+  let pausedPoll = false;
+  window.addEventListener('gamepadconnected', () => { pad.connected = true; onPadChange?.(); });
+  window.addEventListener('gamepaddisconnected', () => { readPad(); onPadChange?.(); });
+  let onPadChange = null;
+
   return {
     intent,
+    /** Manette branchée ? (nom) */
+    get gamepad() { readPad(); return pad.connected ? pad.name : null; },
+    onGamepadChange(fn) { onPadChange = fn; },
+    /** Surveille la manette même quand la course est en pause. */
+    setPausedPoll(v) { pausedPoll = v; },
+    /** Vibration de la manette (choc). */
+    rumble(strength = 0.5, ms = 80) {
+      const gp = [...(navigator.getGamepads?.() ?? [])].find((g) => g && g.connected);
+      try { gp?.vibrationActuator?.playEffect?.('dual-rumble', { duration: ms, strongMagnitude: Math.min(1, strength), weakMagnitude: Math.min(1, strength * 0.6) }); } catch { /* pas de vibration */ }
+    },
+    /** Touches personnalisées (réglages). */
+    setKeys(bindings) { buildKeymap({ ...DEFAULT_KEYS, ...bindings }); keys.clear(); },
+    /** Attend la prochaine touche (réglages : « appuie sur une touche… »). */
+    captureKey(cb) { capture = cb; },
+    cancelCapture() { capture = null; },
     /** À appeler à chaque pas physique. */
     update(dt) {
+      if (pad.connected) readPad();
       const left = keys.has('left') || touchState.left;
       const right = keys.has('right') || touchState.right;
-      const target = (right ? 1 : 0) - (left ? 1 : 0);
+      let target = (right ? 1 : 0) - (left ? 1 : 0);
+      // Stick de la manette : direction progressive (prioritaire s'il est poussé)
+      if (target === 0 && Math.abs(pad.steer) > 0.01) target = pad.steer;
       // Léger lissage : un bouton est tout-ou-rien, la direction ne doit pas l'être.
       // Sensibilité de la direction (réglage) : douce / normale / vive
       const sens = options.steer === 'soft' ? 0.6 : options.steer === 'sharp' ? 1.7 : 1;
@@ -151,22 +225,22 @@ export function createInput({ touchRoot, onAction } = {}) {
       if (Math.abs(steerSmooth) < 0.001 && target === 0) steerSmooth = 0;
 
       intent.steer = steerSmooth;
-      intent.brake = keys.has('brake') || touchState.brake ? 1 : 0;
+      intent.brake = Math.max(keys.has('brake') || touchState.brake ? 1 : 0, pad.brake);
       intent.throttle = options.autoGas
-        ? (intent.brake ? 0 : 1)
-        : keys.has('gas') || touchState.gas ? 1 : 0;
-      intent.boost = keys.has('boost') || touchState.boost;
+        ? (intent.brake > 0.5 ? 0 : 1)
+        : Math.max(keys.has('gas') || touchState.gas ? 1 : 0, pad.gas);
+      intent.boost = keys.has('boost') || touchState.boost || pad.boost;
       return intent;
     },
     setOptions(o) { Object.assign(options, o); },
     /** État brut des commandes (utilisé par le tutoriel). */
     get pressed() {
       return {
-        left: keys.has('left') || touchState.left,
-        right: keys.has('right') || touchState.right,
-        gas: keys.has('gas') || touchState.gas,
-        brake: keys.has('brake') || touchState.brake,
-        boost: keys.has('boost') || touchState.boost,
+        left: keys.has('left') || touchState.left || pad.steer < -0.3,
+        right: keys.has('right') || touchState.right || pad.steer > 0.3,
+        gas: keys.has('gas') || touchState.gas || pad.gas > 0.3,
+        brake: keys.has('brake') || touchState.brake || pad.brake > 0.3,
+        boost: keys.has('boost') || touchState.boost || pad.boost,
       };
     },
     /** Remet seulement la direction à zéro (les doigts / touches maintenus restent actifs). */

@@ -1,10 +1,31 @@
 // Écran des réglages (5 onglets) : son, commandes, graphismes, affichage, compte.
 
-import { exportSaveCode, importSaveCode } from '../progression/save.js';
+import { exportSaveCode, importSaveCode, defaultSave } from '../progression/save.js';
+import { DEFAULT_KEYS } from '../core/input.js';
 
 const $ = (id) => document.getElementById(id);
 
-export function createSettingsScreen({ save, onChange, onImport, onTutorial, onClose, onIdentity, onReset, accountInfo }) {
+const ACTIONS = [['left', 'Tourner à gauche'], ['right', 'Tourner à droite'], ['gas', 'Accélérer'], ['brake', 'Freiner / drift'], ['boost', 'Boost'], ['respawn', 'Replacer la voiture'], ['pause', 'Pause']];
+
+/** Nom lisible d'une touche (selon la disposition réelle du clavier si le navigateur la connaît). */
+let layout = null;
+navigator.keyboard?.getLayoutMap?.().then((m) => { layout = m; }).catch(() => {});
+export function keyName(code) {
+  if (!code) return '—';
+  const fixed = { ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓', Space: 'ESPACE', ShiftLeft: 'MAJ G', ShiftRight: 'MAJ D', ControlLeft: 'CTRL G', ControlRight: 'CTRL D',
+    AltLeft: 'ALT', AltRight: 'ALT GR', Enter: 'ENTRÉE', Backspace: 'EFFACER', Tab: 'TAB', Escape: 'ÉCHAP', CapsLock: 'VERR MAJ' };
+  if (fixed[code]) return fixed[code];
+  const real = layout?.get?.(code);
+  if (real) return real.toUpperCase();
+  // Navigateur qui ne connaît pas la disposition (Firefox, Safari) : en français, on suppose un clavier AZERTY
+  if (/^fr/i.test(navigator.language || '')) {
+    const azerty = { KeyA: 'Q', KeyQ: 'A', KeyW: 'Z', KeyZ: 'W', Semicolon: 'M', KeyM: ',' };
+    if (azerty[code]) return azerty[code];
+  }
+  return code.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Numpad/, 'PAVÉ ').toUpperCase();
+}
+
+export function createSettingsScreen({ save, onChange, onImport, onTutorial, onClose, onIdentity, onReset, accountInfo, input }) {
   const settings = save.settings;
   const pct = (v) => `${Math.round(v * 100)} %`;
   let tab = 'sound';
@@ -36,6 +57,7 @@ export function createSettingsScreen({ save, onChange, onImport, onTutorial, onC
     ['set-fps', () => String(settings.graphics.fps), (v) => { settings.graphics.fps = Number(v); }],
     ['set-effects', () => settings.graphics.effects, (v) => { settings.graphics.effects = v; }],
     ['set-units', () => settings.display.units, (v) => { settings.display.units = v; }],
+    ['set-zoom', () => settings.graphics.zoom, (v) => { settings.graphics.zoom = v; }],
   ];
   const QHINT = {
     auto: 'Le jeu baisse un peu la finesse de l\'image si ton appareil n\'arrive pas à suivre.',
@@ -51,7 +73,59 @@ export function createSettingsScreen({ save, onChange, onImport, onTutorial, onC
     document.querySelectorAll('.set-tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
     document.querySelectorAll('.set-pane').forEach((p) => p.classList.toggle('hidden', p.dataset.pane !== tab));
     if (tab === 'account') $('set-account').innerHTML = accountInfo?.() ?? '';
+    if (tab === 'controls') { renderKeys(); renderPad(); }
   }
+
+  // ---------- Touches du clavier ----------
+  const keysOf = () => settings.keys ?? DEFAULT_KEYS;
+  let waiting = null; // [action, emplacement] en attente d'une touche
+  function renderKeys() {
+    const k = keysOf();
+    $('kb-list').innerHTML = ACTIONS.map(([a, label]) => `<div class="kb-row"><span>${label}</span>${[0, 1, 2].map((i) =>
+      `<button class="kb-key ${waiting && waiting[0] === a && waiting[1] === i ? 'wait' : ''}" data-a="${a}" data-i="${i}">${waiting && waiting[0] === a && waiting[1] === i ? 'APPUIE…' : keyName(k[a][i])}</button>`).join('')}</div>`).join('')
+      + '<div class="set-hint">Échap met toujours en pause. Pendant l\'attente : Échap = annuler, Retour arrière = vider l\'emplacement.</div>';
+    $('kb-list').querySelectorAll('.kb-key').forEach((b) => b.addEventListener('click', () => {
+      waiting = [b.dataset.a, Number(b.dataset.i)];
+      renderKeys();
+      input?.captureKey((code) => {
+        const [a, i] = waiting; waiting = null;
+        if (code !== 'Escape') {
+          const next = JSON.parse(JSON.stringify(keysOf()));
+          const val = code === 'Backspace' ? null : code;
+          // Une touche ne sert qu'à une seule action : on la retire ailleurs
+          if (val) for (const list of Object.values(next)) for (let j = 0; j < 3; j++) if (list[j] === val) list[j] = null;
+          next[a][i] = val;
+          settings.keys = next;
+          onChange(true);
+        }
+        renderKeys();
+      });
+    }));
+  }
+  $('kb-reset').addEventListener('click', () => { settings.keys = null; waiting = null; input?.cancelCapture(); onChange(true); renderKeys(); });
+
+  // ---------- Manette ----------
+  function renderPad() {
+    const name = input?.gamepad;
+    $('pad-box').innerHTML = name
+      ? `<b class="pad-on">● MANETTE CONNECTÉE</b><small>${String(name).replace(/[<>&]/g, '').slice(0, 60)}</small>
+         <div class="pad-map"><span><i>STICK / CROIX</i>tourner</span><span><i>GÂCHETTE D · A</i>accélérer</span><span><i>GÂCHETTE G · B</i>freiner / drift</span><span><i>RB · X</i>boost</span><span><i>Y</i>replacer</span><span><i>START</i>pause</span></div>`
+      : '<b class="pad-off">Aucune manette détectée</b><small>Branche une manette (Xbox, PlayStation…) ou connecte-la en Bluetooth, puis appuie sur un de ses boutons.</small>';
+  }
+  input?.onGamepadChange(() => { if (!$('settings').classList.contains('hidden') && tab === 'controls') renderPad(); });
+
+  // ---------- Rétablir les réglages ----------
+  const defBtn = $('set-defaults');
+  defBtn.addEventListener('click', () => {
+    if (defBtn.dataset.confirm !== '1') { defBtn.dataset.confirm = '1'; defBtn.textContent = 'Confirmer : tout remettre par défaut ?'; return; }
+    const d = defaultSave().settings;
+    for (const k of Object.keys(settings)) delete settings[k];
+    Object.assign(settings, d);
+    defBtn.dataset.confirm = ''; defBtn.textContent = 'Réglages rétablis ✓';
+    setTimeout(() => { defBtn.textContent = 'Rétablir les réglages par défaut'; }, 2000);
+    onChange(true);
+    refresh();
+  });
   for (const [id, , set] of sliders) {
     const el = $(id);
     el.addEventListener('input', () => { set(+el.value); refresh(); onChange(false); });
@@ -133,6 +207,6 @@ export function createSettingsScreen({ save, onChange, onImport, onTutorial, onC
     for (const id of ['save-import', 'btn-tutorial-again', 'set-reset', 'set-identity']) $(id).disabled = inRace;
     $('settings').classList.remove('hidden');
   }
-  function close() { $('settings').classList.add('hidden'); onClose?.(); }
+  function close() { waiting = null; input?.cancelCapture(); defBtn.dataset.confirm = ''; defBtn.textContent = 'Rétablir les réglages par défaut'; $('settings').classList.add('hidden'); onClose?.(); }
   return { open, close };
 }

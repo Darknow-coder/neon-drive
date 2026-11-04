@@ -134,16 +134,19 @@
         <label class="set-row set-check"><span>Inverser (direction à droite, pédales à gauche)</span><input type="checkbox" id="set-swapped" /></label>
         <label class="set-row"><span>Taille des boutons</span><input type="range" min="0.75" max="1.35" step="0.05" id="set-size" /><output id="set-size-out"></output></label>
         <label class="set-row"><span>Opacité des boutons</span><input type="range" min="0.25" max="1" step="0.05" id="set-opacity" /><output id="set-opacity-out"></output></label>
-        <div class="controls-help">
-          <div class="help-kb"><b>Clavier :</b> ← → tourner · ↑ / Z accélérer · ↓ / S / Espace freiner · freiner + tourner vite = drift · Maj / B boost · R replacer · Échap / P pause</div>
-          <div class="help-touch"><b>Tactile :</b> pouce gauche ◀ ▶ · pouce droit GAZ, FREIN/DRIFT, BOOST</div>
-        </div>
+        <div class="controls-help"><div class="help-touch"><b>Tactile :</b> pouce gauche ◀ ▶ · pouce droit GAZ, FREIN/DRIFT, BOOST · freiner en tournant = drift</div></div>
+        <div class="set-sub">MANETTE</div>
+        <div class="pad-box" id="pad-box"></div>
+        <div class="set-sub">CLAVIER <small>(touche un emplacement puis appuie sur la touche voulue)</small></div>
+        <div class="kb-list" id="kb-list"></div>
+        <div class="row-btns"><button class="menu-btn small-btn" id="kb-reset">TOUCHES PAR DÉFAUT</button></div>
       </div>
 
       <div class="set-pane hidden" data-pane="graphics">
         <div class="set-row"><span>Qualité</span><div class="seg" id="set-quality"><button data-v="auto">AUTO</button><button data-v="high">HAUTE</button><button data-v="eco">ÉCONOMIE</button></div></div>
         <div class="set-hint" id="set-quality-hint"></div>
         <div class="set-row"><span>Images par seconde</span><div class="seg" id="set-fps"><button data-v="60">60</button><button data-v="30">30 (batterie)</button></div></div>
+        <div class="set-row"><span>Zoom de la caméra</span><div class="seg" id="set-zoom"><button data-v="near">PROCHE</button><button data-v="normal">NORMAL</button><button data-v="far">LOIN</button></div></div>
         <div class="set-row"><span>Effets visuels</span><div class="seg" id="set-effects"><button data-v="full">COMPLETS</button><button data-v="low">RÉDUITS</button></div></div>
         <label class="set-row set-check"><span>Secousses de la caméra</span><input type="checkbox" id="set-shake" /></label>
         <label class="set-row set-check"><span>Afficher les images par seconde</span><input type="checkbox" id="set-showfps" /></label>
@@ -190,6 +193,9 @@
         <div class="row-btns"><button class="menu-btn danger" id="set-reset">EFFACER TOUTE MA PROGRESSION</button></div>
         <div class="small muted" id="set-reset-msg">Remet le jeu à zéro sur cet appareil (trophées, voitures, crédits…). Impossible à annuler : exporte d'abord ta sauvegarde !</div>
         <div class="about" id="about">NEON//DRIVE</div>
+      </div>
+      <div class="set-foot">
+        <button class="set-defaults" id="set-defaults">Rétablir les réglages par défaut</button>
       </div>
     </div>
   </div>

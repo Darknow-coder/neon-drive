@@ -2376,3 +2376,22 @@ body.reduce-motion .badge, body.reduce-motion .boot * { animation: none !importa
 .id-legal { font-size: 12px; color: var(--muted); text-align: center; }
 .id-legal a { color: #7af7ff; }
 @media (max-height: 460px) { .legal-card { padding: 10px 14px; } .lg-body { max-height: calc(100vh - 120px); font-size: 13px; } .lg-tab { height: 30px; font-size: 9px; } }
+/* Réglages : clavier, manette, rétablir */
+.set-sub small { font-family: var(--font-ui); letter-spacing: 0; text-transform: none; font-size: 11px; margin-left: 6px; }
+.kb-list { display: flex; flex-direction: column; gap: 4px; }
+.kb-row { display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, 84px); gap: 6px; align-items: center; padding: 3px 8px; border-radius: 9px; background: rgba(255, 255, 255, 0.04); font-size: 14px; }
+.kb-key { height: 30px; border-radius: 8px; cursor: pointer; font-family: var(--font-display); font-size: 11px; color: #fff; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(0, 240, 255, 0.35); }
+.kb-key:hover { border-color: var(--cyan); }
+.kb-key.wait { color: #0b0628; background: #ffd34d; border-color: #ffd34d; animation: bootgo 0.8s ease-in-out infinite; }
+.pad-box { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); }
+.pad-box b { font-family: var(--font-display); font-size: 11px; letter-spacing: 1px; }
+.pad-on { color: #3dff9e; } .pad-off { color: var(--muted); }
+.pad-box small { font-size: 12px; color: var(--muted); }
+.pad-map { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; }
+.pad-map i { font-style: normal; font-family: var(--font-display); font-size: 9px; color: #7af7ff; margin-right: 4px; }
+.set-foot { display: flex; justify-content: center; }
+.set-defaults { background: none; border: none; color: var(--muted); font-family: var(--font-ui); font-size: 13px; text-decoration: underline; cursor: pointer; padding: 4px; }
+.set-defaults:hover { color: #fff; }
+/* Sur écran tactile sans clavier : on cache la partie clavier */
+@media (pointer: coarse) and (hover: none) { #kb-list, #kb-list + .row-btns, .set-sub:has(+ #kb-list) { display: none; } }
+@media (max-width: 560px) { .kb-row { grid-template-columns: minmax(0, 1fr) repeat(3, 60px); } }
