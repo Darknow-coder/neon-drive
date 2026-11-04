@@ -10,6 +10,7 @@
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="stylesheet" href="/src/styles/fonts.css" />
   <link rel="stylesheet" href="/src/styles/main.css" />
 </head>
 <body>
@@ -177,7 +178,12 @@
           </div>
           <div class="small" id="save-io-msg"></div>
         </div>
-        <div class="set-sub">EN LIGNE</div>
+        <div class="set-sub">EN LIGNE ET CONFIDENTIALITÉ</div>
+        <div class="row-btns">
+          <button class="menu-btn" id="btn-online-data">MES DONNÉES EN LIGNE</button>
+          <button class="menu-btn" id="btn-legal">CONFIDENTIALITÉ ET CONDITIONS</button>
+        </div>
+        <div class="small muted" id="online-data-msg"></div>
         <div class="row-btns"><button class="menu-btn" id="btn-online-delete">SUPPRIMER MON PROFIL EN LIGNE</button></div>
         <div class="small muted" id="online-delete-msg">Efface ton profil du classement et tes amis. Ta partie sur cet appareil n'est pas touchée.</div>
         <div class="set-sub danger">ZONE DANGEREUSE</div>
@@ -185,6 +191,23 @@
         <div class="small muted" id="set-reset-msg">Remet le jeu à zéro sur cet appareil (trophées, voitures, crédits…). Impossible à annuler : exporte d'abord ta sauvegarde !</div>
         <div class="about" id="about">NEON//DRIVE</div>
       </div>
+    </div>
+  </div>
+
+  <!-- Confidentialité, conditions, mentions légales -->
+  <div id="legal" class="overlay hidden">
+    <div class="overlay-card legal-card">
+      <div class="garage-head">
+        <button class="menu-btn small-btn" id="legal-back">‹ RETOUR</button>
+        <div class="overlay-title">INFOS LÉGALES</div>
+        <div></div>
+      </div>
+      <div class="lg-tabs">
+        <button class="lg-tab on" data-tab="privacy">CONFIDENTIALITÉ</button>
+        <button class="lg-tab" data-tab="terms">CONDITIONS</button>
+        <button class="lg-tab" data-tab="legal">MENTIONS LÉGALES</button>
+      </div>
+      <div class="lg-body" id="lg-body"></div>
     </div>
   </div>
 
@@ -556,6 +579,7 @@
           </div>
         </div>
       </div>
+      <div class="id-legal" id="id-legal">Ton pseudo et ton emblème seront visibles dans le classement. En jouant, tu acceptes les <a href="#" data-legal="terms">conditions d'utilisation</a> et la <a href="#" data-legal="privacy">politique de confidentialité</a>.</div>
       <div class="id-actions">
         <button class="menu-btn" id="id-cancel">ANNULER</button>
         <button class="menu-btn primary" id="id-ok">C'EST PARTI !</button>

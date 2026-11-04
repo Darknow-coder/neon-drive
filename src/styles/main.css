@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
+/* Polices intégrées au jeu (aucune requête vers des serveurs extérieurs) : voir src/styles/fonts.css */
 
 :root {
   --cyan: #00f0ff;
@@ -2357,3 +2357,22 @@ button, .menu-btn, .nav-btn, .mode-tile { touch-action: manipulation; }
 /* Réduire les animations : tout ce qui bouge en boucle s'arrête */
 body.reduce-motion .menu *, body.reduce-motion .menu *::before, body.reduce-motion .menu *::after,
 body.reduce-motion .badge, body.reduce-motion .boot * { animation: none !important; }
+
+/* Infos légales */
+#legal { z-index: 55; }
+.legal-card { width: min(820px, 100%); gap: 10px; max-height: calc(100vh - 24px); }
+.lg-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.lg-tab { height: 36px; border-radius: 10px; cursor: pointer; font-family: var(--font-display); font-size: 10px; letter-spacing: 1px; color: var(--muted); background: rgba(10, 6, 30, 0.6); border: 1px solid rgba(0, 240, 255, 0.2); }
+.lg-tab.on { color: #fff; border-color: var(--cyan); background: rgba(0, 240, 255, 0.12); }
+.lg-body { overflow-y: auto; touch-action: pan-y; max-height: calc(100vh - 170px); padding: 0 6px 10px 2px; font-size: 15px; line-height: 1.5; user-select: text; -webkit-user-select: text; }
+.lg-body h2 { font-family: var(--font-display); font-size: 16px; letter-spacing: 2px; color: #fff; margin: 4px 0 8px; }
+.lg-body h3 { font-family: var(--font-display); font-size: 12px; letter-spacing: 1px; color: #ff9fe8; margin: 16px 0 4px; }
+.lg-body p, .lg-body ul { margin: 4px 0; }
+.lg-body ul { padding-left: 20px; }
+.lg-body a { color: #7af7ff; }
+.lg-body b { color: #fff; }
+.lg-lead { padding: 10px 12px; border-radius: 12px; background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.3); }
+.lg-date { margin-top: 16px !important; font-size: 12px; color: var(--muted); }
+.id-legal { font-size: 12px; color: var(--muted); text-align: center; }
+.id-legal a { color: #7af7ff; }
+@media (max-height: 460px) { .legal-card { padding: 10px 14px; } .lg-body { max-height: calc(100vh - 120px); font-size: 13px; } .lg-tab { height: 30px; font-size: 9px; } }

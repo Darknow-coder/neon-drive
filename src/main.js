@@ -59,6 +59,8 @@ import { createSeasonScreen } from './ui/season.js';
 import { createCareerScreen } from './ui/career.js';
 import { createDailyScreen, dailyGoals, ensureTargets } from './ui/daily.js';
 import { createRankingScreen } from './ui/ranking.js';
+import { createLegalScreen } from './ui/legal.js';
+import { rpc as onlineRpc, onlineId } from './online/api.js';
 import { syncProfile, onOnlineChange, deleteOnlineProfile } from './online/sync.js';
 import { cached as onlineCached } from './online/api.js';
 import { starsHtml } from './ui/career.js';
@@ -934,6 +936,26 @@ const settingsScreen = createSettingsScreen({
   onTutorial: () => startTutorial(),
 });
 $('btn-settings').addEventListener('click', () => settingsScreen.open());
+// ---------------- Confidentialité ----------------
+const legalScreen = createLegalScreen();
+$('btn-legal').addEventListener('click', () => legalScreen.open('privacy'));
+document.querySelectorAll('[data-legal]').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); legalScreen.open(a.dataset.legal); }));
+// Droit d'accès : télécharger tout ce que le serveur sait de moi
+$('btn-online-data').addEventListener('click', async () => {
+  const msg = $('online-data-msg');
+  if (!onlineId()) { msg.textContent = 'Aucun profil en ligne sur cet appareil : rien n\'est stocké sur le serveur.'; return; }
+  msg.textContent = 'Récupération…';
+  try {
+    const [profileData, friends] = await Promise.all([onlineRpc('player_card', { p_id: onlineId() }), onlineRpc('my_friends')]);
+    const data = { exporté_le: new Date().toISOString(), identifiant_anonyme: onlineId(), profil: profileData,
+      amis_et_demandes: friends.map((f) => ({ pseudo: `${f.name} #${String(f.tag).padStart(4, '0')}`, relation: f.relation })) };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'neon-drive-mes-donnees.json'; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    msg.innerHTML = `Fichier téléchargé. Le serveur connaît : ton pseudo <b>${profileData.name} #${String(profileData.tag).padStart(4, '0')}</b>, ton emblème, ton titre, ta voiture, ${profileData.trophies} trophées, ${profileData.races} courses, ${profileData.wins} victoires et ${friends.length} ami(s) ou demande(s). Rien d'autre.`;
+  } catch { msg.textContent = 'Pas de connexion : réessaie plus tard.'; }
+});
 $('btn-pause-settings').addEventListener('click', () => settingsScreen.open({ inRace: true }));
 $('btn-train-back').addEventListener('click', () => showTrainingPicker(false));
 $('btn-menu').addEventListener('click', () => (session?.isDaily ? backToDaily() : session?.careerStage ? backToCareer() : backToMenu()));

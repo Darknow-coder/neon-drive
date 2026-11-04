@@ -11,7 +11,7 @@ export default defineConfig({
     assetsInlineLimit: 0,
     rollupOptions: {
       // Deux pages : le jeu et l'éditeur de circuits
-      input: { main: 'index.html', editor: 'editor.html' },
+      input: { main: 'index.html', editor: 'editor.html', legal: 'legal.html' },
     },
   },
   server: { host: true },
