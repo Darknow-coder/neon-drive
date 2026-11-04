@@ -28,16 +28,22 @@ insert into public.tt_tracks (track_id, min_time) values
 on conflict (track_id) do update set min_time = excluded.min_time;
 
 -- ---------- Meilleur tour de chaque joueur sur chaque circuit ----------
+-- (si un essai précédent du script a créé une ancienne version vide, on la recrée)
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tt_records' and column_name = 'time') then
+    drop table public.tt_records;
+  end if;
+end $$;
 create table if not exists public.tt_records (
   player_id  uuid not null references public.players (id) on delete cascade,
   track_id   text not null references public.tt_tracks (track_id),
-  time       real not null,
+  lap_time   real not null,
   car        text not null default 'nova',
   ghost      jsonb not null,           -- trajectoire du tour (≈ 10 Ko)
   updated_at timestamptz not null default now(),
   primary key (player_id, track_id)
 );
-create index if not exists tt_records_rank_idx on public.tt_records (track_id, time asc, updated_at asc);
+create index if not exists tt_records_rank_idx on public.tt_records (track_id, lap_time asc, updated_at asc);
 alter table public.tt_records enable row level security;
 revoke all on public.tt_records from anon, authenticated;
 
@@ -69,21 +75,21 @@ begin
     return json_build_object('status', 'bad_ghost');
   end if;
   if p_car !~ '^[a-z]{2,16}$' then p_car := 'nova'; end if;
-  select time into old from public.tt_records where player_id = me and track_id = p_track;
+  select lap_time into old from public.tt_records where player_id = me and track_id = p_track;
   if old is not null and old <= p_time then
     return json_build_object('status', 'not_better', 'best', old);
   end if;
-  insert into public.tt_records (player_id, track_id, time, car, ghost, updated_at)
+  insert into public.tt_records (player_id, track_id, lap_time, car, ghost, updated_at)
   values (me, p_track, p_time, p_car, p_ghost, now())
-  on conflict (player_id, track_id) do update set time = excluded.time, car = excluded.car, ghost = excluded.ghost, updated_at = now();
+  on conflict (player_id, track_id) do update set lap_time = excluded.lap_time, car = excluded.car, ghost = excluded.ghost, updated_at = now();
   return json_build_object('status', 'ok',
-    'rank', (select count(*) + 1 from public.tt_records r where r.track_id = p_track and r.time < p_time));
+    'rank', (select count(*) + 1 from public.tt_records r where r.track_id = p_track and r.lap_time < p_time));
 end $$;
 
 -- ---------- Classement d'un circuit ----------
 -- p_scope : 'world' (tout le monde) ou 'friends' (mes amis et moi)
 create or replace function public.tt_leaderboard(p_track text, p_scope text default 'world', p_limit int default 20)
-returns table (rank bigint, player_id uuid, name text, tag int, avatar text, color text, time real, car text, me boolean)
+returns table (rank bigint, player_id uuid, name text, tag int, avatar text, color text, lap_time real, car text, me boolean)
 language sql stable security definer set search_path = public as $$
   with pool as (
     select r.* from public.tt_records r
@@ -92,9 +98,9 @@ language sql stable security definer set search_path = public as $$
         select 1 from public.friendships f where f.status = 'accepted'
         and ((f.from_id = auth.uid() and f.to_id = r.player_id) or (f.to_id = auth.uid() and f.from_id = r.player_id))))
   ), ranked as (
-    select rank() over (order by time asc) as rank, row_number() over (order by time asc, updated_at asc) as rn, pool.* from pool
+    select rank() over (order by pool.lap_time asc) as rank, row_number() over (order by pool.lap_time asc, pool.updated_at asc) as rn, pool.* from pool
   )
-  select k.rank, k.player_id, p.name, p.tag, p.avatar, p.color, k.time, k.car, k.player_id = auth.uid()
+  select k.rank, k.player_id, p.name, p.tag, p.avatar, p.color, k.lap_time, k.car, k.player_id = auth.uid()
   from ranked k join public.players p on p.id = k.player_id
   where k.rn <= least(greatest(p_limit, 1), 100) or k.player_id = auth.uid()
   order by k.rn;
@@ -105,26 +111,26 @@ create or replace function public.tt_summary()
 returns table (track_id text, my_time real, my_rank bigint, players bigint, world_time real, friend_name text, friend_time real)
 language sql stable security definer set search_path = public as $$
   select t.track_id,
-    (select time from public.tt_records where player_id = auth.uid() and track_id = t.track_id),
+    (select r.lap_time from public.tt_records r where r.player_id = auth.uid() and r.track_id = t.track_id),
     (select count(*) + 1 from public.tt_records r where r.track_id = t.track_id
-       and r.time < (select time from public.tt_records where player_id = auth.uid() and track_id = t.track_id)),
+       and r.lap_time < (select m.lap_time from public.tt_records m where m.player_id = auth.uid() and m.track_id = t.track_id)),
     (select count(*) from public.tt_records r where r.track_id = t.track_id),
-    (select min(time) from public.tt_records r where r.track_id = t.track_id),
-    fb.name, fb.time
+    (select min(r.lap_time) from public.tt_records r where r.track_id = t.track_id),
+    fb.name, fb.lap_time
   from public.tt_tracks t
   left join lateral (
-    select p.name, r.time from public.tt_records r join public.players p on p.id = r.player_id
+    select p.name, r.lap_time from public.tt_records r join public.players p on p.id = r.player_id
     where r.track_id = t.track_id and r.player_id <> auth.uid() and exists (
       select 1 from public.friendships f where f.status = 'accepted'
       and ((f.from_id = auth.uid() and f.to_id = r.player_id) or (f.to_id = auth.uid() and f.from_id = r.player_id)))
-    order by r.time asc limit 1
+    order by r.lap_time asc limit 1
   ) fb on true;
 $$;
 
 -- ---------- Télécharger le fantôme d'un pilote ----------
 create or replace function public.tt_ghost(p_player uuid, p_track text)
 returns json language sql stable security definer set search_path = public as $$
-  select json_build_object('time', r.time, 'car', r.car, 'ghost', r.ghost, 'name', p.name, 'tag', p.tag)
+  select json_build_object('time', r.lap_time, 'car', r.car, 'ghost', r.ghost, 'name', p.name, 'tag', p.tag)
   from public.tt_records r join public.players p on p.id = r.player_id
   where r.player_id = p_player and r.track_id = p_track;
 $$;
