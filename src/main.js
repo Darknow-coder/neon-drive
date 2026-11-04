@@ -62,6 +62,7 @@ import { createRankingScreen } from './ui/ranking.js';
 import { createLegalScreen } from './ui/legal.js';
 import { rpc as onlineRpc, onlineId } from './online/api.js';
 import { syncProfile, onOnlineChange, deleteOnlineProfile } from './online/sync.js';
+import { uploadRecord, uploadPending, resetSent } from './online/chrono.js';
 import { cached as onlineCached } from './online/api.js';
 import { starsHtml } from './ui/career.js';
 import { ico } from './ui/icons.js';
@@ -691,7 +692,7 @@ function startTutorial() {
 }
 
 /** Contre-la-montre sur un circuit. */
-function startTimeTrial(id) {
+function startTimeTrial(id, rival = null) {
   session?.dispose();
   training = true;
   trackId = id;
@@ -700,6 +701,7 @@ function startTimeTrial(id) {
     save, onSave: persist, trackId: id, carId,
     colors: liveryFor(save, carId), level: carLevel(save, carId),
     renderer, input, hud, lowEnd, sfx, settings: save.settings,
+    rival, onRecord: () => uploadRecord(save, id),
   });
   input.reset();
   hideResults();
@@ -913,7 +915,7 @@ $('btn-pass').addEventListener('click', () => seasonScreen.open());
 $('btn-profile').addEventListener('click', () => profile.open(achievementsBadge(save) ? 'ach' : 'stats'));
 $('btn-shop').addEventListener('click', () => shop.open());
 $('btn-missions').addEventListener('click', () => missions.open());
-const ttSelect = createTimeTrialSelect({ save, onStart: (id) => { enterFullscreenOnMobile(); startTimeTrial(id); }, onClose: refreshMenu });
+const ttSelect = createTimeTrialSelect({ save, onStart: (id, rival) => { enterFullscreenOnMobile(); startTimeTrial(id, rival); }, onClose: refreshMenu, sfx });
 $('btn-timetrial').addEventListener('click', () => ttSelect.open());
 const settingsScreen = createSettingsScreen({
   save,
@@ -953,14 +955,16 @@ $('btn-online-data').addEventListener('click', async () => {
   if (!onlineId()) { msg.textContent = 'Aucun profil en ligne sur cet appareil : rien n\'est stocké sur le serveur.'; return; }
   msg.textContent = 'Récupération…';
   try {
-    const [profileData, friends] = await Promise.all([onlineRpc('player_card', { p_id: onlineId() }), onlineRpc('my_friends')]);
+    const [profileData, friends, chrono] = await Promise.all([onlineRpc('player_card', { p_id: onlineId() }), onlineRpc('my_friends'), onlineRpc('tt_summary').catch(() => [])]);
+    const records = chrono.filter((r) => r.my_time);
     const data = { exporté_le: new Date().toISOString(), identifiant_anonyme: onlineId(), profil: profileData,
-      amis_et_demandes: friends.map((f) => ({ pseudo: `${f.name} #${String(f.tag).padStart(4, '0')}`, relation: f.relation })) };
+      amis_et_demandes: friends.map((f) => ({ pseudo: `${f.name} #${String(f.tag).padStart(4, '0')}`, relation: f.relation })),
+      records_du_chrono: records.map((r) => ({ circuit: r.track_id, temps: r.my_time, place: r.my_rank, note: 'avec la trajectoire du tour (fantôme), visible par les autres joueurs' })) };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = 'neon-drive-mes-donnees.json'; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-    msg.innerHTML = `Fichier téléchargé. Le serveur connaît : ton pseudo <b>${profileData.name} #${String(profileData.tag).padStart(4, '0')}</b>, ton emblème, ton titre, ta voiture, ${profileData.trophies} trophées, ${profileData.races} courses, ${profileData.wins} victoires et ${friends.length} ami(s) ou demande(s). Rien d'autre.`;
+    msg.innerHTML = `Fichier téléchargé. Le serveur connaît : ton pseudo <b>${profileData.name} #${String(profileData.tag).padStart(4, '0')}</b>, ton emblème, ton titre, ta voiture, ${profileData.trophies} trophées, ${profileData.races} courses, ${profileData.wins} victoires ${friends.length} ami(s) ou demande(s) et ${records.length} record(s) du chrono (avec leur fantôme). Rien d'autre.`;
   } catch { msg.textContent = 'Pas de connexion : réessaie plus tard.'; }
 });
 $('btn-pause-settings').addEventListener('click', () => settingsScreen.open({ inRace: true }));
@@ -973,7 +977,7 @@ $('btn-online-delete').addEventListener('click', async () => {
   const b = $('btn-online-delete');
   if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'CONFIRMER LA SUPPRESSION ?'; return; }
   b.disabled = true;
-  try { await deleteOnlineProfile(); $('online-delete-msg').textContent = 'Profil en ligne supprimé. Il sera recréé (sans amis) au prochain lancement du jeu.'; }
+  try { await deleteOnlineProfile(); resetSent(); $('online-delete-msg').textContent = 'Profil en ligne supprimé. Il sera recréé (sans amis) au prochain lancement du jeu.'; }
   catch { $('online-delete-msg').textContent = 'Pas de connexion : réessaie plus tard.'; b.disabled = false; }
   b.dataset.confirm = ''; b.textContent = 'SUPPRIMER MON PROFIL EN LIGNE';
 });
@@ -1036,7 +1040,7 @@ runBoot({
     if (hasLink) history.replaceState(null, '', location.pathname);
     if (hasLink && save.profile.name) setTimeout(() => rankingScreen.open('friends', friendCode), 2200);
     // Connexion au classement en arrière-plan (sans bloquer)
-    if (!skipIntro) setTimeout(() => syncProfile(save, { now: true }), 1200);
+    if (!skipIntro) setTimeout(() => syncProfile(save, { now: true }).then((me) => me && uploadPending(save)), 1200);
     if (!skipIntro) setTimeout(() => sfx.unlock(), 60);
     // Premier lancement : choix du pseudo
     if (!save.profile.name && !skipIntro) {

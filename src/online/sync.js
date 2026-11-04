@@ -23,8 +23,10 @@ export function onOnlineChange(fn) { listeners.push(fn); }
 const offlineTests = typeof navigator !== 'undefined' && navigator.webdriver && !/[?&]online/.test(location.search);
 
 let paused = false; // après suppression du profil : plus d'envoi jusqu'au prochain lancement
+/** Peut-on parler au serveur ? (pseudo choisi, pas en test automatique, profil non supprimé) */
+export const canSync = (save) => !!save.profile.name && !offlineTests && !paused;
 export function syncProfile(save, { now = false } = {}) {
-  if (!save.profile.name || offlineTests || paused) return Promise.resolve(null); // pas encore de pseudo / tests
+  if (!canSync(save)) return Promise.resolve(null); // pas encore de pseudo / tests
   clearTimeout(pending?.timer);
   return new Promise((resolve) => {
     const go = async () => {

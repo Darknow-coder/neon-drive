@@ -29,7 +29,11 @@ function neonGhost(trackId) {
   return g;
 }
 
-export function createTimeTrial({ save, onSave, trackId, carId, colors, level, ...opts }) {
+/**
+ * @param rival    fantôme choisi dans le classement : { ghost, label, time } (sinon : mon record ou NEON)
+ * @param onRecord appelé à chaque nouveau record ; peut renvoyer une promesse { status, rank } (envoi en ligne)
+ */
+export function createTimeTrial({ save, onSave, trackId, carId, colors, level, rival = null, onRecord = null, ...opts }) {
   let invalid = false;
   const scene = createRaceScene({
     ...opts, trackId, carId, playerColors: colors, playerLevel: level,
@@ -47,8 +51,14 @@ export function createTimeTrial({ save, onSave, trackId, carId, colors, level, .
     ghostLabel = label;
   }
   const mine = loadGhost(trackId);
-  if (mine) setGhost(mine, 'RECORD');
+  if (rival?.ghost === 'neon') setGhost(neonGhost(trackId), 'NEON');
+  else if (rival?.ghost) {
+    try { setGhost(rival.ghost, rival.label); } catch { setGhost(mine ?? neonGhost(trackId), mine ? 'RECORD' : 'NEON'); }
+  } else if (mine) setGhost(mine, 'RECORD');
   else setGhost(neonGhost(trackId), 'NEON');
+  const fixedRival = !!rival?.ghost; // un rival choisi reste affiché même après un record
+  let rivalBeaten = false;
+  let disposed = false;
 
   const recorder = createRecorder();
   let lapT0 = 0;
@@ -73,7 +83,11 @@ export function createTimeTrial({ save, onSave, trackId, carId, colors, level, .
     const parts = [];
     if (res.record) {
       saveGhost(trackId, recorder.finish(time, { carId, colors }));
-      setGhost(loadGhost(trackId), 'RECORD');
+      if (!fixedRival) setGhost(loadGhost(trackId), 'RECORD');
+      // Envoi en ligne : on annonce la place mondiale dès que le serveur répond
+      Promise.resolve(onRecord?.(time)).then((r) => {
+        if (r?.status === 'ok' && r.rank) setTimeout(() => { if (!disposed) scene.flash(`CLASSEMENT MONDIAL : ${r.rank === 1 ? '1er' : `${r.rank}e`} sur ce circuit !`, 3); }, 2800);
+      }).catch(() => {});
       parts.push(`${res.previous ? 'NOUVEAU RECORD' : 'PREMIER RECORD'} ${formatTime(time)}${res.previous ? ` (−${(res.previous - time).toFixed(2)} s)` : ''}`);
     } else {
       parts.push(`Tour ${formatTime(time)} (+${(time - res.previous).toFixed(2)} s)`);
@@ -83,6 +97,11 @@ export function createTimeTrial({ save, onSave, trackId, carId, colors, level, .
       parts.push(`★ MÉDAILLE ${top.name} ! +${res.rewards.credits} crédits`);
       opts.sfx?.unlock();
       for (const p of res.rewards.packs) pendingRewards.push(p);
+    }
+    if (fixedRival && !rivalBeaten && ghost && time < ghost.time) {
+      rivalBeaten = true;
+      parts.unshift(`TU AS BATTU ${ghostLabel} !`);
+      opts.sfx?.unlock();
     }
     if (xp) parts.push(`+${xp} XP`);
     scene.flash(parts.join('  ·  '), res.newMedals.length ? 4 : 3);
@@ -116,6 +135,7 @@ export function createTimeTrial({ save, onSave, trackId, carId, colors, level, .
         if (gt !== null) sc.delta = { label: ghostLabel, value: t - gt };
       }
     },
+    dispose() { disposed = true; scene.dispose?.(); },
     isFinished: () => false,
     isTimeTrial: true,
     trackId,

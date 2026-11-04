@@ -23,19 +23,20 @@ export const LEGAL = {
 <h3>2. Données gardées sur ton appareil</h3>
 <p>Ta progression (trophées, voitures, crédits, réglages, statistiques…) est enregistrée <b>uniquement dans ton navigateur</b> (stockage local). Elle ne quitte pas ton appareil, sauf si tu l'exportes toi-même avec un code de sauvegarde. Le jeu n'utilise <b>aucun cookie publicitaire ni de mesure d'audience</b> : le stockage local sert seulement à faire fonctionner le jeu.</p>
 
-<h3>3. Données envoyées en ligne (classement et amis)</h3>
+<h3>3. Données envoyées en ligne (classements et amis)</h3>
 <p>Quand tu es connecté à internet, le jeu crée automatiquement un <b>compte anonyme</b> (un identifiant aléatoire, sans e-mail ni mot de passe) et envoie au serveur :</p>
 <ul>
 <li>ton <b>pseudo</b> et son numéro (ex. #4821), ton emblème, sa couleur, ton titre et ta voiture ;</li>
 <li>tes <b>trophées</b> (actuels et record), ton nombre de courses et de victoires ;</li>
 <li>ton <b>code ami</b> et la liste de tes amis et demandes d'amis ;</li>
+<li>tes <b>records du contre-la-montre</b> : ton meilleur temps sur chaque circuit, la voiture et ses couleurs, et la <b>trajectoire de ce tour</b> (le « fantôme » : positions de la voiture sur la piste) ;</li>
 <li>la date de création du profil et de la dernière mise à jour.</li>
 </ul>
-<p><b>Ce qui est public</b> : pseudo, numéro, emblème, titre, voiture, trophées, courses, victoires et la date de ta dernière partie sont visibles par les autres joueurs dans le classement. Ton code ami n'est visible que par tes amis. <b>Ne mets pas ton vrai nom dans ton pseudo.</b></p>
+<p><b>Ce qui est public</b> : pseudo, numéro, emblème, titre, voiture, trophées, courses, victoires et la date de ta dernière partie sont visibles par les autres joueurs dans le classement. Tes records du chrono et leurs fantômes sont aussi visibles : les autres joueurs peuvent courir contre ton fantôme. Ton code ami n'est visible que par tes amis. <b>Ne mets pas ton vrai nom dans ton pseudo.</b></p>
 <p>Comme pour tout site internet, l'<b>adresse IP</b> de ton appareil est vue techniquement par les serveurs lors des connexions (elle peut apparaître dans les journaux de sécurité de l'hébergeur), mais elle n'est pas utilisée par le jeu.</p>
 
 <h3>4. Pourquoi ?</h3>
-<p>Ces données servent uniquement à faire fonctionner le classement, les amis et l'anti-triche (vérifier qu'une progression est possible). La base légale est l'<b>exécution du service</b> que tu demandes en utilisant ces fonctions, et l'<b>intérêt légitime</b> à garder un classement honnête.</p>
+<p>Ces données servent uniquement à faire fonctionner les classements (trophées et chrono), les fantômes, les amis et l'anti-triche (vérifier qu'une progression est possible). La base légale est l'<b>exécution du service</b> que tu demandes en utilisant ces fonctions, et l'<b>intérêt légitime</b> à garder un classement honnête.</p>
 
 <h3>5. Qui y a accès ?</h3>
 <ul>
@@ -43,7 +44,7 @@ export const LEGAL = {
 <li><b>GitHub Pages</b> (hébergement du site), qui reçoit les adresses IP des visiteurs pour afficher les pages ;</li>
 <li>les autres joueurs, pour les informations publiques listées ci-dessus.</li>
 </ul>
-<p>Les données du classement et des amis restent donc <b>dans l'Union européenne</b>. Ces deux entreprises étant américaines, elles s'engagent à protéger les données selon les règles européennes (clauses contractuelles types). Les polices et images du jeu sont hébergées avec le jeu : aucune donnée n'est envoyée à Google ou à un réseau publicitaire.</p>
+<p>Les données des classements et des amis restent donc <b>dans l'Union européenne</b>. Ces deux entreprises étant américaines, elles s'engagent à protéger les données selon les règles européennes (clauses contractuelles types). Les polices et images du jeu sont hébergées avec le jeu : aucune donnée n'est envoyée à Google ou à un réseau publicitaire.</p>
 
 <h3>6. Combien de temps ?</h3>
 <p>Ton profil en ligne est conservé tant que tu joues. Tu peux le supprimer à tout moment. Les profils inactifs depuis plus de <b>2 ans</b> peuvent être supprimés. Les données sur ton appareil restent jusqu'à ce que tu les effaces (Réglages → Compte, ou en vidant les données du navigateur).</p>
@@ -53,7 +54,7 @@ export const LEGAL = {
 <ul>
 <li><b>voir et télécharger</b> tes données en ligne (« MES DONNÉES EN LIGNE ») ;</li>
 <li><b>corriger</b> ton pseudo et ton emblème ;</li>
-<li><b>supprimer</b> ton profil en ligne et tes amitiés (« SUPPRIMER MON PROFIL EN LIGNE ») ;</li>
+<li><b>supprimer</b> ton profil en ligne, tes amitiés et tes records du chrono (« SUPPRIMER MON PROFIL EN LIGNE ») ;</li>
 <li><b>effacer</b> ta progression sur l'appareil.</li>
 </ul>
 <p>Tu peux aussi contacter l'éditeur (voir point 1), et si tu estimes que tes droits ne sont pas respectés, saisir la <b>CNIL</b> (<a href="https://www.cnil.fr" target="_blank" rel="noopener">cnil.fr</a>).</p>
