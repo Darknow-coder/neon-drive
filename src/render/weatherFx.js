@@ -116,44 +116,71 @@ export function createWeatherFx(kind) {
     ctx.stroke();
   }
 
+  // ---- Images pré-dessinées (créer des dégradés à chaque image coûte cher sur téléphone) ----
+  const cache = {};
+  function offscreen(w, h, draw) {
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h));
+    draw(c.getContext('2d'), c.width, c.height);
+    return c;
+  }
+  /** Image plein écran recalculée seulement quand la taille change. */
+  function screenLayer(key, W, H, draw) {
+    const c = cache[key];
+    if (c && c.width === W && c.height === H) return c;
+    cache[key] = offscreen(W, H, draw);
+    return cache[key];
+  }
+
   // Brouillard : clair autour de la voiture, épais au loin, avec des bancs qui dérivent
   let banks = null;
   function fog(ctx, W, H, cam, dpr) {
     const [dx, dy] = camDelta(cam, dpr, 1);
     const D = Math.hypot(W, H);
     if (!banks || W !== W0) { W0 = W; banks = Array.from({ length: 7 }, () => ({ x: Math.random() * W, y: Math.random() * H, r: (0.18 + Math.random() * 0.2) * D, vx: (Math.random() - 0.5) * 0.4 })); }
+    // (un seul dessin de banc, réutilisé et redimensionné)
+    cache.bank ??= offscreen(128, 128, (c) => {
+      const g = c.createRadialGradient(64, 64, 0, 64, 64, 64);
+      g.addColorStop(0, 'rgba(170,180,205,0.22)'); g.addColorStop(1, 'rgba(170,180,205,0)');
+      c.fillStyle = g; c.fillRect(0, 0, 128, 128);
+    });
     for (const b of banks) {
       b.x += b.vx * dpr - dx; b.y -= dy;
       if (b.x < -b.r) b.x += W + 2 * b.r; else if (b.x > W + b.r) b.x -= W + 2 * b.r;
       if (b.y < -b.r) b.y += H + 2 * b.r; else if (b.y > H + b.r) b.y -= H + 2 * b.r;
-      const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-      g.addColorStop(0, 'rgba(170,180,205,0.22)'); g.addColorStop(1, 'rgba(170,180,205,0)');
-      ctx.fillStyle = g; ctx.fillRect(b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+      ctx.drawImage(cache.bank, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
     }
-    const g = ctx.createRadialGradient(W / 2, H / 2, D * 0.16, W / 2, H / 2, D * 0.52);
-    g.addColorStop(0, 'rgba(140,150,180,0)');
-    g.addColorStop(0.55, 'rgba(140,150,180,0.45)');
-    g.addColorStop(1, 'rgba(150,160,190,0.86)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
+    // Voile épais sur les bords : pré-dessiné à basse résolution puis agrandi (dégradé doux)
+    const lw = Math.round(W / 4), lh = Math.round(H / 4);
+    ctx.drawImage(screenLayer('fogVeil', lw, lh, (c, w, h) => {
+      const d = Math.hypot(w, h);
+      const g = c.createRadialGradient(w / 2, h / 2, d * 0.16, w / 2, h / 2, d * 0.52);
+      g.addColorStop(0, 'rgba(140,150,180,0)');
+      g.addColorStop(0.55, 'rgba(140,150,180,0.45)');
+      g.addColorStop(1, 'rgba(150,160,190,0.86)');
+      c.fillStyle = g; c.fillRect(0, 0, w, h);
+    }), 0, 0, W, H);
   }
 
   function dusk(ctx, W, H, cam, dpr) {
     seed(46, W, H, () => ({ x: Math.random() * W, y: Math.random() * H, a: Math.random() * 6, va: (Math.random() - 0.5) * 0.08, s: 0.6 + Math.random() * 0.9 }));
     const [dx, dy] = camDelta(cam, dpr, 0.85);
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, 'rgba(255,110,80,0.16)'); g.addColorStop(0.6, 'rgba(255,90,150,0.05)'); g.addColorStop(1, 'rgba(120,40,160,0.10)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(screenLayer('duskSky', 4, Math.round(H / 4), (c, w, h) => {
+      const g = c.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, 'rgba(255,110,80,0.16)'); g.addColorStop(0.6, 'rgba(255,90,150,0.05)'); g.addColorStop(1, 'rgba(120,40,160,0.10)');
+      c.fillStyle = g; c.fillRect(0, 0, w, h);
+    }), 0, 0, W, H);
+    // Pétale pré-dessiné (tourné et aplati à chaque image : beaucoup moins cher qu'une ellipse)
+    cache.petal ??= offscreen(20, 12, (c) => { c.fillStyle = 'rgba(255,170,215,0.85)'; c.beginPath(); c.ellipse(10, 6, 9, 5.5, 0, 0, Math.PI * 2); c.fill(); });
     for (const p of parts) {
       p.x += (1.1 * p.s) * dpr - dx * p.s; p.y += (0.9 * p.s) * dpr - dy * p.s; p.a += p.va;
       wrap(p, W, H);
-      ctx.save();
-      ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.scale(1, Math.abs(Math.sin(p.a * 1.7)) * 0.7 + 0.3);
-      ctx.fillStyle = 'rgba(255,170,215,0.85)';
-      ctx.beginPath(); ctx.ellipse(0, 0, 4.2 * dpr * p.s, 2.6 * dpr * p.s, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
+      const k = dpr * p.s * 0.47, sy = Math.abs(Math.sin(p.a * 1.7)) * 0.7 + 0.3;
+      const c = Math.cos(p.a), s2 = Math.sin(p.a);
+      ctx.setTransform(c * k, s2 * k, -s2 * k * sy, c * k * sy, p.x, p.y);
+      ctx.drawImage(cache.petal, -10, -6);
     }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
 
   return {

@@ -34,6 +34,7 @@ export function createHud() {
     if (cache[key] !== value) {
       cache[key] = value;
       if (prop === 'width') node.style.width = value;
+      else if (prop === 'scaleX') node.style.transform = `scaleX(${value})`;
       else node[prop] = value;
     }
   };
@@ -96,10 +97,16 @@ export function createHud() {
         el.rival.classList.toggle('ahead', !!rival && rival.position > position);
       }
       if (cache.big !== !!big) { cache.big = !!big; el.msg.classList.toggle('big', !!big); }
-      set('time', el.time, lap > 0 ? formatTime(lapTime) : '0:00.000');
+      // Chiffres qui changent sans arrêt (chrono, vitesse, jauge) : ~15 fois par seconde
+      // suffisent à l'œil, et chaque mise à jour du texte coûte un recalcul de la page.
+      const now = performance.now();
+      if (now - (cache.numAt ?? 0) > 66) {
+        cache.numAt = now;
+        set('time', el.time, lap > 0 ? formatTime(lapTime) : '0:00.000');
+        set('speed', el.speed, String(Math.round(Math.max(0, car.vF) * SPEED_TO_KMH)));
+        set('boost', el.boost, String(Math.round(car.boost * 50) / 50), 'scaleX'); // (transform : sans recalcul de la page)
+      }
       set('best', el.best, formatTime(bestLap));
-      set('speed', el.speed, String(Math.round(Math.max(0, car.vF) * SPEED_TO_KMH)));
-      set('boost', el.boost, `${Math.round(car.boost * 100)}%`, 'width');
       const ready = car.boost > 0.15;
       if (cache.ready !== ready) {
         cache.ready = ready;

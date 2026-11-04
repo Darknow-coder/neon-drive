@@ -71,6 +71,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   let lastPad = 0;
   let lastBoost = 0;
   let msgTone = '';
+  let sfxTick = 0;
   let slowmo = 0;          // ralenti de fin de course (secondes réelles restantes)
   let launchShown = false;
   let wasBoosting = false;
@@ -146,7 +147,8 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
 
     // ---------- Sons ----------
     if (sfx) {
-      sfx.updateCar(player, true);
+      // Son du moteur : 30 réglages par seconde suffisent (au lieu de 120)
+      if ((sfxTick = (sfxTick + 1) % 4) === 0) sfx.updateCar(player, true);
       if (hit > 120) sfx.hit(hit, true);
       // Chocs des adversaires proches : plus discrets
       for (const car of world.cars) {

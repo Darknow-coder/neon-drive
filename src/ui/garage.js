@@ -27,7 +27,12 @@ export function createGarage({ save, onSave, onClose, sfx, openShop }) {
     sprite = makeCarSprite(c, 46, 24, liveryFor(save, c.id));
   }
 
+  let lastDraw = 0;
   function drawPreview(t) {
+    // 30 images/s suffisent pour une voiture qui tourne lentement (économie sur téléphone)
+    if (t - lastDraw < 32) { raf = requestAnimationFrame(drawPreview); return; }
+    const stepK = lastDraw ? Math.min(3, (t - lastDraw) / 16.7) : 1;
+    lastDraw = t;
     const W = canvas.width, H = canvas.height;
     ctx.clearRect(0, 0, W, H);
     // Socle lumineux
@@ -42,7 +47,7 @@ export function createGarage({ save, onSave, onClose, sfx, openShop }) {
     ctx.ellipse(W / 2, H * 0.55, W * 0.36, H * 0.3, 0, 0, Math.PI * 2);
     ctx.stroke();
     // Voiture qui tourne lentement
-    angle += 0.006;
+    angle += 0.006 * stepK;
     const owned = isOwned(save, car().id);
     const scale = 4.9;
     ctx.save();

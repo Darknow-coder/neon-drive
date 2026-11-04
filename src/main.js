@@ -177,6 +177,7 @@ function applyControls() {
   touchRoot.classList.toggle('autogas', c.autoGas);
   touchRoot.style.setProperty('--bs', String(c.size));
   input.setOptions({ autoGas: c.autoGas });
+  input.remeasure?.();
 }
 applyControls();
 
@@ -194,7 +195,7 @@ function refreshMenu() {
   $('pass-badge').classList.toggle('hidden', !pb);
   // Classement mondial (dernière place connue)
   const om = onlineCached();
-  $('menu-rank').textContent = om?.rank ? `#${Number(om.rank).toLocaleString('fr-FR')}` : 'CLASSEMENT';
+  $('menu-rank').textContent = om?.rank ? `#${Number(om.rank).toLocaleString('fr-FR')}` : 'TOP';
   setFriendBadges(om?.incoming ?? 0);
   // Défi du jour
   refreshDaily(save);
@@ -811,6 +812,35 @@ tuning = createTuningPanel($('tuning'), {
 
 // Mesure du temps de calcul (affichée dans le panneau ⚙)
 const perf = { update: 0, render: 0, worst: 0, frameUpdate: 0 };
+// ---------------- Fluidité automatique ----------------
+// Si l'appareil n'arrive pas à afficher ~50 images/s en course, la résolution
+// baisse par paliers (le jeu reste net, mais un peu moins fin). Le réglage est
+// retenu pour les prochaines courses. Forçable avec ?quality=high.
+const QKEY = 'neondrive.quality';
+let quality = (() => { try { return Number(localStorage.getItem(QKEY)) || 1; } catch { return 1; } })();
+if (q === 'high') quality = 1;
+renderer.setQuality(quality);
+const fpsWatch = { slow: 0, fast: 0, cooldown: 0 };
+function watchFps(dtReal) {
+  if (state !== 'race' || q === 'high' || dtReal <= 0 || dtReal > 0.25) return;
+  const fpsNow = 1 / dtReal;
+  fpsWatch.cooldown = Math.max(0, fpsWatch.cooldown - dtReal);
+  if (fpsNow < 47) { fpsWatch.slow += dtReal; fpsWatch.fast = 0; } else if (fpsNow > 57) { fpsWatch.fast += dtReal; fpsWatch.slow = Math.max(0, fpsWatch.slow - dtReal * 0.5); }
+  if (fpsWatch.cooldown > 0) return;
+  if (fpsWatch.slow > 1.2 && quality > 0.5) {
+    quality = Math.round((quality - 0.15) * 100) / 100;
+    renderer.setQuality(quality); session?.resize();
+    try { localStorage.setItem(QKEY, String(quality)); } catch { /* rien */ }
+    fpsWatch.slow = 0; fpsWatch.cooldown = 2;
+  } else if (fpsWatch.fast > 12 && quality < 1) {
+    // Très fluide depuis longtemps : on essaie un peu plus fin
+    quality = Math.min(1, Math.round((quality + 0.1) * 100) / 100);
+    renderer.setQuality(quality); session?.resize();
+    try { localStorage.setItem(QKEY, String(quality)); } catch { /* rien */ }
+    fpsWatch.fast = 0; fpsWatch.cooldown = 6;
+  }
+}
+
 const loop = createLoop({
   update: (dt) => {
     const t = performance.now();
@@ -819,7 +849,8 @@ const loop = createLoop({
     if (state === 'race' && session?.car && session.world?.started !== false) addDriving(save, dt, session.car.speed);
     perf.frameUpdate += performance.now() - t;
   },
-  render: (alpha) => {
+  render: (alpha, dtReal) => {
+    watchFps(dtReal);
     const t = performance.now();
     session?.render(alpha);
     const r = performance.now() - t;

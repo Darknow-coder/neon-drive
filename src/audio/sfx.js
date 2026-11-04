@@ -113,7 +113,7 @@ export function createSfx(audio) {
     }
     car.lastThrottle = thr;
     // Frottement contre le mur (maintenu un court instant pour éviter les à-coups)
-    car.scrapeHold = c.wallTouch && c.speed > 120 ? 0.12 : Math.max(0, car.scrapeHold - 1 / 60);
+    car.scrapeHold = c.wallTouch && c.speed > 120 ? 0.12 : Math.max(0, car.scrapeHold - 1 / 30);
     car.scrapeG.gain.setTargetAtTime(car.scrapeHold > 0 ? Math.min(0.09, c.speed / 9000) : 0, t, 0.03);
     car.scrapeF.frequency.setTargetAtTime(2400 + Math.min(c.speed, 900) * 1.5, t, 0.05);
 

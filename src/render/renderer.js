@@ -11,12 +11,16 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
   let brakeGlow = makeGlowSprite('#ff2b5a', 64);
   let headCone = makeHeadlightCone();
 
+  // Résolution adaptative : `quality` (0,5 … 1) réduit la résolution si
+  // l'appareil n'arrive pas à suivre (réglé par main.js selon la fluidité).
+  let quality = 1;
   function resize() {
     const cssW = window.innerWidth;
     const cssH = window.innerHeight;
     // Résolution limitée : au-delà de 2x, la différence ne se voit pas mais
     // coûte très cher en performances sur téléphone.
-    const dpr = Math.min(window.devicePixelRatio || 1, lowEnd ? 1.5 : 2);
+    const maxDpr = Math.min(window.devicePixelRatio || 1, lowEnd ? 1.5 : 2);
+    const dpr = Math.max(0.75, maxDpr * quality);
     const w = Math.round(cssW * dpr);
     const h = Math.round(cssH * dpr);
     state.cssW = cssW;
@@ -196,7 +200,14 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
     // (le vignettage des bords est fait en CSS : .vignette dans main.css)
   }
 
-  return { resize, render, resetSprites, state, ctx };
+  /** Règle la résolution (1 = pleine). Retourne la résolution effective. */
+  function setQuality(q) {
+    quality = Math.max(0.5, Math.min(1, q));
+    resize();
+    return state.dpr;
+  }
+
+  return { resize, render, resetSprites, state, ctx, setQuality, get quality() { return quality; } };
 }
 
 function makeHeadlightCone() {

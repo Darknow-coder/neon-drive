@@ -26,6 +26,14 @@ function drawShowcase() {
   const cv = document.getElementById('menu-car-canvas');
   const menuVisible = !document.getElementById('start').classList.contains('hidden');
   if (!cv || !menuVisible || !showcase.sprite) { showcase.raf = 0; return; }
+  // Écran ouvert par-dessus le menu : on ne redessine pas la vitrine (économie de batterie)
+  showcase.raf = requestAnimationFrame(drawShowcase);
+  if (document.querySelector('.overlay:not(.hidden)')) return;
+  // 30 images/s suffisent pour une voiture qui tourne lentement
+  const now = performance.now();
+  if (now - (showcase.last ?? 0) < 32) return;
+  const step = Math.min(3, (now - (showcase.last ?? now)) / 16.7);
+  showcase.last = now;
   const c = cv.getContext('2d');
   const W = cv.width, H = cv.height;
   c.clearRect(0, 0, W, H);
@@ -35,12 +43,11 @@ function drawShowcase() {
   c.fillStyle = g; c.fillRect(0, 0, W, H);
   c.strokeStyle = 'rgba(0,240,255,0.4)'; c.lineWidth = 2;
   c.beginPath(); c.ellipse(W / 2, H * 0.56, W * 0.34, H * 0.3, 0, 0, Math.PI * 2); c.stroke();
-  showcase.angle += 0.007;
+  showcase.angle += 0.007 * step;
   const sp = showcase.sprite, sc = 4.2;
   c.save(); c.translate(W / 2, H * 0.54); c.rotate(showcase.angle);
   c.drawImage(sp.canvas, -sp.ox * sc, -sp.oy * sc, sp.w * sc, sp.h * sc);
   c.restore();
-  showcase.raf = requestAnimationFrame(drawShowcase);
 }
 export function startShowcase(save) {
   const id = selectedCar(save);
