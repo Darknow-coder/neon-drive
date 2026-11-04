@@ -12,7 +12,7 @@
 
 const KEY = 'neondrive.save';
 const BACKUP_KEY = 'neondrive.save.backup';
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 
 export function defaultSave() {
   return {
@@ -25,7 +25,7 @@ export function defaultSave() {
     history: [],             // 10 dernières courses
     garage: {
       owned: ['nova'],       // voitures possédées (paliers, et plus tard boutique…)
-      liveries: {},          // { idVoiture: { body, accent, finish, motif } }
+      liveries: {},          // { idVoiture: { body, accent, glow, finish, motif, trail, smoke, number, numStyle, decal } }
     },
     settings: {
       music: 0.7, sfx: 0.85, vibration: true,
@@ -46,7 +46,7 @@ export function defaultSave() {
     // Boutique : offres du jour, cadeau quotidien
     shop: { day: null, offers: [], giftDay: null, giftStreak: 0, seenDay: null },
     // Cosmétiques possédés (utilisables sur toutes les voitures)
-    cosmetics: { finishes: [], motifs: [] },
+    cosmetics: { finishes: [], motifs: [], trails: [], smokes: [] },
     // Missions du jour et de la semaine
     missions: { day: null, daily: [], bonusClaimed: false, week: null, weekly: null },
     // Contre-la-montre : meilleurs temps et médailles par circuit
@@ -151,6 +151,9 @@ function sanitize(raw) {
         if (isColor(l.accent)) clean.accent = l.accent;
         if (typeof l.finish === 'string' && /^[a-z]{2,16}$/.test(l.finish)) clean.finish = l.finish;
         if (typeof l.motif === 'string' && /^[a-z]{2,16}$/.test(l.motif)) clean.motif = l.motif;
+        if (isColor(l.glow)) clean.glow = l.glow;
+        for (const f of ['trail', 'smoke', 'numStyle', 'decal']) if (typeof l[f] === 'string' && /^[a-z]{2,16}$/.test(l[f])) clean[f] = l[f];
+        if (Number.isInteger(l.number) && l.number >= 0 && l.number <= 99) clean.number = l.number;
         if (Object.keys(clean).length) s.garage.liveries[id] = clean;
       }
     }
@@ -216,7 +219,7 @@ function sanitize(raw) {
     s.missions.bonusClaimed = !!ms.bonusClaimed;
     if (isDay(ms.week) && okM(ms.weekly)) { s.missions.week = ms.week; s.missions.weekly = clean(ms.weekly); }
   }
-  for (const key of ['finishes', 'motifs']) {
+  for (const key of ['finishes', 'motifs', 'trails', 'smokes']) {
     const arr = raw.cosmetics?.[key];
     if (Array.isArray(arr)) s.cosmetics[key] = [...new Set(arr.filter((x) => typeof x === 'string' && /^[a-z]{2,16}$/.test(x)))];
   }
@@ -369,7 +372,12 @@ function migrate(raw) {
     raw.daily ??= { day: null, stars: 0, best: null, targets: null, streak: 0, lastDone: null, total: 0 };
     raw.version = 12;
   }
-  // Pour le futur : if (raw.version === 12) { …; raw.version = 13; }
+  // Version 12 → 13 : personnalisation poussée (néon, numéro, autocollant, traînées, fumées)
+  if (raw.version === 12) {
+    if (raw.cosmetics) { raw.cosmetics.trails ??= []; raw.cosmetics.smokes ??= []; }
+    raw.version = 13;
+  }
+  // Pour le futur : if (raw.version === 13) { …; raw.version = 14; }
   return raw;
 }
 

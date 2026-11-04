@@ -69,7 +69,7 @@ export const ACHIEVEMENTS = [
   { id: 'tracks', name: 'GLOBE-TROTTEUR', tiers: [3, 5, 7], text: (n) => `Cours sur ${n} circuits différents`, title: 'Globe-trotteur', value: (s) => tracksDriven(s).size },
   { id: 'distance', name: 'KILOMÈTRES', tiers: [50, 250, 1000], text: (n) => `Parcours ${n} km`, title: 'Grand voyageur', value: (s) => km(s.career.distance), unit: 'km' },
   { id: 'credits', name: 'FORTUNE', tiers: [2000, 10000, 50000], text: (n) => `Gagne ${n.toLocaleString('fr-FR')} crédits au total`, title: 'Magnat', value: (s) => s.career.creditsEarned },
-  { id: 'style', name: 'STYLISTE', tiers: [2, 6, 12], text: (n) => `Possède ${n} finitions ou motifs`, title: 'Icône de style', value: (s) => s.cosmetics.finishes.length + s.cosmetics.motifs.length },
+  { id: 'style', name: 'STYLISTE', tiers: [2, 6, 12], text: (n) => `Possède ${n} cosmétiques (finitions, motifs, effets)`, title: 'Icône de style', value: (s) => s.cosmetics.finishes.length + s.cosmetics.motifs.length + (s.cosmetics.trails?.length ?? 0) + (s.cosmetics.smokes?.length ?? 0) },
   { id: 'missions', name: 'ASSIDU', tiers: [5, 25, 100], text: (n) => `Accomplis ${n} missions`, title: 'Assidu', value: (s) => s.career.missionsDone },
 ];
 

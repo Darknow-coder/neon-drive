@@ -3,14 +3,15 @@
 
 import { getCar } from '../data/cars.js';
 import { PACKS, UNLOCK_FRAGMENTS } from '../data/economy.js';
-import { DAILY_GIFTS, FINISHES, MOTIFS } from '../data/shop.js';
+import { DAILY_GIFTS } from '../data/shop.js';
 import {
   dayKey, msUntilMidnight, refreshShop, buyOffer, buyPackItem, buyStyle, equipStyle,
-  claimGift, giftAvailable, giftIndex, ownsFinish, ownsMotif, racesFor, bestFragmentTarget,
+  claimGift, giftAvailable, giftIndex, ownsStyle, STYLE_KINDS, racesFor, bestFragmentTarget,
 } from '../progression/shop.js';
 import { fragmentsOf, upgradeCost } from '../progression/economy.js';
 import { isOwned, liveryFor, selectedCar } from '../progression/garage.js';
 import { makeCarSprite } from '../render/carSprite.js';
+import { effectPreview } from '../render/effectPreview.js';
 import { carIcon } from './carIcon.js';
 import { ico } from './icons.js';
 import { showRewards } from './packOpen.js';
@@ -55,7 +56,13 @@ export function createShop({ save, onSave, sfx, onClose }) {
   const myCar = () => getCar(selectedCar(save));
   function styledColors(kind, id) {
     const base = liveryFor(save, myCar().id);
-    return kind === 'finish' ? { ...base, finish: id } : { ...base, motif: id };
+    return { ...base, [kind]: id };
+  }
+  const isFx = (kind) => kind === 'trail' || kind === 'smoke';
+  /** Image d'un cosmétique : la voiture (finition, motif) ou l'effet en action (boost, drift). */
+  function styleVisual(kind, id, w, h, live = false) {
+    return isFx(kind) ? effectPreview(myCar(), styledColors(kind, id), kind === 'trail' ? 'boost' : 'drift', w, h, { live })
+      : carIcon(myCar(), styledColors(kind, id), w, h);
   }
   function priceHtml(price, oldPrice) {
     return `${ico('credit')}${fmt(price)}${oldPrice ? ` <s>${fmt(oldPrice)}</s>` : ''}`;
@@ -149,12 +156,12 @@ export function createShop({ save, onSave, sfx, onClose }) {
       const p = PACKS[o.packId];
       return card({ ...base, color: p.color, visual: `<div class="mini-pack" style="--ic:${p.color}" data-n="×${p.fragments}"></div>`, title: p.name, sub: `<b>${p.fragments}</b> fragments`, price, onClick: click });
     }
-    const list = o.kind === 'finish' ? FINISHES : MOTIFS;
-    const item = list.find((x) => x.id === o.itemId);
+    const item = STYLE_KINDS[o.kind].list.find((x) => x.id === o.itemId);
+    const SUBS = { finish: 'Finition de carrosserie', motif: 'Motif de décoration', trail: 'Traînée de boost', smoke: 'Fumée de drift' };
     return card({
       ...base, color: '#b07aff',
-      visual: carIcon(myCar(), styledColors(o.kind, o.itemId), 300, 192),
-      title: item.name, sub: o.kind === 'finish' ? 'Finition de carrosserie' : 'Motif de décoration',
+      visual: styleVisual(o.kind, o.itemId, 300, 192),
+      title: item.name, sub: SUBS[o.kind],
       price, onClick: click,
     });
   }
@@ -191,23 +198,23 @@ export function createShop({ save, onSave, sfx, onClose }) {
     const current = liveryFor(save, car.id);
     const sw = document.createElement('div');
     sw.className = 'style-switch';
-    sw.innerHTML = `<button data-s="finish" class="${styleTab === 'finish' ? 'on' : ''}">FINITIONS</button><button data-s="motif" class="${styleTab === 'motif' ? 'on' : ''}">MOTIFS</button>
+    sw.innerHTML = `${[['finish', 'FINITIONS'], ['motif', 'MOTIFS'], ['trail', 'BOOST'], ['smoke', 'DRIFT']].map(([k, l]) => `<button data-s="${k}" class="${styleTab === k ? 'on' : ''}">${l}</button>`).join('')}
       <span>Aperçu sur ta <b>${car.name}</b> · s'utilise sur toutes tes voitures · aucun effet sur les performances</span>`;
     sw.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { styleTab = b.dataset.s; sfx?.click(); render(); }));
     body.append(sw);
-    for (const [kind, list] of [['finish', FINISHES], ['motif', MOTIFS]]) {
+    for (const [kind, { list }] of Object.entries(STYLE_KINDS)) {
       if (kind !== styleTab) continue;
       const sec = document.createElement('div');
       sec.className = 'shop-section';
       const row = document.createElement('div');
       row.className = 'shop-row';
       for (const item of list) {
-        const owned = kind === 'finish' ? ownsFinish(save, item.id) : ownsMotif(save, item.id);
+        const owned = ownsStyle(save, kind, item.id);
         if (item.exclusive && !owned) continue; // exclusif d'événement : pas en vente
         const equipped = current[kind] === item.id;
         row.append(card({
           color: '#b07aff',
-          visual: carIcon(car, styledColors(kind, item.id), 300, 192),
+          visual: styleVisual(kind, item.id, 300, 192),
           ribbon: equipped ? 'ÉQUIPÉ' : '', ribbonCls: 'green',
           title: item.name, sub: item.desc,
           price: equipped ? '<div class="price done">✓ ÉQUIPÉ</div>'
@@ -304,7 +311,7 @@ export function createShop({ save, onSave, sfx, onClose }) {
         buy: () => buyOffer(save, o.id),
       });
     } else {
-      const item = (o.kind === 'finish' ? FINISHES : MOTIFS).find((x) => x.id === o.itemId);
+      const item = STYLE_KINDS[o.kind].list.find((x) => x.id === o.itemId);
       confirmStyle(o.kind, item, o);
     }
   }
@@ -323,11 +330,11 @@ export function createShop({ save, onSave, sfx, onClose }) {
   function confirmStyle(kind, item, offer = null) {
     const car = myCar();
     openConfirm({
-      kind: kind === 'finish' ? 'FINITION · POUR TOUTES TES VOITURES' : 'MOTIF · POUR TOUTES TES VOITURES',
+      kind: `${STYLE_KINDS[kind].label} · POUR TOUTES TES VOITURES`,
       title: item.name, color: '#b07aff',
       desc: `${item.desc}<br>Aperçu sur ta <b>${car.name}</b>. Purement esthétique : aucun effet sur les performances.`,
       price: offer ? offer.price : item.price, oldPrice: offer?.oldPrice,
-      visual: previewCar(car, styledColors(kind, item.id)),
+      visual: isFx(kind) ? styleVisual(kind, item.id, 480, 400, true) : previewCar(car, styledColors(kind, item.id)),
       buy: () => {
         const r = offer ? buyOffer(save, offer.id) : buyStyle(save, kind, item.id);
         if (r.ok) { equipStyle(save, car.id, kind, item.id); r.equipped = true; }

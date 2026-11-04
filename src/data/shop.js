@@ -59,6 +59,39 @@ export const MOTIFS = [
   { id: 'giga', name: 'GIGA RUSH', price: 0, exclusive: true, desc: 'Exclusif : réservé aux vainqueurs de la GIGA RUSH.' },
 ];
 
+// ---------- Traînées de boost (flammes derrière la voiture) ----------
+// colors : couleurs tirées au hasard ('glow' = la couleur néon de la voiture)
+// rainbow : couleurs qui défilent · sparks : étincelles en plus · size : taille des flammes
+export const TRAILS = [
+  { id: 'neon', name: 'NÉON', price: 0, desc: 'Les flammes rose et cyan d\'origine.', colors: ['#ff2bd6', '#ff2bd6', '#7af7ff'] },
+  { id: 'fire', name: 'FEU', price: 300, desc: 'De vraies flammes orange et jaunes.', colors: ['#ff6a00', '#ffb000', '#ffe14d', '#ff3b2b'] },
+  { id: 'ice', name: 'GLACE', price: 300, desc: 'Un souffle glacé bleu et blanc.', colors: ['#bfe9ff', '#ffffff', '#5ab8ff'] },
+  { id: 'toxic', name: 'TOXIQUE', price: 350, desc: 'Un nuage vert radioactif.', colors: ['#3dff9e', '#c6ff3d', '#3dff9e'] },
+  { id: 'plasma', name: 'PLASMA', price: 400, desc: 'Prend la couleur néon de ta voiture.', colors: ['glow', 'glow', '#ffffff'] },
+  { id: 'void', name: 'NÉANT', price: 450, desc: 'Un trou noir violet qui aspire la lumière.', colors: ['#8a2bff', '#4b1490', '#ff2bd6'], size: 1.25 },
+  { id: 'electric', name: 'ÉLECTRIQUE', price: 550, desc: 'Des arcs électriques qui crépitent.', colors: ['#7af7ff', '#ffffff', '#2b6bff'], sparks: '#e8fbff', size: 0.8 },
+  { id: 'gold', name: 'OR', price: 650, desc: 'Une pluie de paillettes dorées.', colors: ['#ffd34d', '#fff2b0', '#ffb000'], sparks: '#ffe680' },
+  { id: 'rainbow', name: 'ARC-EN-CIEL', price: 900, desc: 'Toutes les couleurs, l\'une après l\'autre.', rainbow: true },
+];
+
+// ---------- Fumées de drift ----------
+export const SMOKES = [
+  { id: 'standard', name: 'D\'ORIGINE', price: 0, desc: 'Teintée de la couleur néon de ta voiture.', colors: ['glow', '#b9a8ff'] },
+  { id: 'pure', name: 'NÉON PUR', price: 150, desc: 'Uniquement ta couleur néon, très vive.', colors: ['glow'] },
+  { id: 'white', name: 'BLANCHE', price: 150, desc: 'La fumée blanche des pneus qui fondent.', colors: ['#f2f0ff', '#dcd8f0'] },
+  { id: 'embers', name: 'BRAISES', price: 300, desc: 'Fumée orange et étincelles brûlantes.', colors: ['#ff6a00', '#ffb000'], sparks: '#ffd34d' },
+  { id: 'duo', name: 'BICOLORE', price: 300, desc: 'Ta couleur de carrosserie et ton accent.', colors: ['body', 'accent'] },
+  { id: 'sparkle', name: 'ÉTINCELLES', price: 450, desc: 'Une gerbe d\'étincelles à chaque drift.', colors: ['glow', '#b9a8ff'], sparks: '#fff6c2' },
+  { id: 'rainbow', name: 'ARC-EN-CIEL', price: 700, desc: 'Un drift aux couleurs de l\'arc-en-ciel.', rainbow: true },
+];
+
+// ---------- Numéro de course (gratuit) ----------
+export const NUMBER_STYLES = [
+  { id: 'roundel', name: 'PASTILLE' },   // rond blanc, chiffres foncés (course classique)
+  { id: 'neon', name: 'NÉON' },          // chiffres lumineux couleur accent
+  { id: 'bold', name: 'GÉANT' },         // grands chiffres blancs cerclés
+];
+
 // ---------- Offres du jour ----------
 export const OFFERS = {
   // Lots de fragments d'une voiture : prix dégressif

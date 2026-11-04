@@ -1,3 +1,4 @@
+import { AVATARS } from '../data/profile.js';
 // Dessin des voitures.
 // Chaque voiture est dessinée UNE fois dans une petite image (sprite), avec
 // ses effets lumineux, puis cette image est simplement tournée/placée à chaque
@@ -477,6 +478,9 @@ export function makeCarSprite(def, length = 46, width = 24, colors = def.colors)
   // ---- Cockpit ----
   drawCockpit(ctx, d.cockpit, hl, hw, accent, glow, ex.has('ring'));
 
+  // ---- Numéro de course et autocollant (atelier) ----
+  if (colors.number > 0 || (colors.decal && colors.decal !== 'none')) drawDecals(ctx, d, ex, hl, hw, colors);
+
   // ---- Roue avant unique (3 roues) : dépasse devant le nez, avec sa fourche ----
   if (d.wheels === 'trike') {
     ctx.strokeStyle = shade(accent, 0.2);
@@ -752,6 +756,91 @@ function drawFinishOverlay(ctx, finish, body, hl, hw, L, Wd) {
         ctx.fillRect(-hl + ((k * 53) % 100) / 100 * L, -hw + ((k * 71) % 100) / 100 * Wd, 0.35, 0.35);
       }
     }
+  }
+}
+
+// Place libre sur la carrosserie devant et derrière le cockpit (en fraction de demi-longueur)
+const COCKPIT_SPAN = {
+  bubble: [-0.645, 0.44], big: [-0.665, 0.7], front: [-0.16, 0.68], rear: [-0.795, 0.08], slit: [-0.69, 0.8], open: [-0.45, 0.2],
+};
+// Centre et longueur du cockpit (en fraction de demi-longueur), comme drawCockpit
+const COCKPIT_GEOM = { bubble: [-0.18, 0.62], big: [-0.08, 0.78], front: [0.2, 0.48], rear: [-0.42, 0.5], slit: [-0.05, 0.85], open: [-0.12, 0.3] };
+const avatarPaths = new Map();
+function avatarPath(id) {
+  if (!avatarPaths.has(id)) {
+    const a = AVATARS.find((x) => x.id === id);
+    avatarPaths.set(id, a ? [...a.path.matchAll(/\sd="([^"]+)"/g)].map((m) => new Path2D(m[1])) : null);
+  }
+  return avatarPaths.get(id);
+}
+
+/** Numéro (dans la plus grande zone libre) et emblème du joueur (dans l'autre). */
+function drawDecals(ctx, d, ex, hl, hw, colors) {
+  const [back, front] = COCKPIT_SPAN[d.cockpit] ?? COCKPIT_SPAN.bubble;
+  const frontEnd = ex.has('scoop') ? 0.26 : 0.9;
+  const zones = [
+    { len: (frontEnd - front) * hl, x: ((frontEnd + front) / 2) * hl },
+    { len: (back + 0.93) * hl, x: ((back - 0.93) / 2) * hl },
+  ].sort((a, b) => b.len - a.len);
+  const fit = (z, max) => Math.max(2.4, Math.min(max, z.len * 0.46));
+  const accent = colors.accent;
+  const n = colors.number | 0;
+  const decal = colors.decal && colors.decal !== 'none' ? avatarPath(colors.decal) : null;
+  // Pas assez de place sur le capot ni à l'arrière : numéro sur le toit (comme en vraie course)
+  const P = COCKPIT_GEOM[d.cockpit] ?? COCKPIT_GEOM.bubble;
+  const onRoof = n > 0 && zones[0].len * 0.46 < 3.8;
+  const roof = { x: (P[0] + P[1] * 0.125) * hl, r: Math.min(hw * 0.5, 5) };
+  const numZone = n > 0 ? (onRoof ? roof : zones[0]) : null;
+  const decZone = decal ? (n > 0 && !onRoof ? zones[1] : zones[0]) : null;
+  if (numZone) {
+    const r = numZone.r ?? fit(numZone, hw * 0.5);
+    const txt = String(n);
+    const style = colors.numStyle ?? 'roundel';
+    ctx.save();
+    ctx.translate(numZone.x, 0);
+    ctx.rotate(Math.PI / 2); // chiffres lisibles quand la voiture monte vers le haut de l'écran
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (style === 'roundel') {
+      ctx.fillStyle = '#f4f3ff';
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = accent; ctx.lineWidth = r * 0.16; ctx.stroke();
+      ctx.fillStyle = '#12102a';
+      ctx.font = `900 ${r * (txt.length > 1 ? 1.05 : 1.3)}px Orbitron, sans-serif`;
+      ctx.fillText(txt, 0, r * 0.06);
+    } else if (style === 'neon') {
+      ctx.font = `900 ${r * (txt.length > 1 ? 1.35 : 1.7)}px Orbitron, sans-serif`;
+      ctx.shadowColor = accent; ctx.shadowBlur = 2.2 * S;
+      ctx.fillStyle = shade(accent, 0.45);
+      ctx.fillText(txt, 0, r * 0.06);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = shade(accent, 0.75);
+      ctx.fillText(txt, 0, r * 0.06);
+    } else {
+      ctx.font = `900 ${r * (txt.length > 1 ? 1.5 : 1.9)}px Orbitron, sans-serif`;
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#0a0818'; ctx.lineWidth = r * 0.34;
+      ctx.strokeText(txt, 0, r * 0.06);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(txt, 0, r * 0.06);
+    }
+    ctx.restore();
+  }
+  if (decZone) {
+    const r = Math.max(2.8, Math.min(hw * 0.46, decZone.len * 0.55));
+    ctx.save();
+    ctx.translate(decZone.x, 0);
+    ctx.rotate(Math.PI / 2);
+    const k = (r * 2) / 32;
+    ctx.scale(k, k);
+    ctx.translate(-16, -16);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(5,3,14,0.75)'; ctx.lineWidth = 5.2;
+    for (const p of decal) ctx.stroke(p);
+    ctx.shadowColor = accent; ctx.shadowBlur = 1.6 * S / k;
+    ctx.strokeStyle = shade(accent, 0.35); ctx.lineWidth = 2.6;
+    for (const p of decal) ctx.stroke(p);
+    ctx.restore();
   }
 }
 

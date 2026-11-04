@@ -2,6 +2,24 @@
 // flammes du boost, étincelles lors des chocs. Appelé à chaque pas physique.
 
 import { P_SMOKE, P_SPARK, P_FLAME } from './particles.js';
+import { TRAILS, SMOKES } from '../data/shop.js';
+
+// Arc-en-ciel : 24 teintes fixes (les particules gardent une image par couleur)
+const RAINBOW = Array.from({ length: 24 }, (_, i) => {
+  const h = i / 24, f = (n) => { const k = (n + h * 12) % 12; return Math.round(255 * (0.5 + 0.5 * Math.max(-1, Math.min(k - 3, 9 - k, 1)))); };
+  return `#${[f(0), f(8), f(4)].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+});
+const TRAIL_BY_ID = Object.fromEntries(TRAILS.map((t) => [t.id, t]));
+const SMOKE_BY_ID = Object.fromEntries(SMOKES.map((t) => [t.id, t]));
+
+/** Couleur d'une particule d'effet (gère « glow », « body », « accent » et l'arc-en-ciel). */
+export function effectColor(effect, colors, phase) {
+  if (effect.rainbow) return RAINBOW[Math.floor(phase * 24) % 24];
+  const c = effect.colors[Math.floor(Math.random() * effect.colors.length)];
+  return c === 'glow' ? colors.glow : c === 'body' ? colors.body : c === 'accent' ? colors.accent : c;
+}
+export const trailOf = (colors) => TRAIL_BY_ID[colors?.trail] ?? TRAILS[0];
+export const smokeOf = (colors) => SMOKE_BY_ID[colors?.smoke] ?? SMOKES[0];
 
 export function createCarFx() {
   return { skidTimer: 0, lastWheels: null, smokeAcc: 0, flameAcc: 0 };
@@ -16,7 +34,9 @@ function rearWheels(car) {
 }
 
 export function updateCarFx(fx, car, dt, particles, trackRenderer, impactThisStep) {
-  const glow = car.def.colors.glow;
+  const colors = car.livery ?? car.def.colors;
+  const glow = colors.glow;
+  fx.phase = ((fx.phase || 0) + dt * 0.6) % 1; // défilement de l'arc-en-ciel
   const sliding = car.drifting || Math.abs(car.vR) > 140 || (car.braking && car.speed > 260);
   const wheels = rearWheels(car);
 
@@ -44,7 +64,13 @@ export function updateCarFx(fx, car, dt, particles, trackRenderer, impactThisSte
     while (fx.smokeAcc >= 1) {
       fx.smokeAcc -= 1;
       const k = Math.random() < 0.5 ? 0 : 2;
-      const col = Math.random() < 0.5 ? glow : '#b9a8ff';
+      const sm = smokeOf(colors);
+      const col = effectColor(sm, colors, fx.phase + Math.random() * 0.08);
+      if (sm.sparks && Math.random() < 0.35) {
+        particles.spawn(P_SPARK, wheels[k], wheels[k + 1],
+          car.vx * 0.2 + (Math.random() - 0.5) * 160, car.vy * 0.2 + (Math.random() - 0.5) * 160,
+          0.2 + Math.random() * 0.25, 1.2 + Math.random(), 0, sm.sparks);
+      }
       particles.spawn(P_SMOKE,
         wheels[k] + (Math.random() - 0.5) * 6, wheels[k + 1] + (Math.random() - 0.5) * 6,
         car.vx * 0.15 + (Math.random() - 0.5) * 50, car.vy * 0.15 + (Math.random() - 0.5) * 50,
@@ -76,11 +102,19 @@ export function updateCarFx(fx, car, dt, particles, trackRenderer, impactThisSte
       const bx = car.x - fxv * car.length * 0.55;
       const by = car.y - fyv * car.length * 0.55;
       const sp = 180 + Math.random() * 160;
-      const col = Math.random() < 0.6 ? '#ff2bd6' : '#7af7ff';
+      const tr = trailOf(colors);
+      const col = effectColor(tr, colors, fx.phase);
+      const size = tr.size ?? 1;
       particles.spawn(P_FLAME,
         bx + (Math.random() - 0.5) * 8, by + (Math.random() - 0.5) * 8,
         car.vx - fxv * sp, car.vy - fyv * sp,
-        0.18 + Math.random() * 0.12, 9 + Math.random() * 5, -10, col);
+        0.18 + Math.random() * 0.12, (9 + Math.random() * 5) * size, -10, col);
+      if (tr.sparks && Math.random() < 0.3) {
+        const a = car.angle + Math.PI + (Math.random() - 0.5) * 1.4;
+        const ss = 120 + Math.random() * 200;
+        particles.spawn(P_SPARK, bx, by, car.vx * 0.6 + Math.cos(a) * ss, car.vy * 0.6 + Math.sin(a) * ss,
+          0.15 + Math.random() * 0.2, 1.2 + Math.random() * 1.2, 0, tr.sparks);
+      }
     }
   }
 

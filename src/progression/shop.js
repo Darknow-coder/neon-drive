@@ -5,7 +5,7 @@
 
 import { CARS, getCar } from '../data/cars.js';
 import { PACKS, UNLOCK_FRAGMENTS, MAX_LEVEL } from '../data/economy.js';
-import { DAILY_GIFTS, FINISHES, MOTIFS, OFFERS, AVG_CREDITS_PER_RACE } from '../data/shop.js';
+import { DAILY_GIFTS, FINISHES, MOTIFS, TRAILS, SMOKES, OFFERS, AVG_CREDITS_PER_RACE } from '../data/shop.js';
 import { isOwned } from './garage.js';
 import { carLevel, fragmentsOf, upgradeCost, openPack } from './economy.js';
 import { mulberry32 } from '../core/math.js';
@@ -32,8 +32,21 @@ function hash(str) {
 export const racesFor = (missing) => Math.max(1, Math.ceil(missing / AVG_CREDITS_PER_RACE));
 
 // ---------- Cosmétiques ----------
-export const ownsFinish = (save, id) => id === 'standard' || save.cosmetics.finishes.includes(id);
-export const ownsMotif = (save, id) => id === 'origin' || id === 'none' || save.cosmetics.motifs.includes(id);
+// Les 4 familles de cosmétiques : liste, case de la sauvegarde, objets gratuits
+export const STYLE_KINDS = {
+  finish: { list: FINISHES, key: 'finishes', free: ['standard'], label: 'FINITION' },
+  motif: { list: MOTIFS, key: 'motifs', free: ['origin', 'none'], label: 'MOTIF' },
+  trail: { list: TRAILS, key: 'trails', free: ['neon'], label: 'TRAÎNÉE DE BOOST' },
+  smoke: { list: SMOKES, key: 'smokes', free: ['standard'], label: 'FUMÉE DE DRIFT' },
+};
+export function ownsStyle(save, kind, id) {
+  const k = STYLE_KINDS[kind];
+  return !!k && (k.free.includes(id) || (save.cosmetics[k.key] ?? []).includes(id));
+}
+export const ownsFinish = (save, id) => ownsStyle(save, 'finish', id);
+export const ownsMotif = (save, id) => ownsStyle(save, 'motif', id);
+/** Nombre de cosmétiques achetés ou gagnés (succès STYLISTE). */
+export const cosmeticsCount = (save) => Object.values(STYLE_KINDS).reduce((n, k) => n + (save.cosmetics[k.key]?.length ?? 0), 0);
 
 /** Intérêt d'une voiture pour des fragments : verrouillée et proche du but d'abord. */
 function fragmentNeed(save, car) {
@@ -91,8 +104,7 @@ export function generateOffers(save, day) {
   });
   // 5) Un cosmétique non possédé (-20 %)
   const styles = [
-    ...FINISHES.filter((f) => f.price && !ownsFinish(save, f.id)).map((f) => ({ kind: 'finish', item: f, w: 1 })),
-    ...MOTIFS.filter((m) => m.price && !ownsMotif(save, m.id)).map((m) => ({ kind: 'motif', item: m, w: 1 })),
+    ...Object.entries(STYLE_KINDS).flatMap(([kind, k]) => k.list.filter((x) => x.price && !x.exclusive && !ownsStyle(save, kind, x.id)).map((x) => ({ kind, item: x, w: 1 }))),
   ];
   if (styles.length) {
     const s = pickWeighted(styles);
@@ -125,8 +137,7 @@ export function buyOffer(save, offerId, rng) {
   const o = save.shop.offers.find((x) => x.id === offerId);
   if (!o) return { ok: false, reason: 'missing' };
   if (o.bought) return { ok: false, reason: 'bought' };
-  if (o.kind === 'finish' && ownsFinish(save, o.itemId)) return { ok: false, reason: 'owned' };
-  if (o.kind === 'motif' && ownsMotif(save, o.itemId)) return { ok: false, reason: 'owned' };
+  if (STYLE_KINDS[o.kind] && ownsStyle(save, o.kind, o.itemId)) return { ok: false, reason: 'owned' };
   const p = pay(save, o.price);
   if (!p.ok) return p;
   o.bought = true;
@@ -135,8 +146,7 @@ export function buyOffer(save, offerId, rng) {
     return { ok: true, kind: 'fragments', gains: [{ carId: o.carId, amount: o.amount, car: getCar(o.carId) }] };
   }
   if (o.kind === 'pack') return { ok: true, kind: 'pack', packId: o.packId, gains: openPack(save, o.packId, rng) };
-  if (o.kind === 'finish') { save.cosmetics.finishes.push(o.itemId); return { ok: true, kind: 'finish', itemId: o.itemId }; }
-  if (o.kind === 'motif') { save.cosmetics.motifs.push(o.itemId); return { ok: true, kind: 'motif', itemId: o.itemId }; }
+  if (STYLE_KINDS[o.kind]) { save.cosmetics[STYLE_KINDS[o.kind].key].push(o.itemId); return { ok: true, kind: o.kind, itemId: o.itemId }; }
   return { ok: false, reason: 'unknown' };
 }
 
@@ -151,21 +161,20 @@ export function buyPackItem(save, packId, rng) {
 
 /** Achète une finition ou un motif au prix normal (onglet STYLE). */
 export function buyStyle(save, kind, id) {
-  const list = kind === 'finish' ? FINISHES : MOTIFS;
-  const item = list.find((x) => x.id === id);
+  const k = STYLE_KINDS[kind];
+  const item = k?.list.find((x) => x.id === id);
   if (!item) return { ok: false, reason: 'missing' };
   if (item.exclusive) return { ok: false, reason: 'exclusive' };
-  if ((kind === 'finish' ? ownsFinish : ownsMotif)(save, id)) return { ok: false, reason: 'owned' };
+  if (ownsStyle(save, kind, id)) return { ok: false, reason: 'owned' };
   const p = pay(save, item.price);
   if (!p.ok) return p;
-  save.cosmetics[kind === 'finish' ? 'finishes' : 'motifs'].push(id);
+  save.cosmetics[k.key].push(id);
   return { ok: true, kind, itemId: id };
 }
 
 /** Applique une finition / un motif possédé à une voiture. */
 export function equipStyle(save, carId, kind, id) {
-  if (kind === 'finish' && !ownsFinish(save, id)) return false;
-  if (kind === 'motif' && !ownsMotif(save, id)) return false;
+  if (!ownsStyle(save, kind, id)) return false;
   const l = (save.garage.liveries[carId] ??= {});
   l[kind] = id;
   return true;

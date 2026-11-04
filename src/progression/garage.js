@@ -51,12 +51,25 @@ export const passOnly = (car) => car.unlock?.type === 'pass';
 export function liveryFor(save, carId) {
   const base = getCar(carId).colors;
   const l = save.garage.liveries[carId];
-  if (!l) return { ...base, finish: base.finish ?? 'standard', motif: 'origin' };
+  if (!l) return { ...base, finish: base.finish ?? 'standard', motif: 'origin', trail: 'neon', smoke: 'standard', number: 0, numStyle: 'roundel', decal: 'none' };
   return {
-    body: l.body ?? base.body, accent: l.accent ?? base.accent, glow: l.body ?? base.glow,
+    body: l.body ?? base.body, accent: l.accent ?? base.accent,
+    // Néon : choisi à part, sinon il suit la carrosserie (comme avant)
+    glow: l.glow ?? l.body ?? base.glow,
     finish: l.finish ?? base.finish ?? 'standard', motif: l.motif ?? 'origin',
+    trail: l.trail ?? 'neon', smoke: l.smoke ?? 'standard',
+    number: l.number ?? 0, numStyle: l.numStyle ?? 'roundel', decal: l.decal ?? 'none',
   };
 }
+
+/** Copie le look d'une voiture sur toutes les voitures possédées. */
+export function copyLiveryToAll(save, carId) {
+  const src = save.garage.liveries[carId] ?? {};
+  for (const id of save.garage.owned) if (id !== carId) save.garage.liveries[id] = { ...src };
+}
+
+/** Remet une voiture à ses couleurs et décorations d'origine. */
+export function resetLivery(save, carId) { delete save.garage.liveries[carId]; }
 
 export function setLivery(save, carId, part, color) {
   const l = (save.garage.liveries[carId] ??= {});

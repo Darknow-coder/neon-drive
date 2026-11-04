@@ -1,18 +1,19 @@
 // Écran du garage : choisir sa voiture, voir ses caractéristiques, la peindre.
 
-import { CARS, PAINT_COLORS, STAT_LABELS, getCar } from '../data/cars.js';
-import { isOwned, liveryFor, setLivery, unlockLabel } from '../progression/garage.js';
+import { CARS, STAT_LABELS, getCar } from '../data/cars.js';
+import { isOwned, liveryFor, unlockLabel } from '../progression/garage.js';
 import { makeCarSprite } from '../render/carSprite.js';
 import { carLevel, fragmentsOf, upgradeCost, upgradeCar, unlockFragments, unlockWithFragments } from '../progression/economy.js';
 import { MAX_LEVEL } from '../data/economy.js';
 import { ico, credits as cr, iconImage } from './icons.js';
-import { FINISHES, MOTIFS } from '../data/shop.js';
+import { FINISHES, MOTIFS, TRAILS, SMOKES } from '../data/shop.js';
 import { TRAITS } from '../data/cars.js';
-import { ownsFinish, ownsMotif, equipStyle } from '../progression/shop.js';
+import { createAtelier } from './atelier.js';
 
 const $ = (id) => document.getElementById(id);
 
-export function createGarage({ save, onSave, onClose, sfx, openShop }) {
+export function createGarage({ save, onSave, onClose, sfx }) {
+  const atelier = createAtelier({ save, onSave, sfx, onClose: () => { $('garage').classList.remove('hidden'); render(); cancelAnimationFrame(raf); raf = requestAnimationFrame(drawPreview); } });
   let index = Math.max(0, CARS.findIndex((c) => c.id === save.selectedCar));
   let raf = 0;
   let angle = -Math.PI / 2;
@@ -74,25 +75,6 @@ export function createGarage({ save, onSave, onClose, sfx, openShop }) {
     raf = requestAnimationFrame(drawPreview);
   }
 
-  function swatches(rootId, part) {
-    const root = $(rootId);
-    root.innerHTML = '';
-    const current = liveryFor(save, car().id)[part];
-    for (const col of PAINT_COLORS) {
-      const b = document.createElement('button');
-      b.className = 'swatch' + (col.toLowerCase() === current.toLowerCase() ? ' on' : '');
-      b.style.background = col;
-      b.style.color = col;
-      b.setAttribute('aria-label', `Couleur ${col}`);
-      b.addEventListener('click', () => {
-        setLivery(save, car().id, part, col);
-        onSave();
-        render();
-      });
-      root.append(b);
-    }
-  }
-
   // Miniatures de toutes les voitures (dessinées une fois, mises à jour au besoin)
   const thumbs = $('garage-thumbs');
   function renderThumbs() {
@@ -124,35 +106,22 @@ export function createGarage({ save, onSave, onClose, sfx, openShop }) {
     thumbs.children[index]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
 
-  // Onglets COULEURS / STYLE
-  let ptab = 'colors';
-  document.querySelectorAll('#paint-tabs button').forEach((b) => b.addEventListener('click', () => { ptab = b.dataset.ptab; render(); }));
-  function renderStyleTab() {
-    const c = car();
-    const cur = liveryFor(save, c.id);
-    const box = $('garage-style');
-    box.innerHTML = '';
-    for (const [kind, list, label] of [['finish', FINISHES, 'Finition'], ['motif', MOTIFS, 'Motif']]) {
-      const owned = list.filter((x) => (kind === 'finish' ? ownsFinish : ownsMotif)(save, x.id));
-      const row = document.createElement('div');
-      row.className = 'style-chips';
-      row.insertAdjacentHTML('beforeend', `<span class="chip-label">${label}</span>`);
-      for (const it of owned) {
-        const b = document.createElement('button');
-        b.textContent = it.name;
-        if (cur[kind] === it.id) b.className = 'on';
-        b.addEventListener('click', () => { equipStyle(save, c.id, kind, it.id); onSave(); sfx?.click(); render(); });
-        row.append(b);
-      }
-      box.append(row);
-    }
-    const more = document.createElement('button');
-    more.className = 'style-more';
-    const left = [...FINISHES.filter((f) => !f.exclusive && !ownsFinish(save, f.id)), ...MOTIFS.filter((m) => !m.exclusive && !ownsMotif(save, m.id))].length;
-    more.textContent = left ? `${left} style${left > 1 ? 's' : ''} de plus dans la BOUTIQUE ›` : 'Voir la BOUTIQUE ›';
-    more.addEventListener('click', () => { close(); openShop?.('style'); });
-    box.append(more);
+  // Résumé du look (sous le bouton ATELIER)
+  const nameOf = (list, id) => list.find((x) => x.id === id)?.name ?? '';
+  function renderQuick() {
+    const l = liveryFor(save, car().id);
+    const dot = (c) => `<i style="background:${c};color:${c}"></i>`;
+    $('garage-quick').innerHTML = `<span class="cq-dots">${dot(l.body)}${dot(l.accent)}${dot(l.glow)}</span>
+      <span>${nameOf(FINISHES, l.finish)} · ${nameOf(MOTIFS, l.motif)}${l.number ? ` · n°${l.number}` : ''}</span>
+      <span>Boost ${nameOf(TRAILS, l.trail)} · Drift ${nameOf(SMOKES, l.smoke)}</span>`;
   }
+  $('garage-custom').querySelector('[data-open]').addEventListener('click', () => {
+    if (!isOwned(save, car().id)) return;
+    sfx?.click?.();
+    cancelAnimationFrame(raf);
+    $('garage').classList.add('hidden');
+    atelier.open(car().id);
+  });
 
   function render() {
     renderThumbs();
@@ -225,19 +194,14 @@ export function createGarage({ save, onSave, onClose, sfx, openShop }) {
       row.innerHTML = `<span>${label}</span><div class="stat-bar">${bars}</div><b>${v}</b>`;
       stats.append(row);
     }
-    $('paint-tabs').classList.toggle('hidden', !owned);
-    document.querySelectorAll('#paint-tabs button').forEach((b) => b.classList.toggle('on', b.dataset.ptab === ptab));
-    $('garage-paint').classList.toggle('hidden', !owned || ptab !== 'colors');
-    $('garage-style').classList.toggle('hidden', !owned || ptab !== 'style');
-    document.querySelector('.garage-card').classList.toggle('styling', owned && ptab === 'style');
-    if (owned && ptab === 'style') renderStyleTab();
+    $('garage-custom').classList.toggle('hidden', !owned);
+    if (owned) renderQuick();
     $('garage-lock').classList.toggle('hidden', owned);
     $('garage-lock').innerHTML = owned ? '' : `${ico('lock')} ${unlockLabel(c)} — aperçu`;
     const sel = $('garage-select');
     const isSelected = save.selectedCar === c.id;
     sel.disabled = !owned || isSelected;
     sel.textContent = !owned ? 'VERROUILLÉE' : isSelected ? 'VOITURE ACTUELLE ✓' : 'CHOISIR CETTE VOITURE';
-    if (owned) { swatches('paint-body', 'body'); swatches('paint-accent', 'accent'); }
   }
 
   $('garage-prev').addEventListener('click', () => { index = (index - 1 + CARS.length) % CARS.length; render(); });
