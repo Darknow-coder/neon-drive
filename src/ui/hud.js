@@ -1,10 +1,12 @@
 // Affichage tête haute : tour, chronos, vitesse, jauge de boost.
 // On ne modifie le texte HTML que s'il a changé (économise du temps de calcul).
 
+import { prefs } from '../core/prefs.js';
 import { formatTime } from '../core/math.js';
 
 export const SPEED_TO_KMH = 0.32;
 
+const fpsAcc = { n: 0, t: performance.now(), v: 0 };
 export function createHud() {
   const el = {
     root: document.getElementById('hud'),
@@ -26,6 +28,8 @@ export function createHud() {
     time: document.getElementById('hud-time'),
     best: document.getElementById('hud-best'),
     speed: document.getElementById('hud-speed'),
+    unit: document.getElementById('hud-unit'),
+    fps: document.getElementById('hud-fps'),
     boost: document.getElementById('hud-boost'),
     boostBtn: document.querySelector('.tbtn-boost'),
   };
@@ -100,10 +104,19 @@ export function createHud() {
       // Chiffres qui changent sans arrêt (chrono, vitesse, jauge) : ~15 fois par seconde
       // suffisent à l'œil, et chaque mise à jour du texte coûte un recalcul de la page.
       const now = performance.now();
+      // Compteur d'images par seconde (réglage) : compté à CHAQUE image
+      if (prefs.showFps) {
+        fpsAcc.n++; if (now - fpsAcc.t > 500) { fpsAcc.v = Math.round((fpsAcc.n * 1000) / (now - fpsAcc.t)); fpsAcc.n = 0; fpsAcc.t = now; }
+        set('fps', el.fps, `${fpsAcc.v} i/s`);
+      }
+      if (cache.fpsOn !== prefs.showFps) { cache.fpsOn = prefs.showFps; el.fps.classList.toggle('hidden', !prefs.showFps); }
       if (now - (cache.numAt ?? 0) > 66) {
         cache.numAt = now;
         set('time', el.time, lap > 0 ? formatTime(lapTime) : '0:00.000');
-        set('speed', el.speed, String(Math.round(Math.max(0, car.vF) * SPEED_TO_KMH)));
+        const k = prefs.units === 'mph' ? SPEED_TO_KMH * 0.6214 : SPEED_TO_KMH;
+        set('speed', el.speed, String(Math.round(Math.max(0, car.vF) * k)));
+        set('unit', el.unit, prefs.units === 'mph' ? 'MPH' : 'KM/H');
+
         set('boost', el.boost, String(Math.round(car.boost * 50) / 50), 'scaleX'); // (transform : sans recalcul de la page)
       }
       set('best', el.best, formatTime(bestLap));

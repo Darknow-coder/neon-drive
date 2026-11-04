@@ -2,6 +2,7 @@
 // stockées dans des tableaux réutilisés (aucune création d'objet en jeu,
 // donc pas de saccades dues au ramasse-miettes sur mobile).
 
+import { prefs } from '../core/prefs.js';
 import { makeGlowSprite } from './carSprite.js';
 
 export const P_SMOKE = 0;
@@ -24,7 +25,10 @@ export function createParticles(max = 500) {
     return s;
   };
 
+  let skip = 0;
   function spawn(t, px, py, pvx, pvy, lifeS, sz, gr, col) {
+    // Effets réduits : une particule sur deux
+    if (prefs.effects === 'low' && (skip = (skip + 1) % 2) === 0) return;
     const i = next;
     next = (next + 1) % max;
     type[i] = t; x[i] = px; y[i] = py; vx[i] = pvx; vy[i] = pvy;

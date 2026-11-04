@@ -1,38 +1,77 @@
-// Écran des réglages : volumes, vibrations, commandes tactiles, sauvegarde.
+// Écran des réglages (5 onglets) : son, commandes, graphismes, affichage, compte.
 
 import { exportSaveCode, importSaveCode } from '../progression/save.js';
 
 const $ = (id) => document.getElementById(id);
 
-export function createSettingsScreen({ save, onChange, onImport, onTutorial, onClose }) {
+export function createSettingsScreen({ save, onChange, onImport, onTutorial, onClose, onIdentity, onReset, accountInfo }) {
   const settings = save.settings;
-  const music = $('set-music');
-  const sfx = $('set-sfx');
-  const vib = $('set-vibration');
-  const swapped = $('set-swapped');
-  const autoGas = $('set-autogas');
-  const size = $('set-size');
   const pct = (v) => `${Math.round(v * 100)} %`;
+  let tab = 'sound';
+
+  // ---------- Curseurs ----------
+  const sliders = [
+    ['set-master', () => settings.master, (v) => { settings.master = v; }],
+    ['set-music', () => settings.music, (v) => { settings.music = v; }],
+    ['set-sfx', () => settings.sfx, (v) => { settings.sfx = v; }],
+    ['set-engine', () => settings.engine, (v) => { settings.engine = v; }],
+    ['set-size', () => settings.controls.size, (v) => { settings.controls.size = v; }],
+    ['set-opacity', () => settings.controls.opacity, (v) => { settings.controls.opacity = v; }],
+  ];
+  // ---------- Cases à cocher ----------
+  const checks = [
+    ['set-vibration', () => settings.vibration, (v) => { settings.vibration = v; }],
+    ['set-swapped', () => settings.controls.swapped, (v) => { settings.controls.swapped = v; }],
+    ['set-autogas', () => settings.controls.autoGas, (v) => { settings.controls.autoGas = v; }],
+    ['set-shake', () => settings.graphics.shake, (v) => { settings.graphics.shake = v; }],
+    ['set-showfps', () => settings.graphics.showFps, (v) => { settings.graphics.showFps = v; }],
+    ['set-names', () => settings.display.names, (v) => { settings.display.names = v; }],
+    ['set-flash', () => settings.display.reduceFlash, (v) => { settings.display.reduceFlash = v; }],
+    ['set-motion', () => settings.display.reduceMotion, (v) => { settings.display.reduceMotion = v; }],
+  ];
+  // ---------- Choix multiples (boutons segmentés) ----------
+  const segs = [
+    ['set-steer', () => settings.controls.steer, (v) => { settings.controls.steer = v; }],
+    ['set-quality', () => settings.graphics.quality, (v) => { settings.graphics.quality = v; }],
+    ['set-fps', () => String(settings.graphics.fps), (v) => { settings.graphics.fps = Number(v); }],
+    ['set-effects', () => settings.graphics.effects, (v) => { settings.graphics.effects = v; }],
+    ['set-units', () => settings.display.units, (v) => { settings.display.units = v; }],
+  ];
+  const QHINT = {
+    auto: 'Le jeu baisse un peu la finesse de l\'image si ton appareil n\'arrive pas à suivre.',
+    high: 'Image toujours la plus fine possible (peut ramer sur les petits téléphones).',
+    eco: 'Image moins fine : plus fluide et moins de batterie sur téléphone.',
+  };
 
   function refresh() {
-    music.value = settings.music;
-    sfx.value = settings.sfx;
-    vib.checked = settings.vibration;
-    swapped.checked = settings.controls.swapped;
-    autoGas.checked = settings.controls.autoGas;
-    size.value = settings.controls.size;
-    $('set-music-out').textContent = pct(settings.music);
-    $('set-sfx-out').textContent = pct(settings.sfx);
-    $('set-size-out').textContent = pct(settings.controls.size);
+    for (const [id, get] of sliders) { $(id).value = get(); $(`${id}-out`).textContent = pct(get()); }
+    for (const [id, get] of checks) $(id).checked = !!get();
+    for (const [id, get] of segs) $(id).querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === String(get())));
+    $('set-quality-hint').textContent = QHINT[settings.graphics.quality];
+    document.querySelectorAll('.set-tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+    document.querySelectorAll('.set-pane').forEach((p) => p.classList.toggle('hidden', p.dataset.pane !== tab));
+    if (tab === 'account') $('set-account').innerHTML = accountInfo?.() ?? '';
   }
-  music.addEventListener('input', () => { settings.music = +music.value; refresh(); onChange(false); });
-  sfx.addEventListener('input', () => { settings.sfx = +sfx.value; refresh(); onChange(false); });
-  size.addEventListener('input', () => { settings.controls.size = +size.value; refresh(); onChange(false); });
-  // Enregistrement quand on relâche le curseur (pas à chaque mouvement)
-  for (const el of [music, sfx, size]) el.addEventListener('change', () => onChange(true));
-  vib.addEventListener('change', () => { settings.vibration = vib.checked; onChange(true); });
-  swapped.addEventListener('change', () => { settings.controls.swapped = swapped.checked; onChange(true); });
-  autoGas.addEventListener('change', () => { settings.controls.autoGas = autoGas.checked; onChange(true); });
+  for (const [id, , set] of sliders) {
+    const el = $(id);
+    el.addEventListener('input', () => { set(+el.value); refresh(); onChange(false); });
+    el.addEventListener('change', () => onChange(true)); // enregistré quand on relâche
+  }
+  for (const [id, , set] of checks) $(id).addEventListener('change', () => { set($(id).checked); refresh(); onChange(true); });
+  for (const [id, , set] of segs) {
+    $(id).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { set(b.dataset.v); refresh(); onChange(true); }));
+  }
+  document.querySelectorAll('.set-tab').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; refresh(); }));
+
+  // ---------- Compte ----------
+  $('set-identity').addEventListener('click', () => onIdentity?.());
+  const reset = $('set-reset');
+  reset.addEventListener('click', () => {
+    if (reset.dataset.step === '2') { onReset?.(); return; }
+    reset.dataset.step = reset.dataset.step === '1' ? '2' : '1';
+    reset.textContent = reset.dataset.step === '1' ? 'TU ES SÛR ? (APPUIE ENCORE)' : 'DERNIÈRE CONFIRMATION : TOUT EFFACER';
+    $('set-reset-msg').textContent = 'Attention : tout sera perdu sur cet appareil. Exporte d\'abord ta sauvegarde si tu veux la garder.';
+  });
 
   // ---------- Sauvegarde : export / import ----------
   const io = $('save-io');
@@ -85,10 +124,13 @@ export function createSettingsScreen({ save, onChange, onImport, onTutorial, onC
   $('settings-close').addEventListener('click', () => close());
 
   function open({ inRace = false } = {}) {
+    if (inRace && tab === 'account') tab = 'sound';
+    reset.dataset.step = '';
+    reset.textContent = 'EFFACER TOUTE MA PROGRESSION';
     refresh();
     io.classList.add('hidden');
-    // Pendant une course : pas d'import ni de tutoriel
-    for (const id of ['save-import', 'btn-tutorial-again']) $(id).disabled = inRace;
+    // Pendant une course : pas d'import, de tutoriel, de remise à zéro ni de changement de pseudo
+    for (const id of ['save-import', 'btn-tutorial-again', 'set-reset', 'set-identity']) $(id).disabled = inRace;
     $('settings').classList.remove('hidden');
   }
   function close() { $('settings').classList.add('hidden'); onClose?.(); }

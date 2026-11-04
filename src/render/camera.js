@@ -4,6 +4,7 @@
 // - Elle dézoome légèrement avec la vitesse et pendant le boost.
 // - Ses mouvements sont amortis (pas de secousses) sauf lors des chocs.
 
+import { prefs } from '../core/prefs.js';
 import { clamp, damp } from '../core/math.js';
 
 export function createCamera() {
@@ -51,7 +52,7 @@ export function updateCamera(cam, car, dt) {
   // Secousse lors des chocs
   if (car.impact > 140) cam.shake = Math.max(cam.shake, Math.min(1, car.impact / 600));
   cam.shake = Math.max(0, cam.shake - dt * 2.8);
-  const s = cam.shake * cam.shake * 9;
+  const s = prefs.shake ? cam.shake * cam.shake * 9 : 0;
   cam.shakeX = (Math.random() * 2 - 1) * s;
   cam.shakeY = (Math.random() * 2 - 1) * s;
 }

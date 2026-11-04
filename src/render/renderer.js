@@ -1,5 +1,6 @@
 // Assemble l'image de chaque frame : sol, circuit, voitures, effets, filtres.
 
+import { prefs } from '../core/prefs.js';
 import { createWeatherFx } from './weatherFx.js';
 import { makeCarSprite, makeGlowSprite } from './carSprite.js';
 import { lerp, lerpAngle } from '../core/math.js';
@@ -165,7 +166,7 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
         ctx.fill();
         continue;
       }
-      if (!car.name || car.isPlayer) continue;
+      if (!car.name || car.isPlayer || !prefs.names) continue;
       const x = lerp(car.prevX, car.x, alpha);
       const y = lerp(car.prevY, car.y, alpha) - 30;
       if (x < view.x0 - 60 || x > view.x1 + 60 || y < view.y0 - 60 || y > view.y1 + 60) continue;
@@ -194,7 +195,8 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
     // Lignes de vitesse : en boost, et plus discrètes à très haute vitesse
     if (player) {
       const fast = player.speed / player.params.maxSpeed;
-      if (player.boosting) drawSpeedLines(ctx, W, H, player, 1);
+      if (prefs.effects === 'low') { /* lignes de vitesse désactivées */ }
+      else if (player.boosting) drawSpeedLines(ctx, W, H, player, 1);
       else if (fast > 0.86) drawSpeedLines(ctx, W, H, player, Math.min(1, (fast - 0.86) / 0.14) * 0.5);
     }
     // (le vignettage des bords est fait en CSS : .vignette dans main.css)

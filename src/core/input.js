@@ -25,7 +25,7 @@ export function createInput({ touchRoot, onAction } = {}) {
   let steerSmooth = 0;
   const intent = createIntent();
   // Options : accélération automatique (on ne gère que la direction et le frein)
-  const options = { autoGas: false };
+  const options = { autoGas: false, steer: 'normal' };
 
   // ----- Clavier -----
   window.addEventListener('keydown', (e) => {
@@ -144,7 +144,9 @@ export function createInput({ touchRoot, onAction } = {}) {
       const right = keys.has('right') || touchState.right;
       const target = (right ? 1 : 0) - (left ? 1 : 0);
       // Léger lissage : un bouton est tout-ou-rien, la direction ne doit pas l'être.
-      const rate = target === 0 ? 14 : Math.sign(target) !== Math.sign(steerSmooth) ? 16 : 9;
+      // Sensibilité de la direction (réglage) : douce / normale / vive
+      const sens = options.steer === 'soft' ? 0.6 : options.steer === 'sharp' ? 1.7 : 1;
+      const rate = (target === 0 ? 14 : Math.sign(target) !== Math.sign(steerSmooth) ? 16 : 9) * sens;
       steerSmooth += (target - steerSmooth) * (1 - Math.exp(-rate * dt));
       if (Math.abs(steerSmooth) < 0.001 && target === 0) steerSmooth = 0;
 

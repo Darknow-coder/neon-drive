@@ -2304,3 +2304,56 @@ button, .menu-btn, .nav-btn, .mode-tile { touch-action: manipulation; }
   .pc-head b { font-size: 16px; }
   .pc-car canvas { width: 64px; height: 64px; }
 }
+
+/* =====================================================================
+   RÉGLAGES (onglets)
+   ===================================================================== */
+.settings-card { width: min(720px, 100%); gap: 10px; }
+.set-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.set-head .overlay-title { text-align: left; }
+.set-ok { min-width: 90px; }
+.set-tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.set-tab { height: 38px; border-radius: 11px; cursor: pointer; font-family: var(--font-display); font-size: 10px; letter-spacing: 1px; color: var(--muted);
+  background: rgba(10, 6, 30, 0.6); border: 1px solid rgba(0, 240, 255, 0.2); padding: 0 4px; }
+.set-tab.on { color: #fff; border-color: var(--cyan); background: rgba(0, 240, 255, 0.12); box-shadow: 0 0 12px rgba(0, 240, 255, 0.25); }
+.set-pane { display: flex; flex-direction: column; gap: 8px; min-height: 230px; }
+.set-pane.hidden { display: none; }
+.set-pane .set-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); }
+.set-pane .set-row > span { font-size: 15px; }
+.set-pane .set-row input[type="range"] { width: min(220px, 40vw); }
+.set-pane .set-row output { min-width: 46px; text-align: right; font-weight: 700; color: #7af7ff; font-variant-numeric: tabular-nums; }
+.set-pane .set-check { grid-template-columns: minmax(0, 1fr) auto; }
+.set-pane .set-check input { width: 22px; height: 22px; accent-color: #00f0ff; }
+.set-pane .set-row:has(.seg) { grid-template-columns: minmax(0, 1fr) auto; }
+.seg { display: inline-flex; border-radius: 10px; overflow: hidden; border: 1px solid rgba(0, 240, 255, 0.35); }
+.seg button { padding: 7px 11px; cursor: pointer; font-family: var(--font-display); font-size: 10px; letter-spacing: 1px; color: var(--muted); background: rgba(10, 6, 30, 0.6); border: none; border-right: 1px solid rgba(0, 240, 255, 0.2); white-space: nowrap; }
+.seg button:last-child { border-right: none; }
+.seg button.on { color: #0b0628; background: #7af7ff; }
+.set-sub { margin-top: 4px; font-family: var(--font-display); font-size: 10px; letter-spacing: 3px; color: var(--muted); }
+.set-sub.danger { color: #ff7a9a; }
+.set-hint { font-size: 12px; color: var(--muted); padding: 0 4px; }
+.menu-btn.danger { border-color: #ff2b5a; color: #ffb3c0; }
+.set-account { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 12px; background: rgba(0, 240, 255, 0.06); border: 1px solid rgba(0, 240, 255, 0.25); }
+.set-account .avatar.av-m { width: 48px; height: 48px; }
+.set-account b { display: block; font-family: var(--font-display); font-size: 15px; letter-spacing: 1px; }
+.set-account b i { font-style: normal; color: var(--muted); font-size: 0.8em; }
+.set-account small { display: block; font-size: 12px; color: var(--muted); }
+.set-account em { font-style: normal; font-family: var(--font-display); color: #7af7ff; letter-spacing: 2px; }
+.set-account .err { color: #ff9fae; }
+@media (max-height: 460px) {
+  .settings-card { padding: 10px 14px; gap: 6px; }
+  .set-tab { height: 30px; font-size: 9px; }
+  .set-pane { gap: 5px; min-height: 0; }
+  .set-pane .set-row { padding: 4px 8px; }
+  .set-pane .set-row > span { font-size: 13px; }
+}
+@media (max-width: 560px) { .set-tab { font-size: 8px; letter-spacing: 0; } .set-pane .set-row { grid-template-columns: minmax(0, 1fr) auto; } .set-pane .set-row output { display: none; } }
+
+/* Boutons tactiles : opacité réglable */
+.touch .tbtn { opacity: var(--bo, 0.85); }
+.touch .tbtn.active { opacity: 1; }
+/* Compteur d'images par seconde */
+.hud-fps { position: absolute; left: 50%; bottom: calc(6px + var(--safe-b)); transform: translateX(-50%); font-family: var(--font-display); font-size: 11px; color: #3dff9e; background: rgba(7, 4, 26, 0.6); padding: 2px 8px; border-radius: 6px; pointer-events: none; }
+/* Réduire les animations : tout ce qui bouge en boucle s'arrête */
+body.reduce-motion .menu *, body.reduce-motion .menu *::before, body.reduce-motion .menu *::after,
+body.reduce-motion .badge, body.reduce-motion .boot * { animation: none !important; }

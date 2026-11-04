@@ -50,12 +50,13 @@
     <div class="hud-lights hidden" id="hud-lights"><div class="lamps"><i></i><i></i><i></i></div><div class="lights-hint" id="hud-lights-hint">Accélère au feu VERT : départ canon !</div></div>
     <div class="hud-weather hidden" id="hud-weather"></div>
     <div class="hud-wind hidden" id="hud-wind"><i id="hud-wind-arrow"><svg viewBox="0 0 32 32" width="30" height="30"><path d="M4 16h20M17 8l8 8-8 8" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></i><span>RAFALE</span></div>
+    <div class="hud-fps hidden" id="hud-fps"></div>
     <div class="hud-center" id="hud-msg"></div>
     <div class="hud-danger hidden" id="hud-danger">TU ES DERNIER — DÉPASSE !</div>
     <div class="hud-count hidden" id="hud-count"></div>
     <div class="hud-block hud-speed">
       <div class="hud-value hud-mono" id="hud-speed">0</div>
-      <div class="hud-label">KM/H</div>
+      <div class="hud-label" id="hud-unit">KM/H</div>
       <div class="boost-gauge"><div class="boost-fill" id="hud-boost"></div></div>
       <div class="hud-label boost-label">BOOST</div>
     </div>
@@ -104,39 +105,86 @@
   <!-- Réglages -->
   <div id="settings" class="overlay hidden">
     <div class="overlay-card settings-card">
-      <div class="overlay-title">RÉGLAGES</div>
-      <label class="set-row"><span>Musique</span><input type="range" min="0" max="1" step="0.05" id="set-music" /><output id="set-music-out"></output></label>
-      <label class="set-row"><span>Effets sonores</span><input type="range" min="0" max="1" step="0.05" id="set-sfx" /><output id="set-sfx-out"></output></label>
-      <label class="set-row set-check"><span>Vibrations (mobile)</span><input type="checkbox" id="set-vibration" /></label>
-      <div class="set-section">COMMANDES TACTILES</div>
-      <label class="set-row set-check"><span>Inverser (direction à droite, pédales à gauche)</span><input type="checkbox" id="set-swapped" /></label>
-      <label class="set-row set-check"><span>Accélération automatique</span><input type="checkbox" id="set-autogas" /></label>
-      <label class="set-row"><span>Taille des boutons</span><input type="range" min="0.75" max="1.35" step="0.05" id="set-size" /><output id="set-size-out"></output></label>
-      <div class="set-section">COMMANDES</div>
-      <div class="controls-help">
-        <div class="help-kb"><b>Clavier :</b> ← → tourner · ↑ / Z accélérer · ↓ / S / Espace freiner · freiner + tourner vite = drift · Maj / B boost · R replacer · Échap pause</div>
-        <div class="help-touch"><b>Tactile :</b> pouce gauche ◀ ▶ · pouce droit GAZ, FREIN/DRIFT, BOOST</div>
+      <div class="set-head">
+        <div class="overlay-title">RÉGLAGES</div>
+        <button class="menu-btn primary set-ok" id="settings-close">OK</button>
       </div>
-      <div class="set-section">SAUVEGARDE</div>
-      <div class="row-btns">
-        <button class="menu-btn" id="save-export">EXPORTER</button>
-        <button class="menu-btn" id="save-import">IMPORTER</button>
-        <button class="menu-btn" id="btn-tutorial-again">TUTORIEL</button>
+      <div class="set-tabs" id="set-tabs">
+        <button class="set-tab on" data-tab="sound">SON</button>
+        <button class="set-tab" data-tab="controls">COMMANDES</button>
+        <button class="set-tab" data-tab="graphics">GRAPHISMES</button>
+        <button class="set-tab" data-tab="display">AFFICHAGE</button>
+        <button class="set-tab" data-tab="account">COMPTE</button>
       </div>
-      <div class="save-io hidden" id="save-io">
-        <div class="muted small" id="save-io-help"></div>
-        <textarea id="save-code" rows="3" spellcheck="false"></textarea>
-        <div class="row-btns">
-          <button class="menu-btn" id="save-io-action">COPIER</button>
-          <button class="menu-btn" id="save-io-cancel">FERMER</button>
+
+      <div class="set-pane" data-pane="sound">
+        <label class="set-row"><span>Volume général</span><input type="range" min="0" max="1" step="0.05" id="set-master" /><output id="set-master-out"></output></label>
+        <label class="set-row"><span>Musique</span><input type="range" min="0" max="1" step="0.05" id="set-music" /><output id="set-music-out"></output></label>
+        <label class="set-row"><span>Effets sonores</span><input type="range" min="0" max="1" step="0.05" id="set-sfx" /><output id="set-sfx-out"></output></label>
+        <label class="set-row"><span>Bruit du moteur</span><input type="range" min="0" max="1" step="0.05" id="set-engine" /><output id="set-engine-out"></output></label>
+        <div class="set-hint">Le son se coupe tout seul quand le jeu passe en arrière-plan.</div>
+      </div>
+
+      <div class="set-pane hidden" data-pane="controls">
+        <label class="set-row set-check"><span>Vibrations (mobile)</span><input type="checkbox" id="set-vibration" /></label>
+        <label class="set-row set-check"><span>Accélération automatique</span><input type="checkbox" id="set-autogas" /></label>
+        <div class="set-row"><span>Sensibilité de la direction</span><div class="seg" id="set-steer"><button data-v="soft">DOUCE</button><button data-v="normal">NORMALE</button><button data-v="sharp">VIVE</button></div></div>
+        <div class="set-sub">BOUTONS TACTILES</div>
+        <label class="set-row set-check"><span>Inverser (direction à droite, pédales à gauche)</span><input type="checkbox" id="set-swapped" /></label>
+        <label class="set-row"><span>Taille des boutons</span><input type="range" min="0.75" max="1.35" step="0.05" id="set-size" /><output id="set-size-out"></output></label>
+        <label class="set-row"><span>Opacité des boutons</span><input type="range" min="0.25" max="1" step="0.05" id="set-opacity" /><output id="set-opacity-out"></output></label>
+        <div class="controls-help">
+          <div class="help-kb"><b>Clavier :</b> ← → tourner · ↑ / Z accélérer · ↓ / S / Espace freiner · freiner + tourner vite = drift · Maj / B boost · R replacer · Échap / P pause</div>
+          <div class="help-touch"><b>Tactile :</b> pouce gauche ◀ ▶ · pouce droit GAZ, FREIN/DRIFT, BOOST</div>
         </div>
-        <div class="small" id="save-io-msg"></div>
       </div>
-      <div class="set-section">EN LIGNE</div>
-      <div class="row-btns"><button class="menu-btn" id="btn-online-delete">SUPPRIMER MON PROFIL EN LIGNE</button></div>
-      <div class="small muted" id="online-delete-msg">Efface ton profil du classement et tes amis. Ta partie sur cet appareil n'est pas touchée.</div>
-      <div class="about" id="about">NEON//DRIVE</div>
-      <button class="menu-btn primary" id="settings-close">OK</button>
+
+      <div class="set-pane hidden" data-pane="graphics">
+        <div class="set-row"><span>Qualité</span><div class="seg" id="set-quality"><button data-v="auto">AUTO</button><button data-v="high">HAUTE</button><button data-v="eco">ÉCONOMIE</button></div></div>
+        <div class="set-hint" id="set-quality-hint"></div>
+        <div class="set-row"><span>Images par seconde</span><div class="seg" id="set-fps"><button data-v="60">60</button><button data-v="30">30 (batterie)</button></div></div>
+        <div class="set-row"><span>Effets visuels</span><div class="seg" id="set-effects"><button data-v="full">COMPLETS</button><button data-v="low">RÉDUITS</button></div></div>
+        <label class="set-row set-check"><span>Secousses de la caméra</span><input type="checkbox" id="set-shake" /></label>
+        <label class="set-row set-check"><span>Afficher les images par seconde</span><input type="checkbox" id="set-showfps" /></label>
+      </div>
+
+      <div class="set-pane hidden" data-pane="display">
+        <div class="set-row"><span>Unité de vitesse</span><div class="seg" id="set-units"><button data-v="kmh">KM/H</button><button data-v="mph">MPH</button></div></div>
+        <label class="set-row set-check"><span>Noms des pilotes au-dessus des voitures</span><input type="checkbox" id="set-names" /></label>
+        <div class="set-sub">ACCESSIBILITÉ</div>
+        <label class="set-row set-check"><span>Réduire les flashs (éclairs de l'orage)</span><input type="checkbox" id="set-flash" /></label>
+        <label class="set-row set-check"><span>Réduire les animations des menus</span><input type="checkbox" id="set-motion" /></label>
+      </div>
+
+      <div class="set-pane hidden" data-pane="account">
+        <div class="set-account" id="set-account"></div>
+        <div class="row-btns">
+          <button class="menu-btn" id="set-identity">PSEUDO ET EMBLÈME</button>
+          <button class="menu-btn" id="btn-tutorial-again">REFAIRE LE TUTORIEL</button>
+        </div>
+        <div class="set-sub">SAUVEGARDE</div>
+        <div class="set-hint">Ta progression est enregistrée sur cet appareil. Exporte-la pour la garder ou la transférer.</div>
+        <div class="row-btns">
+          <button class="menu-btn" id="save-export">EXPORTER</button>
+          <button class="menu-btn" id="save-import">IMPORTER</button>
+        </div>
+        <div class="save-io hidden" id="save-io">
+          <div class="muted small" id="save-io-help"></div>
+          <textarea id="save-code" rows="3" spellcheck="false"></textarea>
+          <div class="row-btns">
+            <button class="menu-btn" id="save-io-action">COPIER</button>
+            <button class="menu-btn" id="save-io-cancel">FERMER</button>
+          </div>
+          <div class="small" id="save-io-msg"></div>
+        </div>
+        <div class="set-sub">EN LIGNE</div>
+        <div class="row-btns"><button class="menu-btn" id="btn-online-delete">SUPPRIMER MON PROFIL EN LIGNE</button></div>
+        <div class="small muted" id="online-delete-msg">Efface ton profil du classement et tes amis. Ta partie sur cet appareil n'est pas touchée.</div>
+        <div class="set-sub danger">ZONE DANGEREUSE</div>
+        <div class="row-btns"><button class="menu-btn danger" id="set-reset">EFFACER TOUTE MA PROGRESSION</button></div>
+        <div class="small muted" id="set-reset-msg">Remet le jeu à zéro sur cet appareil (trophées, voitures, crédits…). Impossible à annuler : exporte d'abord ta sauvegarde !</div>
+        <div class="about" id="about">NEON//DRIVE</div>
+      </div>
     </div>
   </div>
 

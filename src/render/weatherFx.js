@@ -1,6 +1,7 @@
 // Effets de météo dessinés par-dessus la course (en pixels d'écran) :
 // pluie, orage, neige, sable, brouillard, crépuscule.
 
+import { prefs } from '../core/prefs.js';
 import { lastLightning } from '../data/weather.js';
 
 export function createWeatherFx(kind) {
@@ -16,6 +17,7 @@ export function createWeatherFx(kind) {
     return [dx, dy];
   }
   function seed(n, W, H, make) {
+    if (prefs.effects === 'low') n = Math.round(n * 0.45);
     if (parts.length && W === W0 && H === H0) return;
     parts.length = 0; W0 = W; H0 = H;
     for (let i = 0; i < n; i++) parts.push(make());
@@ -63,7 +65,9 @@ export function createWeatherFx(kind) {
       bolt = [[x, y]];
       while (y < H * (0.55 + Math.random() * 0.3)) { x += (Math.random() - 0.5) * 90 * dpr; y += (30 + Math.random() * 40) * dpr; bolt.push([x, y]); }
     }
-    const flick = since < 0.08 ? 1 : since < 0.14 ? 0.3 : since < 0.22 ? 0.85 : Math.max(0, 1 - (since - 0.22) / 0.38) * 0.5;
+    // (accessibilité « réduire les flashs » : pas de clignotement, flash très doux)
+    const flick = prefs.reduceFlash ? Math.max(0, 1 - since / 0.6) * 0.18
+      : since < 0.08 ? 1 : since < 0.14 ? 0.3 : since < 0.22 ? 0.85 : Math.max(0, 1 - (since - 0.22) / 0.38) * 0.5;
     ctx.fillStyle = `rgba(220,225,255,${0.55 * flick})`;
     ctx.fillRect(0, 0, W, H);
     if (since < 0.3 && bolt) {

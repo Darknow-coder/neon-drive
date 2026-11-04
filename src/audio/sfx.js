@@ -95,11 +95,12 @@ export function createSfx(audio) {
     car.o3.frequency.setTargetAtTime(f / 2, t, k);
     car.engFilter.frequency.setTargetAtTime(350 + c.throttle * 1500 + rpm * 500, t, 0.06);
     const thr = Math.max(c.throttle, c.rev || 0);
-    car.engGain.gain.setTargetAtTime(0.05 + thr * 0.07 + ratio * 0.03, t, 0.08);
+    const engVol = audio.settings?.engine ?? 1; // réglage « bruit du moteur »
+    car.engGain.gain.setTargetAtTime((0.05 + thr * 0.07 + ratio * 0.03) * engVol, t, 0.08);
     // Passage de rapport : petite coupure du moteur
     if (g > car.gear && c.speed > 60) {
       car.engGain.gain.setTargetAtTime(0.02, t, 0.015);
-      car.engGain.gain.setTargetAtTime(0.05 + thr * 0.07 + ratio * 0.03, t + 0.07, 0.04);
+      car.engGain.gain.setTargetAtTime((0.05 + thr * 0.07 + ratio * 0.03) * engVol, t + 0.07, 0.04);
     }
     car.gear = g;
     // Pétarades quand on lâche l'accélérateur à haut régime

@@ -1,6 +1,7 @@
 // Point d'entrée du jeu : enchaîne les écrans (menu → course → résultats).
 
 import { createLoop } from './core/loop.js';
+import { applyPrefs } from './core/prefs.js';
 import { createInput, isTouchDevice } from './core/input.js';
 import { createRenderer } from './render/renderer.js';
 import { createHud } from './ui/hud.js';
@@ -176,7 +177,8 @@ function applyControls() {
   touchRoot.classList.toggle('swapped', c.swapped);
   touchRoot.classList.toggle('autogas', c.autoGas);
   touchRoot.style.setProperty('--bs', String(c.size));
-  input.setOptions({ autoGas: c.autoGas });
+  touchRoot.style.setProperty('--bo', String(c.opacity ?? 0.85));
+  input.setOptions({ autoGas: c.autoGas, steer: c.steer ?? 'normal' });
   input.remeasure?.();
 }
 applyControls();
@@ -818,11 +820,20 @@ const perf = { update: 0, render: 0, worst: 0, frameUpdate: 0 };
 // retenu pour les prochaines courses. Forçable avec ?quality=high.
 const QKEY = 'neondrive.quality';
 let quality = (() => { try { return Number(localStorage.getItem(QKEY)) || 1; } catch { return 1; } })();
-if (q === 'high') quality = 1;
-renderer.setQuality(quality);
+/** Qualité choisie dans les réglages : auto (s'adapte), haute (pleine résolution), économie. */
+function applyGraphics() {
+  const mode = q === 'high' ? 'high' : save.settings.graphics.quality;
+  if (mode === 'high') renderer.setQuality(1);
+  else if (mode === 'eco') renderer.setQuality(0.6);
+  else renderer.setQuality(quality);
+  session?.resize();
+  applyPrefs(save.settings);
+  document.body.classList.toggle('reduce-motion', !!save.settings.display.reduceMotion);
+}
+applyGraphics();
 const fpsWatch = { slow: 0, fast: 0, cooldown: 0 };
 function watchFps(dtReal) {
-  if (state !== 'race' || q === 'high' || dtReal <= 0 || dtReal > 0.25) return;
+  if (state !== 'race' || q === 'high' || save.settings.graphics.quality !== 'auto' || save.settings.graphics.fps === 30 || dtReal <= 0 || dtReal > 0.25) return;
   const fpsNow = 1 / dtReal;
   fpsWatch.cooldown = Math.max(0, fpsWatch.cooldown - dtReal);
   if (fpsNow < 47) { fpsWatch.slow += dtReal; fpsWatch.fast = 0; } else if (fpsNow > 57) { fpsWatch.fast += dtReal; fpsWatch.slow = Math.max(0, fpsWatch.slow - dtReal * 0.5); }
@@ -842,6 +853,7 @@ function watchFps(dtReal) {
 }
 
 const loop = createLoop({
+  maxFps: () => save.settings.graphics.fps,
   update: (dt) => {
     const t = performance.now();
     session?.update(dt);
@@ -897,7 +909,21 @@ const ttSelect = createTimeTrialSelect({ save, onStart: (id) => { enterFullscree
 $('btn-timetrial').addEventListener('click', () => ttSelect.open());
 const settingsScreen = createSettingsScreen({
   save,
-  onChange: (commit) => { audio.applyVolumes(); applyControls(); if (commit) persist(); },
+  onChange: (commit) => { audio.applyVolumes(); applyControls(); applyGraphics(); if (commit) persist(); },
+  onIdentity: () => profile.openIdentity({ onDone: () => settingsScreen.open() }),
+  onReset: () => {
+    // Remise à zéro complète (la sauvegarde de secours est aussi effacée)
+    store.wipe();
+    try { for (const k of Object.keys(localStorage)) if (k.startsWith('neondrive.') && k !== 'neondrive.online') localStorage.removeItem(k); } catch { /* rien */ }
+    location.reload();
+  },
+  accountInfo: () => {
+    const om = onlineCached();
+    const since = new Date(save.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    return `${avatarHtml(save.profile, 'av-m')}<div><b>${playerName(save)}${om?.tag ? ` <i>#${String(om.tag).padStart(4, '0')}</i>` : ''}</b>
+      <small>${currentTitle(save)} · pilote depuis le ${since}</small>
+      <small>${om?.friend_code ? `Code ami : <em>${om.friend_code}</em> · ` : ''}${saveStatus === 'unavailable' ? '<span class="err">Sauvegarde impossible sur ce navigateur (navigation privée ?)</span>' : 'Sauvegarde automatique ✓'}</small></div>`;
+  },
   onImport: (data) => {
     // Remplace toute la progression par celle du code, puis recharge le jeu
     for (const k of Object.keys(save)) delete save[k];

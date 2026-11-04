@@ -59,8 +59,9 @@ export function createAudio(settings, { lowEnd = false } = {}) {
     if (!ctx) return;
     const t = ctx.currentTime;
     // Courbe quadratique : plus naturelle pour l'oreille qu'un réglage linéaire
-    musicBus.gain.setTargetAtTime(settings.music ** 2 * 1.7, t, 0.05);
-    sfxBus.gain.setTargetAtTime(settings.sfx ** 2, t, 0.05);
+    const m = (settings.master ?? 1) ** 2; // volume général
+    musicBus.gain.setTargetAtTime(settings.music ** 2 * 1.7 * m, t, 0.05);
+    sfxBus.gain.setTargetAtTime(settings.sfx ** 2 * m, t, 0.05);
   }
 
   /** À appeler lors d'un geste du joueur (obligatoire sur mobile). */

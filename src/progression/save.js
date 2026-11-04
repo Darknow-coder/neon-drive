@@ -29,7 +29,12 @@ export function defaultSave() {
     },
     settings: {
       music: 0.7, sfx: 0.85, vibration: true,
-      controls: { swapped: false, autoGas: false, size: 1 },
+      master: 1, engine: 0.8,
+      controls: { swapped: false, autoGas: false, size: 1, opacity: 0.85, steer: 'normal' },
+      // Graphismes : qualité auto / haute / économie, limite d'images, effets, secousses, compteur
+      graphics: { quality: 'auto', fps: 60, effects: 'full', shake: true, showFps: false },
+      // Affichage et accessibilité
+      display: { units: 'kmh', names: true, reduceFlash: false, reduceMotion: false },
     },
     tutorialDone: false,
     rivalsBeaten: {},        // { idRival: nombre de victoires contre lui }
@@ -102,6 +107,22 @@ function sanitize(raw) {
       if (typeof c.swapped === 'boolean') s.settings.controls.swapped = c.swapped;
       if (typeof c.autoGas === 'boolean') s.settings.controls.autoGas = c.autoGas;
       if (typeof c.size === 'number' && c.size >= 0.7 && c.size <= 1.4) s.settings.controls.size = c.size;
+      if (typeof c.opacity === 'number' && c.opacity >= 0.2 && c.opacity <= 1) s.settings.controls.opacity = c.opacity;
+      if (['soft', 'normal', 'sharp'].includes(c.steer)) s.settings.controls.steer = c.steer;
+    }
+    s.settings.master = vol(raw.settings.master, s.settings.master);
+    s.settings.engine = vol(raw.settings.engine, s.settings.engine);
+    const g = raw.settings.graphics;
+    if (g && typeof g === 'object') {
+      if (['auto', 'high', 'eco'].includes(g.quality)) s.settings.graphics.quality = g.quality;
+      if (g.fps === 30 || g.fps === 60) s.settings.graphics.fps = g.fps;
+      if (['full', 'low'].includes(g.effects)) s.settings.graphics.effects = g.effects;
+      for (const k of ['shake', 'showFps']) if (typeof g[k] === 'boolean') s.settings.graphics[k] = g[k];
+    }
+    const dsp = raw.settings.display;
+    if (dsp && typeof dsp === 'object') {
+      if (['kmh', 'mph'].includes(dsp.units)) s.settings.display.units = dsp.units;
+      for (const k of ['names', 'reduceFlash', 'reduceMotion']) if (typeof dsp[k] === 'boolean') s.settings.display[k] = dsp[k];
     }
   }
   const isColor = (c) => typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c);
