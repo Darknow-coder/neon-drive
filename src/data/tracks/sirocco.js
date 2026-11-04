@@ -2,10 +2,11 @@
 // Profil : très rapide, dans le désert. De longues lignes droites balayées
 // par des rafales de sable : elles sont annoncées, et poussent tout le monde.
 
+import { t } from '../../i18n/index.js';
 export default {
   id: 'sirocco',
   name: 'SIROCCO',
-  profile: 'Rapide · Tempête de sable',
+  profile: t('Rapide · Tempête de sable'),
   league: 'or',
   laps: 2,
   scale: 1.6,

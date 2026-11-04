@@ -2,10 +2,11 @@
 // Profil : coulé et accueillant. Une avenue bordée de cerisiers en fleurs,
 // au coucher du soleil : une pluie de pétales roses, sans difficulté en plus.
 
+import { t } from '../../i18n/index.js';
 export default {
   id: 'sakura-avenue',
   name: 'SAKURA AVENUE',
-  profile: 'Fluide · Crépuscule',
+  profile: t('Fluide · Crépuscule'),
   league: 'bronze',
   scale: 1.4,
   width: 260,

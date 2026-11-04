@@ -2,10 +2,11 @@
 // Profil : l'épreuve des orages. Un sommet battu par la pluie : piste
 // mouillée, éclairs aveuglants et un pilier mobile dans la descente.
 
+import { t } from '../../i18n/index.js';
 export default {
   id: 'thunder-peak',
   name: 'THUNDER PEAK',
-  profile: 'Ultime · Orage',
+  profile: t('Ultime · Orage'),
   league: 'elite',
   scale: 1.5,
   width: 220,

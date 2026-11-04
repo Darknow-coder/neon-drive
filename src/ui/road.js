@@ -1,4 +1,5 @@
 // Écran de la route des trophées : une récompense par palier.
+import { t, many } from '../i18n/index.js';
 import { PACKS } from '../data/economy.js';
 import { getCar } from '../data/cars.js';
 import { roadStatus, claimMilestone, claimableCount } from '../progression/economy.js';
@@ -35,15 +36,15 @@ export function createRoad({ save, onSave, sfx, onClose }) {
       rew.insertAdjacentHTML('beforeend', rewardHtml(m.reward));
       node.insertAdjacentHTML('afterbegin', `<div class="rn-at">${ico('trophy')} ${m.at}</div>`);
       node.append(rew);
-      if (m.claimed) node.insertAdjacentHTML('beforeend', '<div class="rn-state">✓ Récupéré</div>');
+      if (m.claimed) node.insertAdjacentHTML('beforeend', `<div class="rn-state">✓ ${t('Récupéré')}</div>`);
       else if (!m.reached) node.insertAdjacentHTML('afterbegin', `<span class="rn-lock">${ico('lock')}</span>`);
       else if (m.reached) {
         const b = document.createElement('button');
         b.className = 'menu-btn primary';
-        b.textContent = 'RÉCUPÉRER';
+        b.textContent = t('RÉCUPÉRER');
         b.addEventListener('click', () => claim([m.at]));
         node.append(b);
-      } else node.insertAdjacentHTML('beforeend', `<div class="rn-state">encore ${m.at - save.trophies}</div>`);
+      } else node.insertAdjacentHTML('beforeend', `<div class="rn-state">${t('encore {n}', { n: m.at - save.trophies })}</div>`);
       if (!focus && (!m.claimed)) focus = node;
       strip.append(node);
     }
@@ -56,7 +57,7 @@ export function createRoad({ save, onSave, sfx, onClose }) {
     });
     const n = claimableCount(save);
     $('road-claim-all').disabled = n === 0;
-    $('road-hint').textContent = n ? `${n} récompense${n > 1 ? 's' : ''} à récupérer !` : 'Gagne des trophées en course pour avancer sur la route.';
+    $('road-hint').textContent = n ? t(many(n) ? '{n} récompenses à récupérer !' : '{n} récompense à récupérer !', { n }) : t('Gagne des trophées en course pour avancer sur la route.');
   }
 
   function claim(list) {

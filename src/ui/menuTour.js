@@ -6,15 +6,15 @@
 const $ = (id) => document.getElementById(id);
 
 const STEPS = [
-  { title: 'BIENVENUE AU PADDOCK !', text: 'Petit tour du menu en 30 secondes pour que tu ne rates rien.', next: 'C\'EST PARTI' },
-  { targets: ['league-card'], title: 'TA LIGUE', text: 'Gagne des <b>trophées</b> en course pour monter de <b>Bronze</b> à <b>Élite</b>. Chaque ligue apporte de nouveaux circuits et des rivaux plus forts.' },
-  { targets: ['btn-car-show', 'btn-garage'], title: 'LE GARAGE', text: 'Choisis ta voiture, <b>améliore-la</b> avec tes fragments, et personnalise-la dans l\'<b>ATELIER</b> : couleurs, numéro, effets…' },
-  { targets: ['btn-career'], title: 'LA CARRIÈRE', text: 'Une histoire en <b>5 chapitres</b> : des épreuves, des étoiles à gagner et des duels contre les boss.' },
-  { targets: ['btn-daily', '.mode-grid'], title: 'LES AUTRES MODES', text: 'Le <b>défi du jour</b>, la <b>coupe</b>, l\'<b>élimination</b>, le <b>chrono</b> contre les fantômes, et la <b>GIGA RUSH</b> à 20 voitures.' },
-  { targets: ['btn-shop', 'btn-pass'], title: 'BOUTIQUE ET PASSE', text: 'Un <b>cadeau gratuit</b> t\'attend chaque jour à la boutique. Le <b>passe de saison</b> te récompense à chaque course.' },
-  { targets: ['btn-missions', 'btn-road'], title: 'MISSIONS ET ROUTE', text: 'Des <b>missions</b> chaque jour et la <b>route des trophées</b> : plein de récompenses gratuites. Une pastille rouge = quelque chose à récupérer !' },
-  { targets: ['btn-profile', 'btn-ranking'], title: 'PROFIL ET CLASSEMENT', text: 'Ton pseudo, tes succès et tes titres. Compare-toi au <b>monde entier</b> et ajoute tes <b>amis</b>.' },
-  { targets: ['btn-start'], title: 'À TOI DE JOUER !', text: 'Touche <b>COURSE</b> pour ta première vraie course contre 5 pilotes.', action: true, next: 'TERMINER' },
+  { title: t('BIENVENUE AU PADDOCK !'), text: t('Petit tour du menu en 30 secondes pour que tu ne rates rien.'), next: t('C\'EST PARTI') },
+  { targets: ['league-card'], title: t('TA LIGUE'), text: t('Gagne des <b>trophées</b> en course pour monter de <b>Bronze</b> à <b>Élite</b>. Chaque ligue apporte de nouveaux circuits et des rivaux plus forts.') },
+  { targets: ['btn-car-show', 'btn-garage'], title: t('LE GARAGE'), text: t('Choisis ta voiture, <b>améliore-la</b> avec tes fragments, et personnalise-la dans l\'<b>ATELIER</b> : couleurs, numéro, effets…') },
+  { targets: ['btn-career'], title: t('LA CARRIÈRE'), text: t('Une histoire en <b>5 chapitres</b> : des épreuves, des étoiles à gagner et des duels contre les boss.') },
+  { targets: ['btn-daily', '.mode-grid'], title: t('LES AUTRES MODES'), text: t('Le <b>défi du jour</b>, la <b>coupe</b>, l\'<b>élimination</b>, le <b>chrono</b> contre les fantômes, et la <b>GIGA RUSH</b> à 20 voitures.') },
+  { targets: ['btn-shop', 'btn-pass'], title: t('BOUTIQUE ET PASSE'), text: t('Un <b>cadeau gratuit</b> t\'attend chaque jour à la boutique. Le <b>passe de saison</b> te récompense à chaque course.') },
+  { targets: ['btn-missions', 'btn-road'], title: t('MISSIONS ET ROUTE'), text: t('Des <b>missions</b> chaque jour et la <b>route des trophées</b> : plein de récompenses gratuites. Une pastille rouge = quelque chose à récupérer !') },
+  { targets: ['btn-profile', 'btn-ranking'], title: t('PROFIL ET CLASSEMENT'), text: t('Ton pseudo, tes succès et tes titres. Compare-toi au <b>monde entier</b> et ajoute tes <b>amis</b>.') },
+  { targets: ['btn-start'], title: t('À TOI DE JOUER !'), text: t('Touche <b>COURSE</b> pour ta première vraie course contre 5 pilotes.'), action: true, next: t('TERMINER') },
 ];
 
 const visible = (el) => { const r = el.getBoundingClientRect(); return r.width > 4 && r.height > 4 && getComputedStyle(el).visibility !== 'hidden'; };
@@ -37,6 +37,7 @@ function targetRects(step) {
 }
 const targetRect = (step) => targetRects(step)[0] ?? null;
 
+import { t } from '../i18n/index.js';
 export function createMenuTour({ sfx, onDone, onRace }) {
   const root = document.createElement('div');
   root.id = 'menu-tour';
@@ -46,7 +47,7 @@ export function createMenuTour({ sfx, onDone, onRace }) {
     <div class="tour-bubble" id="tour-bubble" role="dialog" aria-live="polite">
       <div class="tour-step" id="tour-step"></div>
       <b id="tour-title"></b><p id="tour-text"></p>
-      <div class="tour-btns"><button class="menu-btn small-btn tour-skip" id="tour-skip">PASSER</button><button class="menu-btn primary tour-next" id="tour-next">SUIVANT ›</button></div>
+      <div class="tour-btns"><button class="menu-btn small-btn tour-skip" id="tour-skip">${t('PASSER')}</button><button class="menu-btn primary tour-next" id="tour-next">${t('SUIVANT ›')}</button></div>
     </div>`;
   document.body.append(root);
   let k = 0;
@@ -84,7 +85,7 @@ export function createMenuTour({ sfx, onDone, onRace }) {
     $('tour-step').textContent = k ? `${k} / ${STEPS.length - 1}` : '';
     $('tour-title').textContent = step.title;
     $('tour-text').innerHTML = step.text;
-    $('tour-next').textContent = step.next ?? 'SUIVANT ›';
+    $('tour-next').textContent = step.next ?? t('SUIVANT ›');
     $('tour-skip').classList.toggle('hidden', k === STEPS.length - 1);
     const bub = $('tour-bubble');
     bub.classList.remove('in'); void bub.offsetWidth; bub.classList.add('in');

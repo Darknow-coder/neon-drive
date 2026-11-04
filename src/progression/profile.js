@@ -1,6 +1,7 @@
 // Profil du joueur : pseudo, avatar, carrière (statistiques) et succès.
 // Aucune dépendance à l'affichage (testable dans tools/progressionCheck.js).
 
+import { t } from '../i18n/index.js';
 import { ACHIEVEMENTS, ACHIEVEMENT_REWARDS, AVATARS, AVATAR_COLORS, DEFAULT_TITLE, NAME_MIN, NAME_MAX, ownsAvatar } from '../data/profile.js';
 import { seasonTitles, addSeasonXp } from './season.js';
 import { campaignTitles } from './campaign.js';
@@ -21,10 +22,10 @@ export function politeName(n) {
 /** Nettoie un pseudo ; retourne { name } ou { error }. */
 export function cleanName(raw) {
   const name = String(raw ?? '').replace(/\s+/g, ' ').trim().toUpperCase();
-  if (name.length < NAME_MIN) return { error: `Au moins ${NAME_MIN} caractères.` };
-  if (name.length > NAME_MAX) return { error: `${NAME_MAX} caractères maximum.` };
-  if (!/^[A-Z0-9À-ÖØ-Þ _.-]+$/.test(name)) return { error: 'Lettres, chiffres, espace, - _ . seulement.' };
-  if (name === 'TOI' || !politeName(name)) return { error: 'Choisis un autre pseudo.' };
+  if (name.length < NAME_MIN) return { error: t('Au moins {n} caractères.', { n: NAME_MIN }) };
+  if (name.length > NAME_MAX) return { error: t('{n} caractères maximum.', { n: NAME_MAX }) };
+  if (!/^[A-Z0-9À-ÖØ-Þ _.-]+$/.test(name)) return { error: t('Lettres, chiffres, espace, - _ . seulement.') };
+  if (name === 'TOI' || !politeName(name)) return { error: t('Choisis un autre pseudo.') };
   return { name };
 }
 

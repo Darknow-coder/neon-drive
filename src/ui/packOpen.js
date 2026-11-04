@@ -6,6 +6,7 @@
 //     Rareté selon le nombre de fragments (commune / rare / épique).
 // Les récompenses sans pack (crédits, voiture) ont leur propre révélation.
 
+import { t } from '../i18n/index.js';
 import { PACKS, UNLOCK_FRAGMENTS } from '../data/economy.js';
 import { isOwned, liveryFor } from '../progression/garage.js';
 import { fragmentsOf, upgradeCost } from '../progression/economy.js';
@@ -15,9 +16,9 @@ import { ico } from './icons.js';
 const $ = (id) => document.getElementById(id);
 
 const RARITY = {
-  common: { label: 'COMMUNE', color: '#00f0ff' },
+  common: { label: t('COMMUNE'), color: '#00f0ff' },
   rare: { label: 'RARE', color: '#b07aff' },
-  epic: { label: 'ÉPIQUE', color: '#ffd34d' },
+  epic: { label: t('ÉPIQUE'), color: '#ffd34d' },
 };
 
 // ---------------------------------------------------------------------------
@@ -133,12 +134,12 @@ export function showRewards(save, results, { sfx, onClose } = {}) {
     $('pack-title').textContent = pack.name;
     const extra = [];
     if (r.credits) extra.push(`${ico('credit')} +${r.credits}`);
-    if (r.car) extra.push(`Nouvelle voiture : ${r.car.name} !`);
+    if (r.car) extra.push(t('Nouvelle voiture : {c} !', { c: r.car.name }));
     $('pack-extra').innerHTML = extra.join(' &nbsp;·&nbsp; ');
     const wrap = $('pack-wrap');
     wrap.className = 'pack-wrap';
-    wrap.querySelectorAll('.pack-face').forEach((f) => f.setAttribute('data-label', `NEON//DRIVE\n${pack.name.replace('PACK ', '')}\n×${pack.fragments}`));
-    $('pack-hint').textContent = 'TOUCHE LE PACK POUR L\'OUVRIR';
+    wrap.querySelectorAll('.pack-face').forEach((f) => f.setAttribute('data-label', `NEON//DRIVE\n${pack.name.replace(/^PACK | PACK$/, '')}\n×${pack.fragments}`));
+    $('pack-hint').textContent = t('TOUCHE LE PACK POUR L\'OUVRIR');
     let opened = false;
     wrap.onclick = () => {
       if (opened) return;
@@ -180,12 +181,12 @@ export function showRewards(save, results, { sfx, onClose } = {}) {
       const owned = isOwned(save, g.car.id);
       const have = fragmentsOf(save, g.car.id);
       let goal = '', need = 0;
-      if (g.isCar) goal = 'Voiture débloquée !';
-      else if (!owned) { need = UNLOCK_FRAGMENTS[g.car.id]; goal = `${have} / ${need} pour la débloquer`; }
+      if (g.isCar) goal = t('Voiture débloquée !');
+      else if (!owned) { need = UNLOCK_FRAGMENTS[g.car.id]; goal = t('{a} / {b} pour la débloquer', { a: have, b: need }); }
       else {
         const c = upgradeCost(save, g.car.id);
         need = c ? c.fragments : 0;
-        goal = c ? `${have} / ${need} pour le niveau ${c.level}` : 'Niveau maximum';
+        goal = c ? t('{a} / {b} pour le niveau {n}', { a: have, b: need, n: c.level }) : t('Niveau maximum');
       }
       g.ready = !g.isCar && need > 0 && have >= need;
       const rar = g.isCar ? 'epic' : rarityOf(g);
@@ -196,12 +197,12 @@ export function showRewards(save, results, { sfx, onClose } = {}) {
       el.style.setProperty('--rc', R.color);
       el.innerHTML = `<div class="card-rays"></div><div class="inner"><div class="face back"></div><div class="face front"></div></div>`;
       const front = el.querySelector('.front');
-      front.insertAdjacentHTML('beforeend', `<div class="rar">${g.isCar ? 'NOUVELLE VOITURE' : R.label}</div>`);
+      front.insertAdjacentHTML('beforeend', `<div class="rar">${g.isCar ? t('NOUVELLE VOITURE') : R.label}</div>`);
       front.append(carIcon(g.car, liveryFor(save, g.car.id), 208, 132));
       front.insertAdjacentHTML('beforeend', `
         <div class="n">${g.isCar ? '★' : `+${g.amount}`}</div>
         <div class="nm">${g.car.name}</div>
-        ${g.ready ? '<div class="ready-tag">PRÊTE À DÉBLOQUER !</div>' : `<div class="goal">${goal}</div>`}
+        ${g.ready ? `<div class="ready-tag">${t('PRÊTE À DÉBLOQUER !')}</div>` : `<div class="goal">${goal}</div>`}
         ${need ? `<div class="frag-bar"><div class="frag-fill" style="width:${Math.min(100, (have / need) * 100)}%"></div></div>` : ''}`);
       box.append(el);
       // Distribution : les cartes arrivent une par une
@@ -222,7 +223,7 @@ export function showRewards(save, results, { sfx, onClose } = {}) {
       };
     });
     later(() => {
-      $('pack-hint').textContent = 'TOUCHE LES CARTES POUR LES RETOURNER';
+      $('pack-hint').textContent = t('TOUCHE LES CARTES POUR LES RETOURNER');
       $('pack-flipall').classList.remove('hidden');
     }, 200 + cards.length * 180);
   }
@@ -230,14 +231,14 @@ export function showRewards(save, results, { sfx, onClose } = {}) {
   // ---------- Fragments sans pack (achat direct, cadeau) : cartes distribuées ----------
   function showDirect(r) {
     reset('#ffd34d');
-    $('pack-title').textContent = r.title ?? 'FRAGMENTS';
+    $('pack-title').textContent = r.title ?? t('FRAGMENTS');
     dealCards(r, null);
   }
 
   // ---------- Récompense simple ----------
   function showSimple(r) {
     reset(r.car || r.visual ? '#ffd34d' : '#00f0ff');
-    $('pack-title').textContent = r.car ? 'NOUVELLE VOITURE' : (r.title ?? 'RÉCOMPENSE');
+    $('pack-title').textContent = r.car ? t('NOUVELLE VOITURE') : (r.title ?? t('RÉCOMPENSE'));
     const big = document.createElement('div');
     big.className = 'reward-big';
     if (r.visual) {
@@ -251,7 +252,7 @@ export function showRewards(save, results, { sfx, onClose } = {}) {
       card.style.setProperty('--rc', '#ffd34d');
       card.innerHTML = `<div class="card-rays"></div><div class="inner"><div class="face back"></div><div class="face front"></div></div>`;
       const front = card.querySelector('.front');
-      front.insertAdjacentHTML('beforeend', '<div class="rar">DÉBLOQUÉE</div>');
+      front.insertAdjacentHTML('beforeend', `<div class="rar">${t('DÉBLOQUÉE')}</div>`);
       front.append(carIcon(r.car, liveryFor(save, r.car.id), 208, 132));
       front.insertAdjacentHTML('beforeend', `<div class="n">★</div><div class="nm">${r.car.name}</div><div class="goal">${r.car.tagline}</div>`);
       big.append(card);

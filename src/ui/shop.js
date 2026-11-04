@@ -1,6 +1,7 @@
 // Écran de la boutique : À LA UNE (cadeau + offres du jour), PACKS, STYLE.
 // Chaque achat passe par une fiche de confirmation (aperçu, prix, solde après).
 
+import { t, fmtNum, many } from '../i18n/index.js';
 import { getCar } from '../data/cars.js';
 import { PACKS, UNLOCK_FRAGMENTS } from '../data/economy.js';
 import { DAILY_GIFTS } from '../data/shop.js';
@@ -17,7 +18,7 @@ import { ico } from './icons.js';
 import { showRewards } from './packOpen.js';
 
 const $ = (id) => document.getElementById(id);
-const fmt = (n) => n.toLocaleString('fr-FR');
+const fmt = (n) => fmtNum(n);
 
 export function createShop({ save, onSave, sfx, onClose }) {
   let tab = 'featured';
@@ -69,9 +70,9 @@ export function createShop({ save, onSave, sfx, onClose }) {
   }
   /** Objectif des fragments d'une voiture (déblocage ou niveau suivant). */
   function fragGoal(carId) {
-    if (!isOwned(save, carId)) return { need: UNLOCK_FRAGMENTS[carId] ?? 0, label: 'pour la débloquer' };
+    if (!isOwned(save, carId)) return { need: UNLOCK_FRAGMENTS[carId] ?? 0, label: t('pour la débloquer') };
     const c = upgradeCost(save, carId);
-    return c ? { need: c.fragments, label: `pour le niveau ${c.level}` } : { need: 0, label: 'niveau max' };
+    return c ? { need: c.fragments, label: t('pour le niveau {n}', { n: c.level }) } : { need: 0, label: t('niveau max') };
   }
   function card({ cls = '', color = '#00f0ff', ribbon = '', ribbonCls = '', visual, title, sub, extra = '', price, onClick }) {
     const el = document.createElement('div');
@@ -94,24 +95,24 @@ export function createShop({ save, onSave, sfx, onClose }) {
     const ready = giftAvailable(save, day);
     const idx = giftIndex(save);
     const g = DAILY_GIFTS[ready ? idx : (idx - 1 + DAILY_GIFTS.length) % DAILY_GIFTS.length];
-    const what = g.credits ? `${ico('credit')} <b>${g.credits}</b> crédits`
+    const what = g.credits ? `${ico('credit')} <b>${g.credits}</b> ${t('crédits')}`
       : g.pack ? `<b>${PACKS[g.pack].name}</b>`
-      : `<b>${g.fragments}</b> fragments ${bestFragmentTarget(save).name}`;
+      : `<b>${g.fragments}</b> ${t('fragments')} ${bestFragmentTarget(save).name}`;
     const days = DAILY_GIFTS.map((_, k) => {
       const done = k < idx || (!ready && k === (idx - 1 + DAILY_GIFTS.length) % DAILY_GIFTS.length && idx > 0);
       const today = ready && k === idx;
-      return `<span class="${today ? 'today' : done ? 'done' : ''}">${done && !today ? '✓' : `J${k + 1}`}</span>`;
+      return `<span class="${today ? 'today' : done ? 'done' : ''}">${done && !today ? '✓' : t('J{n}', { n: k + 1 })}</span>`;
     }).join('');
     const el = card({
       cls: `gift ${ready ? 'ready' : ''}`,
       color: '#ff2bd6',
       visual: '<div class="gift-box"><i></i></div>',
-      ribbon: ready ? 'GRATUIT' : '',
+      ribbon: ready ? t('GRATUIT') : '',
       ribbonCls: 'pink',
-      title: 'CADEAU DU JOUR',
-      sub: ready ? `Aujourd'hui : ${what}` : `Récupéré ! Reviens demain`,
+      title: t('CADEAU DU JOUR'),
+      sub: ready ? t('Aujourd\'hui : {w}', { w: what }) : t('Récupéré ! Reviens demain'),
       extra: `<div class="gift-days">${days}</div>`,
-      price: ready ? '<div class="price equip">RÉCUPÉRER</div>' : `<div class="price done">✓ DEMAIN : NOUVEAU CADEAU</div>`,
+      price: ready ? `<div class="price equip">${t('RÉCUPÉRER')}</div>` : `<div class="price done">✓ ${t('DEMAIN : NOUVEAU CADEAU')}</div>`,
       onClick: ready ? () => {
         const got = claimGift(save, day);
         if (!got) return;
@@ -120,7 +121,7 @@ export function createShop({ save, onSave, sfx, onClose }) {
         updateWallet(true);
         render();
         const res = got.packId ? [{ packId: got.packId, gains: got.gains }]
-          : got.gains.length ? [{ title: 'CADEAU DU JOUR', gains: got.gains }]
+          : got.gains.length ? [{ title: t('CADEAU DU JOUR'), gains: got.gains }]
           : [{ credits: got.credits }];
         showRewards(save, res, { sfx, onClose: render });
       } : null,
@@ -130,9 +131,9 @@ export function createShop({ save, onSave, sfx, onClose }) {
 
   function offerCard(o) {
     const bought = o.bought;
-    const ribbon = o.featured ? `OFFRE SPÉCIALE −${Math.round((1 - o.price / o.oldPrice) * 100)} %` : o.oldPrice ? `−${Math.round((1 - o.price / o.oldPrice) * 100)} %` : '';
-    const base = { cls: `${o.featured ? 'featured wide' : ''} ${bought ? 'bought' : ''}`, ribbon: bought ? 'ACHETÉ' : ribbon, ribbonCls: bought ? 'green' : '' };
-    const price = bought ? '<div class="price done">✓ ACHETÉ</div>' : priceBtn(o.price, o.oldPrice);
+    const ribbon = o.featured ? `${t('OFFRE SPÉCIALE')} −${Math.round((1 - o.price / o.oldPrice) * 100)} %` : o.oldPrice ? `−${Math.round((1 - o.price / o.oldPrice) * 100)} %` : '';
+    const base = { cls: `${o.featured ? 'featured wide' : ''} ${bought ? 'bought' : ''}`, ribbon: bought ? t('ACHETÉ') : ribbon, ribbonCls: bought ? 'green' : '' };
+    const price = bought ? `<div class="price done">✓ ${t('ACHETÉ')}</div>` : priceBtn(o.price, o.oldPrice);
     const click = bought ? null : () => confirmOffer(o);
     if (o.kind === 'fragments') {
       const car = getCar(o.carId);
@@ -145,7 +146,7 @@ export function createShop({ save, onSave, sfx, onClose }) {
         color: car.colors.glow,
         visual: carIcon(car, isOwned(save, car.id) ? liveryFor(save, car.id) : car.colors, o.featured ? 380 : 300, o.featured ? 240 : 192),
         title: `${car.name}`,
-        sub: `<b>×${o.amount}</b> fragments`,
+        sub: `<b>×${o.amount}</b> ${t('fragments')}`,
         extra: goal.need ? `<div class="prog"><div class="pl">${have} → <b>${have + o.amount}</b> / ${goal.need}</div><div class="pg">${goal.label}</div>
           <div class="frag-bar" style="position:relative"><div class="frag-fill" style="position:absolute;inset:0 auto 0 0;width:${after}%;opacity:.35"></div><div class="frag-fill" style="position:absolute;inset:0 auto 0 0;width:${now}%"></div></div></div>` : '',
         price,
@@ -154,10 +155,10 @@ export function createShop({ save, onSave, sfx, onClose }) {
     }
     if (o.kind === 'pack') {
       const p = PACKS[o.packId];
-      return card({ ...base, color: p.color, visual: `<div class="mini-pack" style="--ic:${p.color}" data-n="×${p.fragments}"></div>`, title: p.name, sub: `<b>${p.fragments}</b> fragments`, price, onClick: click });
+      return card({ ...base, color: p.color, visual: `<div class="mini-pack" style="--ic:${p.color}" data-n="×${p.fragments}"></div>`, title: p.name, sub: `<b>${p.fragments}</b> ${t('fragments')}`, price, onClick: click });
     }
     const item = STYLE_KINDS[o.kind].list.find((x) => x.id === o.itemId);
-    const SUBS = { finish: 'Finition de carrosserie', motif: 'Motif de décoration', trail: 'Traînée de boost', smoke: 'Fumée de drift' };
+    const SUBS = { finish: t('Finition de carrosserie'), motif: t('Motif de décoration'), trail: t('Traînée de boost'), smoke: t('Fumée de drift') };
     return card({
       ...base, color: '#b07aff',
       visual: styleVisual(o.kind, o.itemId, 300, 192),
@@ -183,13 +184,13 @@ export function createShop({ save, onSave, sfx, onClose }) {
         cls: 'wide', color: p.color,
         visual: `<div class="mini-pack lg" style="--ic:${p.color}" data-n="×${p.fragments}"></div>`,
         title: p.name,
-        sub: `<b>${p.fragments}</b> fragments répartis sur 2 à 4 voitures`,
+        sub: t('<b>{n}</b> fragments répartis sur 2 à 4 voitures', { n: p.fragments }),
         price: priceBtn(p.price),
         onClick: () => confirmPack(id),
       }));
     }
     body.append(row);
-    body.insertAdjacentHTML('beforeend', `<div class="pack-note">Les fragments vont <b>en priorité aux voitures que tu n'as pas encore</b> : assez de fragments les débloquent avant leur palier de trophées. Pour tes voitures, ils servent aux améliorations.</div>`);
+    body.insertAdjacentHTML('beforeend', `<div class="pack-note">${t('Les fragments vont <b>en priorité aux voitures que tu n\'as pas encore</b> : assez de fragments les débloquent avant leur palier de trophées. Pour tes voitures, ils servent aux améliorations.')}</div>`);
   }
 
   // ---------------------------------------------------------------- STYLE
@@ -198,8 +199,8 @@ export function createShop({ save, onSave, sfx, onClose }) {
     const current = liveryFor(save, car.id);
     const sw = document.createElement('div');
     sw.className = 'style-switch';
-    sw.innerHTML = `${[['finish', 'FINITIONS'], ['motif', 'MOTIFS'], ['trail', 'BOOST'], ['smoke', 'DRIFT']].map(([k, l]) => `<button data-s="${k}" class="${styleTab === k ? 'on' : ''}">${l}</button>`).join('')}
-      <span>Aperçu sur ta <b>${car.name}</b> · s'utilise sur toutes tes voitures · aucun effet sur les performances</span>`;
+    sw.innerHTML = `${[['finish', t('FINITIONS')], ['motif', t('MOTIFS')], ['trail', 'BOOST'], ['smoke', 'DRIFT']].map(([k, l]) => `<button data-s="${k}" class="${styleTab === k ? 'on' : ''}">${l}</button>`).join('')}
+      <span>${t('Aperçu sur ta <b>{car}</b> · s\'utilise sur toutes tes voitures · aucun effet sur les performances', { car: car.name })}</span>`;
     sw.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { styleTab = b.dataset.s; sfx?.click(); render(); }));
     body.append(sw);
     for (const [kind, { list }] of Object.entries(STYLE_KINDS)) {
@@ -215,10 +216,10 @@ export function createShop({ save, onSave, sfx, onClose }) {
         row.append(card({
           color: '#b07aff',
           visual: styleVisual(kind, item.id, 300, 192),
-          ribbon: equipped ? 'ÉQUIPÉ' : '', ribbonCls: 'green',
+          ribbon: equipped ? t('ÉQUIPÉ') : '', ribbonCls: 'green',
           title: item.name, sub: item.desc,
-          price: equipped ? '<div class="price done">✓ ÉQUIPÉ</div>'
-            : owned ? `<div class="price equip">ÉQUIPER</div>`
+          price: equipped ? `<div class="price done">✓ ${t('ÉQUIPÉ')}</div>`
+            : owned ? `<div class="price equip">${t('ÉQUIPER')}</div>`
             : priceBtn(item.price),
           onClick: equipped ? null : owned
             ? () => { equipStyle(save, car.id, kind, item.id); onSave(); sfx?.click(); render(); }
@@ -262,11 +263,11 @@ export function createShop({ save, onSave, sfx, onClose }) {
     $('confirm-desc').innerHTML = desc;
     const missing = price - save.credits;
     $('confirm-balance').innerHTML = missing > 0
-      ? `<span class="miss">Il te manque ${ico('credit')}${fmt(missing)} — environ ${racesFor(missing)} course${racesFor(missing) > 1 ? 's' : ''}</span>`
-      : `Ton solde : ${ico('credit')}${fmt(save.credits)} → <span class="after">${ico('credit')}${fmt(save.credits - price)}</span>`;
+      ? `<span class="miss">${t(many(racesFor(missing)) ? 'Il te manque {c} — environ {n} courses' : 'Il te manque {c} — environ {n} course', { c: ico('credit') + fmt(missing), n: racesFor(missing) })}</span>`
+      : `${t('Ton solde :')} ${ico('credit')}${fmt(save.credits)} → <span class="after">${ico('credit')}${fmt(save.credits - price)}</span>`;
     const btn = $('confirm-buy');
     btn.disabled = missing > 0;
-    btn.innerHTML = missing > 0 ? 'PAS ASSEZ DE CRÉDITS' : `ACHETER &nbsp;${priceHtml(price, oldPrice)}`;
+    btn.innerHTML = missing > 0 ? t('PAS ASSEZ DE CRÉDITS') : `${t('ACHETER')} &nbsp;${priceHtml(price, oldPrice)}`;
     $('confirm-stamp').classList.add('hidden');
     btn.onclick = () => {
       const res = buy();
@@ -274,14 +275,14 @@ export function createShop({ save, onSave, sfx, onClose }) {
       onSave();
       sfx?.purchase?.();
       updateWallet(true);
-      $('confirm-stamp').textContent = res.equipped ? 'ACHETÉ & ÉQUIPÉ !' : 'ACHETÉ !';
+      $('confirm-stamp').textContent = res.equipped ? t('ACHETÉ & ÉQUIPÉ !') : t('ACHETÉ !');
       $('confirm-stamp').classList.remove('hidden');
       btn.disabled = true;
       setTimeout(() => {
         closeConfirm();
         render();
         if (res.kind === 'pack') showRewards(save, [{ packId: res.packId, gains: res.gains }], { sfx, onClose: render });
-        else if (res.kind === 'fragments') showRewards(save, [{ title: 'FRAGMENTS', gains: res.gains }], { sfx, onClose: render });
+        else if (res.kind === 'fragments') showRewards(save, [{ title: t('FRAGMENTS'), gains: res.gains }], { sfx, onClose: render });
       }, 900);
     };
     $('shop-confirm').classList.remove('hidden');
@@ -295,8 +296,8 @@ export function createShop({ save, onSave, sfx, onClose }) {
       const goal = fragGoal(o.carId);
       const have = fragmentsOf(save, o.carId);
       openConfirm({
-        kind: o.featured ? 'OFFRE SPÉCIALE DU JOUR' : 'FRAGMENTS', title: `${car.name} ×${o.amount}`, color: car.colors.glow,
-        desc: goal.need ? `Tu auras <b>${have + o.amount} / ${goal.need}</b> fragments ${goal.label}.${have + o.amount >= goal.need ? ' <b style="color:#3dff9e">Objectif atteint !</b>' : ''}` : 'Fragments de cette voiture.',
+        kind: o.featured ? t('OFFRE SPÉCIALE DU JOUR') : t('FRAGMENTS'), title: `${car.name} ×${o.amount}`, color: car.colors.glow,
+        desc: goal.need ? `${t('Tu auras <b>{a} / {b}</b> fragments {g}.', { a: have + o.amount, b: goal.need, g: goal.label })}${have + o.amount >= goal.need ? ` <b style="color:#3dff9e">${t('Objectif atteint !')}</b>` : ''}` : t('Fragments de cette voiture.'),
         price: o.price, oldPrice: o.oldPrice,
         visual: previewCar(car, isOwned(save, car.id) ? liveryFor(save, car.id) : car.colors),
         buy: () => buyOffer(save, o.id),
@@ -304,8 +305,8 @@ export function createShop({ save, onSave, sfx, onClose }) {
     } else if (o.kind === 'pack') {
       const p = PACKS[o.packId];
       openConfirm({
-        kind: 'PACK EN PROMOTION', title: p.name, color: p.color,
-        desc: `<b>${p.fragments} fragments</b> à découvrir, surtout pour les voitures que tu n'as pas encore.`,
+        kind: t('PACK EN PROMOTION'), title: p.name, color: p.color,
+        desc: t('<b>{n} fragments</b> à découvrir, surtout pour les voitures que tu n\'as pas encore.', { n: p.fragments }),
         price: o.price, oldPrice: o.oldPrice,
         visual: `<div class="mini-pack xl" style="--ic:${p.color}" data-n="×${p.fragments}"></div>`,
         buy: () => buyOffer(save, o.id),
@@ -320,7 +321,7 @@ export function createShop({ save, onSave, sfx, onClose }) {
     const p = PACKS[id];
     openConfirm({
       kind: 'PACK', title: p.name, color: p.color,
-      desc: `<b>${p.fragments} fragments</b> répartis sur 2 à 4 voitures, surtout celles que tu n'as pas encore.`,
+      desc: t('<b>{n} fragments</b> répartis sur 2 à 4 voitures, surtout celles que tu n\'as pas encore.', { n: p.fragments }),
       price: p.price,
       visual: `<div class="mini-pack xl" style="--ic:${p.color}" data-n="×${p.fragments}"></div>`,
       buy: () => buyPackItem(save, id),
@@ -330,9 +331,9 @@ export function createShop({ save, onSave, sfx, onClose }) {
   function confirmStyle(kind, item, offer = null) {
     const car = myCar();
     openConfirm({
-      kind: `${STYLE_KINDS[kind].label} · POUR TOUTES TES VOITURES`,
+      kind: `${STYLE_KINDS[kind].label} · ${t('POUR TOUTES TES VOITURES')}`,
       title: item.name, color: '#b07aff',
-      desc: `${item.desc}<br>Aperçu sur ta <b>${car.name}</b>. Purement esthétique : aucun effet sur les performances.`,
+      desc: `${item.desc}<br>${t('Aperçu sur ta <b>{car}</b>. Purement esthétique : aucun effet sur les performances.', { car: car.name })}`,
       price: offer ? offer.price : item.price, oldPrice: offer?.oldPrice,
       visual: isFx(kind) ? styleVisual(kind, item.id, 480, 400, true) : previewCar(car, styledColors(kind, item.id)),
       buy: () => {
@@ -359,7 +360,7 @@ export function createShop({ save, onSave, sfx, onClose }) {
     const ms = msUntilMidnight();
     const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000), s = Math.floor((ms % 60000) / 1000);
     const p = (n) => String(n).padStart(2, '0');
-    $('shop-timer').innerHTML = `Nouvelles offres dans <b>${p(h)}:${p(m)}:${p(s)}</b>`;
+    $('shop-timer').innerHTML = t('Nouvelles offres dans <b>{t}</b>', { t: `${p(h)}:${p(m)}:${p(s)}` });
     // Minuit passé pendant que la boutique est ouverte : nouvelles offres
     if (refreshShop(save)) { save.shop.seenDay = dayKey(); onSave(); render(); }
   }

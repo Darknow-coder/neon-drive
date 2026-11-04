@@ -2,10 +2,11 @@
 // Profil : technique dans le brouillard. Une baie portuaire noyée dans la
 // brume : on voit moins loin, il faut connaître le tracé par cœur.
 
+import { t } from '../../i18n/index.js';
 export default {
   id: 'phantom-bay',
   name: 'PHANTOM BAY',
-  profile: 'Technique · Brouillard',
+  profile: t('Technique · Brouillard'),
   league: 'diamant',
   scale: 1.65,
   width: 225,

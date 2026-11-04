@@ -1,6 +1,7 @@
 // Affichage tête haute : tour, chronos, vitesse, jauge de boost.
 // On ne modifie le texte HTML que s'il a changé (économise du temps de calcul).
 
+import { t, ord } from '../i18n/index.js';
 import { prefs } from '../core/prefs.js';
 import { formatTime } from '../core/math.js';
 
@@ -70,14 +71,14 @@ export function createHud() {
       set('lap', el.lap, lap > 0 ? String(lap) : '–');
       set('laps', el.laps, timeTrial || !laps ? '' : `/${laps}`);
       // Mode Élimination
-      const eTxt = elim ? `ÉLIMINATION ${elim.round}/${elim.rounds} · ${elim.left} EN PISTE` : '';
+      const eTxt = elim ? t('ÉLIMINATION {a}/{b} · {n} EN PISTE', { a: elim.round, b: elim.rounds, n: elim.left }) : '';
       if (cache.eTxt !== eTxt) { cache.eTxt = eTxt; el.elimLine.textContent = eTxt; el.elimLine.classList.toggle('hidden', !eTxt); }
       const dg = !!elim?.danger;
       if (cache.dg !== dg) { cache.dg = dg; el.danger.classList.toggle('hidden', !dg); }
       const cTxt = elim?.countdown ? String(elim.countdown) : '';
       if (cache.cTxt !== cTxt) {
         cache.cTxt = cTxt;
-        el.count.textContent = cTxt ? `ÉLIMINATION DANS ${cTxt}` : '';
+        el.count.textContent = cTxt ? t('ÉLIMINATION DANS {n}', { n: cTxt }) : '';
         el.count.classList.toggle('hidden', !cTxt);
         el.count.classList.toggle('me', dg);
       }
@@ -93,7 +94,7 @@ export function createHud() {
       set('pos', el.pos, String(position));
       set('total', el.total, `/${total}`);
       set('msg', el.msg, lastMsg || '');
-      const rivalTxt = rival ? `★ ${rival.name} : ${rival.position}e${rival.position > position ? ' — derrière toi' : ''}` : '';
+      const rivalTxt = rival ? `★ ${rival.name} : ${ord(rival.position)}${rival.position > position ? ` — ${t('derrière toi')}` : ''}` : '';
       if (cache.rivalTxt !== rivalTxt) {
         cache.rivalTxt = rivalTxt;
         el.rival.textContent = rivalTxt;

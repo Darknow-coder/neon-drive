@@ -1,5 +1,6 @@
 // Écrans de la Coupe : présentation, classement entre les courses, podium final.
 
+import { t, ord } from '../i18n/index.js';
 import { playerLabel } from './playerLabel.js';
 import { getTrackData } from '../data/tracks/index.js';
 import { getCar } from '../data/cars.js';
@@ -70,7 +71,7 @@ export function createCupScreens({ save, sfx }) {
       el.append(minimap(td));
       const h = cup.history[k];
       el.insertAdjacentHTML('beforeend', `<div class="ct-i">${k + 1}</div><div class="ct-n">${td.name}</div>
-        <div class="ct-w">${h ? `Vainqueur : ${h.order[0] === PLAYER ? playerLabel() : h.order[0]}` : td.profile}</div>`);
+        <div class="ct-w">${h ? t('Vainqueur : {w}', { w: h.order[0] === PLAYER ? playerLabel() : h.order[0] }) : td.profile}</div>`);
       wrap.append(el);
     });
     return wrap;
@@ -92,31 +93,31 @@ export function createCupScreens({ save, sfx }) {
   function showIntro(cup, { onStart, onAbandon, resumed = false }) {
     stopFx?.();
     card.innerHTML = '';
-    card.insertAdjacentHTML('beforeend', `<div class="cup-title">COUPE ${leagueName(cup.league)}</div>
-      <div class="cup-subtitle">${resumed ? `Reprise — <b>course ${cup.race + 1} / ${CUP_RACES}</b>` : `${CUP_RACES} courses · mêmes adversaires · classement aux points`}</div>`);
+    card.insertAdjacentHTML('beforeend', `<div class="cup-title">${t('COUPE {l}', { l: leagueName(cup.league) })}</div>
+      <div class="cup-subtitle">${resumed ? t('Reprise — <b>course {a} / {b}</b>', { a: cup.race + 1, b: CUP_RACES }) : t('{n} courses · mêmes adversaires · classement aux points', { n: CUP_RACES })}</div>`);
     card.append(tracksHtml(cup));
     const rv = RIVALS[cup.league];
     const opp = Object.keys(cup.points).filter((n) => n !== PLAYER);
     const rew = [1, 2, 3, 4].map((rank) => {
       const r = cupReward(cup.league, rank);
-      return `<span class="rk">${rank}${rank === 1 ? 're' : 'e'}</span><span>+${r.trophies} ${ico('trophy')} · ${ico('credit')}${r.credits}${r.pack ? ` · ${PACKS[r.pack].name}` : ''}</span>`;
+      return `<span class="rk">${ord(rank, true)}</span><span>+${r.trophies} ${ico('trophy')} · ${ico('credit')}${r.credits}${r.pack ? ` · ${PACKS[r.pack].name}` : ''}</span>`;
     }).join('');
     card.insertAdjacentHTML('beforeend', `<div class="cup-cols">
-      <div class="cup-box"><h4>${resumed ? 'CLASSEMENT' : 'ADVERSAIRES'}</h4>
+      <div class="cup-box"><h4>${resumed ? t('CLASSEMENT') : t('ADVERSAIRES')}</h4>
         ${resumed ? tableHtml(cup, standings(cup)) : `<div class="cup-rivals">${opp.map((n) => { const w = who(save, cup, n); return `<span style="color:${w.rival ? '#ffd34d' : w.colors.glow}">${w.rival ? '★ ' : ''}${n}</span>`; }).join('')}</div>
-        <h4 style="margin-top:8px">POINTS PAR COURSE</h4><div class="cup-pts">${CUP_POINTS.map((p, k) => `<span>${k + 1}e <b>${p}</b></span>`).join('')}</div>`}
+        <h4 style="margin-top:8px">${t('POINTS PAR COURSE')}</h4><div class="cup-pts">${CUP_POINTS.map((p, k) => `<span>${ord(k + 1, true)} <b>${p}</b></span>`).join('')}</div>`}
       </div>
-      <div class="cup-box"><h4>RÉCOMPENSES FINALES</h4><div class="cup-rew">${rew}</div>
-        <h4 style="margin-top:8px">RÈGLES</h4><div class="cup-subtitle" style="text-align:left;font-size:12px">Course 1 : grille tirée au sort. Ensuite, le leader part dernier.${rv ? ` Ton rival <b>${rv.name}</b> est de la partie.` : ''} Quitter une course compte comme une 6e place.</div>
+      <div class="cup-box"><h4>${t('RÉCOMPENSES FINALES')}</h4><div class="cup-rew">${rew}</div>
+        <h4 style="margin-top:8px">${t('RÈGLES')}</h4><div class="cup-subtitle" style="text-align:left;font-size:12px">${t('Course 1 : grille tirée au sort. Ensuite, le leader part dernier.')}${rv ? ` ${t('Ton rival <b>{r}</b> est de la partie.', { r: rv.name })}` : ''} ${t('Quitter une course compte comme une 6e place.')}</div>
       </div></div>`);
     const act = document.createElement('div');
     act.className = 'cup-actions';
-    act.innerHTML = `<button class="menu-btn" id="cup-abandon">${resumed ? 'ABANDONNER LA COUPE' : 'RETOUR'}</button>
-      <button class="menu-btn primary" id="cup-go">${resumed ? `COURSE ${cup.race + 1}` : 'COMMENCER'} ›</button>`;
+    act.innerHTML = `<button class="menu-btn" id="cup-abandon">${resumed ? t('ABANDONNER LA COUPE') : t('RETOUR')}</button>
+      <button class="menu-btn primary" id="cup-go">${resumed ? t('COURSE {n}', { n: cup.race + 1 }) : t('COMMENCER')} ›</button>`;
     card.append(act);
     $('cup-go').onclick = () => { close(); onStart(); };
     $('cup-abandon').onclick = () => {
-      if (resumed && !confirm('Abandonner la coupe ? Les points seront perdus (sans récompense finale).')) return;
+      if (resumed && !confirm(t('Abandonner la coupe ? Les points seront perdus (sans récompense finale).'))) return;
       close(); onAbandon(resumed);
     };
     open();
@@ -128,16 +129,16 @@ export function createCupScreens({ save, sfx }) {
     card.innerHTML = '';
     const last = cup.history[cup.history.length - 1];
     const myPlace = last.order.indexOf(PLAYER) + 1;
-    card.insertAdjacentHTML('beforeend', `<div class="cup-title">COURSE ${cup.race} / ${CUP_RACES}</div>
-      <div class="cup-subtitle">${getTrackData(last.trackId).name} — tu termines <b>${myPlace}${myPlace === 1 ? 're' : 'e'}</b> (+${res.gained[PLAYER]} pts)</div>`);
+    card.insertAdjacentHTML('beforeend', `<div class="cup-title">${t('COURSE {a} / {b}', { a: cup.race, b: CUP_RACES })}</div>
+      <div class="cup-subtitle">${getTrackData(last.trackId).name} — ${t('tu termines <b>{p}</b> (+{n} pts)', { p: ord(myPlace, true), n: res.gained[PLAYER] })}</div>`);
     card.append(tracksHtml(cup));
-    card.insertAdjacentHTML('beforeend', `<div class="cup-box"><h4>CLASSEMENT GÉNÉRAL</h4>${tableHtml(cup, res.standings)}</div>`);
+    card.insertAdjacentHTML('beforeend', `<div class="cup-box"><h4>${t('CLASSEMENT GÉNÉRAL')}</h4>${tableHtml(cup, res.standings)}</div>`);
     if (info) card.insertAdjacentHTML('beforeend', `<div class="cup-info">${info}</div>`);
     const act = document.createElement('div');
     act.className = 'cup-actions';
     act.innerHTML = res.finished
-      ? '<button class="menu-btn primary" id="cup-next">RÉSULTAT FINAL ›</button>'
-      : `<button class="menu-btn" id="cup-menu">PAUSE (MENU)</button><button class="menu-btn primary" id="cup-next">COURSE ${cup.race + 1} : ${getTrackData(cup.tracks[cup.race]).name} ›</button>`;
+      ? `<button class="menu-btn primary" id="cup-next">${t('RÉSULTAT FINAL')} ›</button>`
+      : `<button class="menu-btn" id="cup-menu">${t('PAUSE (MENU)')}</button><button class="menu-btn primary" id="cup-next">${t('COURSE {n}', { n: cup.race + 1 })} : ${getTrackData(cup.tracks[cup.race]).name} ›</button>`;
     card.append(act);
     $('cup-next').onclick = () => { close(); onNext(); };
     if ($('cup-menu')) $('cup-menu').onclick = () => { close(); onMenu(); };
@@ -149,7 +150,7 @@ export function createCupScreens({ save, sfx }) {
     card.innerHTML = '';
     const cupLike = { league: fin.league };
     const won = fin.rank === 1;
-    card.insertAdjacentHTML('beforeend', `<div class="cup-title">COUPE ${leagueName(fin.league)} — RÉSULTAT</div>`);
+    card.insertAdjacentHTML('beforeend', `<div class="cup-title">${t('COUPE {l}', { l: leagueName(fin.league) })} — ${t('RÉSULTAT')}</div>`);
     if (won) card.insertAdjacentHTML('beforeend', `<div class="cup-trophy">${ico('trophy')}</div>`);
     const pod = document.createElement('div');
     pod.className = 'podium';
@@ -164,19 +165,19 @@ export function createCupScreens({ save, sfx }) {
       pod.append(el);
     }
     card.append(pod);
-    const msg = won ? 'TU REMPORTES LA COUPE !' : fin.rank <= 3 ? `PODIUM : ${fin.rank}E PLACE !` : `${fin.rank}E PLACE AU CLASSEMENT`;
+    const msg = won ? t('TU REMPORTES LA COUPE !') : fin.rank <= 3 ? t('PODIUM : {p} PLACE !', { p: ord(fin.rank, true).toUpperCase() }) : t('{p} PLACE AU CLASSEMENT', { p: ord(fin.rank, true).toUpperCase() });
     card.insertAdjacentHTML('beforeend', `<div class="cup-result" style="color:${won ? '#ffd34d' : fin.rank <= 3 ? '#fff' : 'var(--muted)'}">${msg}</div>`);
     const g = fin.reward;
     card.insertAdjacentHTML('beforeend', `<div class="cup-gains">
       ${g.trophies ? `<span class="tr">+${g.trophies} ${ico('trophy')}</span>` : ''}
       <span class="cr">${ico('credit')} +${g.credits}</span>
       ${g.pack ? `<span class="pk" style="color:${PACKS[g.pack].color}">${PACKS[g.pack].name}</span>` : ''}</div>`);
-    if (fin.unlockedCars?.length) card.insertAdjacentHTML('beforeend', `<div class="promo">NOUVELLE VOITURE DÉBLOQUÉE : ${fin.unlockedCars.map((c) => c.name).join(', ')}</div>`);
+    if (fin.unlockedCars?.length) card.insertAdjacentHTML('beforeend', `<div class="promo">${t('NOUVELLE VOITURE DÉBLOQUÉE : {c}', { c: fin.unlockedCars.map((c) => c.name).join(', ') })}</div>`);
     const act = document.createElement('div');
     act.className = 'cup-actions';
-    act.innerHTML = `<button class="menu-btn primary" id="cup-done">${g.pack ? 'OUVRIR LE PACK ›' : 'TERMINER'}</button>`;
+    act.innerHTML = `<button class="menu-btn primary" id="cup-done">${g.pack ? t('OUVRIR LE PACK ›') : t('TERMINER')}</button>`;
     card.append(act);
-    card.insertAdjacentHTML('beforeend', `<div class="cup-box cup-final-table"><h4>CLASSEMENT FINAL</h4>${tableHtml(cupLike, fin.table)}</div>`);
+    card.insertAdjacentHTML('beforeend', `<div class="cup-box cup-final-table"><h4>${t('CLASSEMENT FINAL')}</h4>${tableHtml(cupLike, fin.table)}</div>`);
     $('cup-done').onclick = () => { close(); onDone(); };
     open();
     if (fin.rank <= 3) { stopFx = confetti($('cup-fx')); setTimeout(() => sfx?.finish(1), 900); }

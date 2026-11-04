@@ -1,4 +1,5 @@
 // Écran de choix du circuit pour le contre-la-montre.
+import { t, ord, many } from '../i18n/index.js';
 import { TRACKS } from '../data/tracks/index.js';
 import { MEDALS, medalTimes } from '../data/timeTrial.js';
 import { getCar } from '../data/cars.js';
@@ -15,7 +16,7 @@ const $ = (id) => document.getElementById(id);
 const minimaps = new Map();
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const tagOf = (n) => `#${String(n).padStart(4, '0')}`;
-const nth = (n) => (n === 1 ? '1er' : `${n}e`);
+const nth = (n) => ord(n);
 
 /** Petit plan du circuit (dessiné une fois). */
 export function minimap(td) {
@@ -60,13 +61,13 @@ export function createTimeTrialSelect({ save, onStart, onClose, sfx }) {
       el.insertAdjacentHTML('beforeend', `
         <div class="tn">${td.name}</div>
         <div class="tp">${td.profile}</div>
-        <div class="tb">${best ? formatTime(best) : '–:––.–––'} <span>${best ? 'ton record' : 'pas encore de record'}</span></div>
+        <div class="tb">${best ? formatTime(best) : '–:––.–––'} <span>${best ? t('ton record') : t('pas encore de record')}</span></div>
         <div class="tt-medals">${times.map((m) => `<i class="medal ${won.has(m.id) ? 'on' : ''}" style="--mc:${m.color}" title="${m.name} : ${formatTime(m.time)}">${m.id === 'neon' ? 'N' : m.name[0]}</i>`).join('')}</div>
-        <div class="tt-next">${nextNotWon ? `Prochaine : ${nextNotWon.name} en ${formatTime(nextNotWon.time)}` : '★ Toutes les médailles !'}</div>
-        ${online ? `<div class="tt-online" data-online="${td.id}"><span class="tt-wait">Classement…</span></div>` : ''}
+        <div class="tt-next">${nextNotWon ? t('Prochaine : {m} en {t}', { m: nextNotWon.name, t: formatTime(nextNotWon.time) }) : t('★ Toutes les médailles !')}</div>
+        ${online ? `<div class="tt-online" data-online="${td.id}"><span class="tt-wait">${t('Classement…')}</span></div>` : ''}
         <div class="tt-btns">
-          ${online ? `<button class="menu-btn tt-rank" title="Classement et fantômes" aria-label="Classement et fantômes">${ico('trophy')}</button>` : ''}
-          <button class="menu-btn primary tt-go">ROULER</button>
+          ${online ? `<button class="menu-btn tt-rank" title="${t('Classement et fantômes')}" aria-label="${t('Classement et fantômes')}">${ico('trophy')}</button>` : ''}
+          <button class="menu-btn primary tt-go">${t('ROULER')}</button>
         </div>`);
       el.addEventListener('click', () => { close(); onStart(td.id, null); });
       el.querySelector('.tt-rank')?.addEventListener('click', (e) => { e.stopPropagation(); sfx?.click?.(); openBoard(td); });
@@ -81,12 +82,12 @@ export function createTimeTrialSelect({ save, onStart, onClose, sfx }) {
     const map = await chronoSummary(save, { fresh: true });
     document.querySelectorAll('[data-online]').forEach((box) => {
       const r = map?.[box.dataset.online];
-      if (!map) { box.innerHTML = '<span class="tt-wait">Hors ligne</span>'; return; }
-      if (!r || !r.players) { box.innerHTML = '<span class="tt-wait">Aucun temps en ligne : sois le premier !</span>'; return; }
-      const mine = r.my_time ? `<span class="tt-wr">MONDE <b>${nth(Number(r.my_rank))}</b>/${r.players}</span>`
-        : `<span class="tt-wr">${r.players} pilote${r.players > 1 ? 's' : ''} · record <b>${formatTime(r.world_time)}</b></span>`;
+      if (!map) { box.innerHTML = `<span class="tt-wait">${t('Hors ligne')}</span>`; return; }
+      if (!r || !r.players) { box.innerHTML = `<span class="tt-wait">${t('Aucun temps en ligne : sois le premier !')}</span>`; return; }
+      const mine = r.my_time ? `<span class="tt-wr">${t('MONDE')} <b>${nth(Number(r.my_rank))}</b>/${r.players}</span>`
+        : `<span class="tt-wr">${t(many(r.players) ? '{n} pilotes · record <b>{t}</b>' : '{n} pilote · record <b>{t}</b>', { n: r.players, t: formatTime(r.world_time) })}</span>`;
       const fr = r.friend_name
-        ? `<span class="tt-fr${r.my_time && r.friend_time < r.my_time ? ' ahead' : ''}">AMI ${esc(r.friend_name)} <b>${formatTime(r.friend_time)}</b></span>` : '';
+        ? `<span class="tt-fr${r.my_time && r.friend_time < r.my_time ? ' ahead' : ''}">${t('AMI')} ${esc(r.friend_name)} <b>${formatTime(r.friend_time)}</b></span>` : '';
       box.innerHTML = mine + fr;
     });
   }
@@ -108,7 +109,7 @@ export function createTimeTrialSelect({ save, onStart, onClose, sfx }) {
   }
 
   function pickLabel(p) {
-    if (p.kind === 'mine') return 'MON RECORD';
+    if (p.kind === 'mine') return t('MON RECORD');
     if (p.kind === 'neon') return 'NEON';
     return `${esc(p.name)} ${tagOf(p.tag)}`;
   }
@@ -116,14 +117,14 @@ export function createTimeTrialSelect({ save, onStart, onClose, sfx }) {
   function renderPick() {
     const mine = bestTime(save, board.td.id);
     const p = board.pick;
-    $('tb-ghosts').innerHTML = `<span class="tb-lbl">FANTÔME :</span>
-      <button class="tb-chip${p.kind === 'mine' ? ' on' : ''}" data-pick="mine" ${mine ? '' : 'disabled'}>MON RECORD <b>${mine ? formatTime(mine) : '—'}</b></button>
-      <button class="tb-chip${p.kind === 'neon' ? ' on' : ''}" data-pick="neon">NEON <b>IA ÉLITE</b></button>
-      ${p.kind === 'player' ? `<span class="tb-chip on">${pickLabel(p)} <b>${formatTime(p.time)}</b></span>` : '<span class="tb-hint">ou touche un pilote du classement</span>'}`;
+    $('tb-ghosts').innerHTML = `<span class="tb-lbl">${t('FANTÔME :')}</span>
+      <button class="tb-chip${p.kind === 'mine' ? ' on' : ''}" data-pick="mine" ${mine ? '' : 'disabled'}>${t('MON RECORD')} <b>${mine ? formatTime(mine) : '—'}</b></button>
+      <button class="tb-chip${p.kind === 'neon' ? ' on' : ''}" data-pick="neon">NEON <b>${t('IA ÉLITE')}</b></button>
+      ${p.kind === 'player' ? `<span class="tb-chip on">${pickLabel(p)} <b>${formatTime(p.time)}</b></span>` : `<span class="tb-hint">${t('ou touche un pilote du classement')}</span>`}`;
     $('tb-ghosts').querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => {
       sfx?.click?.(); board.pick = { kind: b.dataset.pick }; renderPick(); renderRows();
     }));
-    $('tb-go').textContent = `ROULER CONTRE ${p.kind === 'player' ? p.name : pickLabel(p)}`;
+    $('tb-go').textContent = t('ROULER CONTRE {x}', { x: p.kind === 'player' ? p.name : pickLabel(p) });
     $('tb-go').disabled = false;
   }
 
@@ -131,9 +132,9 @@ export function createTimeTrialSelect({ save, onStart, onClose, sfx }) {
     const box = $('tb-list');
     const rows = board.rows;
     if (!rows.length) {
-      box.innerHTML = `<div class="rk-off"><b>${board.scope === 'friends' ? 'AUCUN AMI' : 'PERSONNE'}</b>${board.scope === 'friends'
-        ? 'Aucun de tes amis n\'a encore de temps ici. Ajoute des amis depuis le CLASSEMENT du menu.'
-        : 'Aucun temps en ligne sur ce circuit : fais un tour et deviens le premier !'}</div>`;
+      box.innerHTML = `<div class="rk-off"><b>${board.scope === 'friends' ? t('AUCUN AMI') : t('PERSONNE')}</b>${board.scope === 'friends'
+        ? t('Aucun de tes amis n\'a encore de temps ici. Ajoute des amis depuis le CLASSEMENT du menu.')
+        : t('Aucun temps en ligne sur ce circuit : fais un tour et deviens le premier !')}</div>`;
       return;
     }
     const p = board.pick;
@@ -145,7 +146,7 @@ export function createTimeTrialSelect({ save, onStart, onClose, sfx }) {
         ${avatarHtml({ avatar: r.avatar, color: r.color }, 'av-s')}
         <span class="rk-name"><b>${esc(r.name)}<i>${tagOf(r.tag)}</i></b><small>${esc(getCar(r.car).name)}</small></span>
         <span class="tb-time">${formatTime(r.lap_time)}</span>
-        <span class="tb-ghost">${on ? 'CHOISI' : r.me ? 'MOI' : 'DÉFIER'}</span>
+        <span class="tb-ghost">${on ? t('CHOISI') : r.me ? t('MOI') : t('DÉFIER')}</span>
       </button>`;
     }).join('');
     box.querySelectorAll('[data-pid]').forEach((b) => b.addEventListener('click', () => {
@@ -161,18 +162,18 @@ export function createTimeTrialSelect({ save, onStart, onClose, sfx }) {
   async function loadBoard() {
     const id = ++loadId;
     const { td, scope } = board;
-    $('tb-list').innerHTML = '<div class="rk-wait">Chargement…</div>';
+    $('tb-list').innerHTML = `<div class="rk-wait">${t('Chargement…')}</div>`;
     try {
       const rows = await chronoBoard(td.id, scope);
       if (id !== loadId) return;
       board.rows = rows ?? [];
       const me = board.rows.find((r) => r.me);
-      $('tb-total').textContent = me ? `Ta place : ${nth(Number(me.rank))}` : '';
+      $('tb-total').textContent = me ? t('Ta place : {p}', { p: nth(Number(me.rank)) }) : '';
       renderRows();
     } catch {
       if (id !== loadId) return;
       board.rows = [];
-      $('tb-list').innerHTML = '<div class="rk-off"><b>HORS LIGNE</b>Le classement n\'est pas disponible. Tu peux quand même rouler contre ton record ou NEON.</div>';
+      $('tb-list').innerHTML = `<div class="rk-off"><b>${t('HORS LIGNE')}</b>${t('Le classement n\'est pas disponible. Tu peux quand même rouler contre ton record ou NEON.')}</div>`;
     }
   }
 
@@ -191,13 +192,13 @@ export function createTimeTrialSelect({ save, onStart, onClose, sfx }) {
     if (pick.kind === 'neon') rival = { ghost: 'neon' };
     if (pick.kind === 'player') {
       const go = $('tb-go');
-      go.disabled = true; go.textContent = 'TÉLÉCHARGEMENT DU FANTÔME…';
+      go.disabled = true; go.textContent = t('TÉLÉCHARGEMENT DU FANTÔME…');
       try {
         const g = await fetchGhost(pick.id, td.id);
         if (!g) throw new Error('vide');
         rival = { ghost: g.ghost, label: g.name, time: g.time };
       } catch {
-        go.disabled = false; go.textContent = 'FANTÔME INDISPONIBLE : RÉESSAYER';
+        go.disabled = false; go.textContent = t('FANTÔME INDISPONIBLE : RÉESSAYER');
         return;
       }
       if (board?.td !== td) return; // fermé entre-temps

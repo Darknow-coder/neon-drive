@@ -3,10 +3,11 @@
 // une longue ligne droite de départ. La pluie réduit l'adhérence de toutes
 // les voitures : il faut freiner plus tôt et doser les drifts.
 
+import { t } from '../../i18n/index.js';
 export default {
   id: 'rainline',
   name: 'RAINLINE',
-  profile: 'Urbain · Pluie',
+  profile: t('Urbain · Pluie'),
   league: 'argent',
   scale: 1.68,
   width: 240,

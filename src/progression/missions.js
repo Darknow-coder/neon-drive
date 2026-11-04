@@ -38,6 +38,14 @@ function makeMission(tpl, target, extra, id) {
   return { id, type: tpl.type, target, progress: 0, text, reward: { ...tpl.reward }, claimed: false, ...extra };
 }
 
+/** Texte d'une mission dans la langue du jeu (recalculé : la sauvegarde garde l'ancien texte). */
+export function missionText(m) {
+  const list = m.id?.startsWith('w') ? WEEKLY_TEMPLATES : DAILY_TEMPLATES;
+  const tpl = list.find((x) => x.type === m.type);
+  if (!tpl) return m.text;
+  return makeMission(tpl, m.target, { trackId: m.trackId, carId: m.carId }, m.id).text;
+}
+
 export function generateDaily(save, day) {
   const rng = mulberry32(hash(`m|${day}|${save.createdAt}`));
   const league = leagueFor(save.trophies).id;

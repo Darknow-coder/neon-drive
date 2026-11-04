@@ -1,14 +1,15 @@
 // Météos des circuits. Chaque circuit choisit la sienne (champ `weather`).
 // La même règle s'applique à toutes les voitures (joueur et IA).
 
+import { t } from '../i18n/index.js';
 export const WEATHER = {
-  clear: { name: 'DÉGAGÉ', grip: 1, desc: '' },
-  rain: { name: 'PLUIE', grip: 0.82, desc: 'Piste mouillée : ça glisse un peu' },
-  dusk: { name: 'CRÉPUSCULE', grip: 1, desc: 'Pluie de pétales au coucher du soleil' },
-  snow: { name: 'NEIGE', grip: 0.76, desc: 'Piste enneigée : freine plus tôt !' },
-  sand: { name: 'TEMPÊTE DE SABLE', grip: 0.93, desc: 'Rafales de vent : tiens bien ta trajectoire' },
-  fog: { name: 'BROUILLARD', grip: 0.96, desc: 'Visibilité réduite : retiens le tracé' },
-  storm: { name: 'ORAGE', grip: 0.8, desc: 'Pluie battante et éclairs' },
+  clear: { name: t('DÉGAGÉ'), grip: 1, desc: '' },
+  rain: { name: t('PLUIE'), grip: 0.82, desc: t('Piste mouillée : ça glisse un peu') },
+  dusk: { name: t('CRÉPUSCULE'), grip: 1, desc: t('Pluie de pétales au coucher du soleil') },
+  snow: { name: t('NEIGE'), grip: 0.76, desc: t('Piste enneigée : freine plus tôt !') },
+  sand: { name: t('TEMPÊTE DE SABLE'), grip: 0.93, desc: t('Rafales de vent : tiens bien ta trajectoire') },
+  fog: { name: t('BROUILLARD'), grip: 0.96, desc: t('Visibilité réduite : retiens le tracé') },
+  storm: { name: t('ORAGE'), grip: 0.8, desc: t('Pluie battante et éclairs') },
 };
 
 export const weatherOf = (id) => WEATHER[id] ?? WEATHER.clear;

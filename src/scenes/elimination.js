@@ -1,6 +1,7 @@
 // Mode Élimination : à la fin de chaque tour du leader, le dernier est éliminé.
 // Même règle pour tout le monde. Le dernier survivant gagne.
 
+import { t, ord } from '../i18n/index.js';
 import { createRaceScene } from './raceScene.js';
 import { P_SPARK, P_FLAME } from '../render/particles.js';
 import { DANGER_SECONDS, COUNTDOWN_SECONDS } from '../data/elimination.js';
@@ -43,7 +44,7 @@ export function createElimination({ onFinish, sfx, ...opts }) {
       time: 0, gap: 0,
       bestLap: car.laps.bestLap,
       position: k + 1,
-      label: k === 0 ? 'VAINQUEUR' : `Éliminé au tour ${car.eliminatedLap}`,
+      label: k === 0 ? t('VAINQUEUR') : t('Éliminé au tour {n}', { n: car.eliminatedLap }),
       stats: { drift: car.raceStats?.drift ?? 0, overtakes: car.raceStats?.overtakes ?? 0, pads: car.raceStats?.pads ?? 0, wallHits: car.wallHits ?? 0 },
     }));
   }
@@ -68,18 +69,18 @@ export function createElimination({ onFinish, sfx, ...opts }) {
         if (navigator.vibrate && out.isPlayer && opts.settings?.vibration) navigator.vibrate([80, 60, 160]);
         const left = world.cars.length;
         if (out.isPlayer) {
-          scene.flash(`ÉLIMINÉ ! ${left + 1}E PLACE`, 9999);
+          scene.flash(t('ÉLIMINÉ ! {p} PLACE', { p: ord(left + 1, true).toUpperCase() }), 9999);
           sfx?.music?.jingle?.(left + 1 <= 3 ? 'podium' : 'finish');
           endTimer = 2.5;
         } else if (left === 1) {
           const win = world.cars[0];
-          scene.flash(win.isPlayer ? 'VICTOIRE ! DERNIER SURVIVANT' : `${win.name} GAGNE`, 9999);
+          scene.flash(win.isPlayer ? t('VICTOIRE ! DERNIER SURVIVANT') : t('{n} GAGNE', { n: win.name }), 9999);
           if (win.isPlayer) sfx?.music?.jingle?.('victory');
           endTimer = 3;
         } else {
           // Duel final (2 voitures) : la musique monte d'un cran
           if (left === 2 && !world.player.eliminated) sfx?.music?.setFinal?.(true);
-          scene.flash(`${out.isRival ? '★ ' : ''}${out.name} ÉLIMINÉ — ${left} RESTANTS`, 2.5);
+          scene.flash(`${out.isRival ? '★ ' : ''}${t('{n} ÉLIMINÉ — {k} RESTANTS', { n: out.name, k: left })}`, 2.5);
         }
       }
       // Danger : le dernier est signalé avant chaque élimination

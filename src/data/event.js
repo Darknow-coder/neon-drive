@@ -1,11 +1,12 @@
 // Événement (provisoirement permanent) : GIGA RUSH, la course à 20 voitures.
 // Tout est réglable ici.
 
+import { t } from '../i18n/index.js';
 export const EVENT = {
   id: 'giga-rush',
   name: 'GIGA RUSH',
-  tagline: '20 pilotes · 2 tours · circuit géant',
-  desc: 'Une autoroute néon immense et très large, 20 voitures au départ. Tu pars en milieu de peloton : remonte jusqu\'à la tête !',
+  tagline: t('20 pilotes · 2 tours · circuit géant'),
+  desc: t('Une autoroute néon immense et très large, 20 voitures au départ. Tu pars en milieu de peloton : remonte jusqu\'à la tête !'),
   trackId: 'neon-highway',
   laps: 2,
   drivers: 20,
@@ -20,10 +21,10 @@ export const EVENT_CREDITS = [150, 130, 115, 100, 90, 80, 72, 65, 58, 52, 46, 41
 
 // Objectifs : chacun récompensé une seule fois (le meilleur résultat débloque aussi les précédents)
 export const EVENT_GOALS = [
-  { id: 'top10', place: 10, label: 'Finis dans le top 10', reward: { credits: 300 } },
-  { id: 'top5', place: 5, label: 'Finis dans le top 5', reward: { pack: 'medium' } },
-  { id: 'podium', place: 3, label: 'Monte sur le podium', reward: { pack: 'large', credits: 300 } },
-  { id: 'win', place: 1, label: 'Gagne la GIGA RUSH', reward: { motif: 'giga', credits: 500 } },
+  { id: 'top10', place: 10, label: t('Finis dans le top 10'), reward: { credits: 300 } },
+  { id: 'top5', place: 5, label: t('Finis dans le top 5'), reward: { pack: 'medium' } },
+  { id: 'podium', place: 3, label: t('Monte sur le podium'), reward: { pack: 'large', credits: 300 } },
+  { id: 'win', place: 1, label: t('Gagne la GIGA RUSH'), reward: { motif: 'giga', credits: 500 } },
 ];
 
 // Pilotes supplémentaires (en plus des 5 habituels et du rival de la ligue)

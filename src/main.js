@@ -1,6 +1,7 @@
 // Point d'entrée du jeu : enchaîne les écrans (menu → course → résultats).
 
 import { createLoop } from './core/loop.js';
+import { translateDom, LANG, LOCALE, setLang, t, ord, fmtNum, missingKeys, many } from './i18n/index.js';
 import { applyPrefs } from './core/prefs.js';
 import { createInput, isTouchDevice } from './core/input.js';
 import { createRenderer } from './render/renderer.js';
@@ -35,7 +36,7 @@ import { ELIM_TROPHIES } from './data/elimination.js';
 import { startCup, cupGrid, applyCupRace, finishCup, abandonCup, PLAYER } from './progression/cup.js';
 import { computeResults } from './race/results.js';
 import { LEAGUES } from './data/progression.js';
-import { refreshMissions, applyMissionProgress } from './progression/missions.js';
+import { refreshMissions, applyMissionProgress, missionText } from './progression/missions.js';
 import { refreshShop } from './progression/shop.js';
 import { PACKS } from './data/economy.js';
 import { FINISHES, MOTIFS } from './data/shop.js';
@@ -82,6 +83,8 @@ import { eventField, applyEventResult } from './progression/event.js';
 import { EVENT_TRACKS } from './data/tracks/index.js';
 import { carIcon } from './ui/carIcon.js';
 
+// Textes écrits en dur dans la page : traduits avant tout affichage
+translateDom();
 const $ = (id) => document.getElementById(id);
 const show = (id, v = true) => $(id).classList.toggle('hidden', !v);
 
@@ -193,8 +196,8 @@ function refreshMenu() {
   renderMenu(save, saveStatus);
   // Bouton COUPE : reprise d'une coupe en cours, ou ligue de la prochaine coupe
   $('cup-sub').textContent = save.cup
-    ? `Reprendre · course ${save.cup.race + 1}/3`
-    : `3 courses · ligue ${LEAGUES.find((l) => l.id === leagueFor(save.trophies).id)?.name ?? ''}`;
+    ? t('Reprendre · course {n}/3', { n: save.cup.race + 1 })
+    : t('3 courses · ligue {l}', { l: LEAGUES.find((l) => l.id === leagueFor(save.trophies).id)?.name ?? '' });
   $('btn-cup').classList.toggle('live', !!save.cup);
   // Passe de saison : niveau et récompenses à récupérer
   $('nav-pass-lvl').textContent = String(seasonLevel(save.pass.xp).level);
@@ -203,7 +206,7 @@ function refreshMenu() {
   $('pass-badge').classList.toggle('hidden', !pb);
   // Classement mondial (dernière place connue)
   const om = onlineCached();
-  $('menu-rank').textContent = om?.rank ? `#${Number(om.rank).toLocaleString('fr-FR')}` : 'TOP';
+  $('menu-rank').textContent = om?.rank ? `#${fmtNum(om.rank)}` : 'TOP';
   setFriendBadges(om?.incoming ?? 0);
   // Défi du jour
   refreshDaily(save);
@@ -214,14 +217,14 @@ function refreshMenu() {
   $('daily-badge').classList.toggle('hidden', !dailyBadge(save));
   // Carrière : chapitre en cours et étoiles
   const curCh = currentChapter(save);
-  $('menu-career-sub').innerHTML = `Chapitre ${curCh.n} · ${totalStars(save)}/${MAX_STARS} ★`;
+  $('menu-career-sub').innerHTML = `${t('Chapitre {n}', { n: curCh.n })} · ${totalStars(save)}/${MAX_STARS} ★`;
   $('career-badge').classList.toggle('hidden', !campaignBadge(save));
   // Tuile de l'événement : meilleure place
-  $('event-sub').textContent = save.event.best ? `Événement · record ${save.event.best === 1 ? '1re' : `${save.event.best}e`} place` : `Événement · ${EVENT.drivers} pilotes`;
+  $('event-sub').textContent = save.event.best ? t('Événement · record {p} place', { p: ord(save.event.best, true) }) : t('Événement · {n} pilotes', { n: EVENT.drivers });
   // Profil : emblème, pseudo, titre et succès à récupérer
   $('menu-avatar').innerHTML = avatarHtml(save.profile, 'av-s');
   $('menu-name').textContent = playerName(save);
-  $('menu-title').textContent = currentTitle(save);
+  $('menu-title').textContent = t(currentTitle(save));
   const nb = achievementsBadge(save);
   $('profile-badge').textContent = String(nb);
   $('profile-badge').classList.toggle('hidden', !nb);
@@ -322,7 +325,7 @@ function cupRaceDone(rows, abandoned = false) {
   let info = '';
   if (abandoned) {
     order = [...order.filter((n) => n !== PLAYER), PLAYER];
-    info = '<span>Course quittée : comptée comme une 6e place.</span>';
+    info = `<span>${t('Course quittée : comptée comme une 6e place.')}</span>`;
   } else {
     const me = rows.find((r) => r.isPlayer);
     const rv = rows.find((r) => r.isRival);
@@ -339,8 +342,8 @@ function cupRaceDone(rows, abandoned = false) {
     });
     recordRace(save, { position: me.position, carId, trackId, mode: 'cup' });
     const sx = addSeasonXp(save, raceXp('cup', me.position), { race: true });
-    info = `<span>Crédits de la course : <b>+${credits.total}</b></span><span>Passe de saison : <b>+${sx.gained} XP${sx.doubled ? ' (×2)' : ''}</b>${sx.after > sx.before ? ` · NIVEAU ${sx.after} !` : ''}</span>` +
-      changes.map((c) => `<span class="${c.done ? 'ok' : ''}">${c.mission.text} <b>${c.done ? '✓' : `${c.after}/${c.mission.target}`}</b></span>`).join('');
+    info = `<span>${t('Crédits de la course :')} <b>+${credits.total}</b></span><span>${t('Passe de saison :')} <b>+${sx.gained} XP${sx.doubled ? ' (×2)' : ''}</b>${sx.after > sx.before ? ` · ${t('NIVEAU {n} !', { n: sx.after })}` : ''}</span>` +
+      changes.map((c) => `<span class="${c.done ? 'ok' : ''}">${missionText(c.mission)} <b>${c.done ? '✓' : `${c.after}/${c.mission.target}`}</b></span>`).join('');
   }
   const res = applyCupRace(cup, order);
   persist();
@@ -419,7 +422,7 @@ function pause() {
   const cup = !!session?.isCup;
   show('btn-restart', !cup);
   show('pause-note', cup);
-  $('pause-note').textContent = cup ? 'Quitter la course compte comme une 6e place (la coupe continue).' : '';
+  $('pause-note').textContent = cup ? t('Quitter la course compte comme une 6e place (la coupe continue).') : '';
   show('pause', true);
   updateMusic();
 }
@@ -497,14 +500,14 @@ function dailyDone(ch, rows) {
   persist();
   lastDaily = res;
   const lines = [];
-  if (res.credits) lines.push({ label: `${res.gained} nouvelle${res.gained > 1 ? 's' : ''} étoile${res.gained > 1 ? 's' : ''}`, amount: res.credits });
+  if (res.credits) lines.push({ label: many(res.gained) ? t('{n} nouvelles étoiles', { n: res.gained }) : t('{n} nouvelle étoile', { n: res.gained }), amount: res.credits });
   showResults(rows, {
-    trackName: `DÉFI DU JOUR · ${ch.track.name}`,
+    trackName: `${t('DÉFI DU JOUR')} · ${ch.track.name}`,
     credits: lines.length ? { total: lines.reduce((a, l) => a + l.amount, 0), lines } : null,
     season,
     career: {
-      stars: res.stars, prev: res.prev, goals: dailyGoals(ch, save.daily.targets), backLabel: 'DÉFI',
-      extra: res.streakReward ? `SÉRIE : ${res.streak} JOUR${res.streak > 1 ? 'S' : ''} ! Récompense sur l'écran du défi` : res.newBest ? 'NOUVEAU MEILLEUR RÉSULTAT DU JOUR !' : '',
+      stars: res.stars, prev: res.prev, goals: dailyGoals(ch, save.daily.targets), backLabel: t('DÉFI'),
+      extra: res.streakReward ? (many(res.streak) ? t('SÉRIE : {n} JOURS ! Récompense sur l\'écran du défi', { n: res.streak }) : t('SÉRIE : {n} JOUR ! Récompense sur l\'écran du défi', { n: res.streak })) : res.newBest ? t('NOUVEAU MEILLEUR RÉSULTAT DU JOUR !') : '',
     },
   });
   if (res.gained) setTimeout(() => sfx.unlock(), 500);
@@ -579,8 +582,8 @@ function careerDone(stage, rows) {
   persist();
   lastCareer = res;
   const lines = [];
-  if (res.credits) lines.push({ label: `${res.gained} nouvelle${res.gained > 1 ? 's' : ''} étoile${res.gained > 1 ? 's' : ''}`, amount: res.credits });
-  if (res.allStars) lines.push({ label: 'Toutes les étoiles !', amount: res.allStars.credits });
+  if (res.credits) lines.push({ label: many(res.gained) ? t('{n} nouvelles étoiles', { n: res.gained }) : t('{n} nouvelle étoile', { n: res.gained }), amount: res.credits });
+  if (res.allStars) lines.push({ label: t('Toutes les étoiles !'), amount: res.allStars.credits });
   showResults(rows, {
     trackName: `${stage.title} · ${session.trackName}`,
     credits: lines.length ? { total: lines.reduce((a, l) => a + l.amount, 0), lines } : null,
@@ -636,9 +639,8 @@ function eventDone(rows) {
   recordRace(save, { position: me.position, carId, trackId, mode: 'event' });
   const season = addSeasonXp(save, raceXp('event', me.position, rows.length), { race: true });
   persist();
-  const place = me.position === 1 ? '1re' : `${me.position}e`;
-  const lines = [{ label: `${place} place sur ${rows.length}`, amount: res.credits }];
-  for (const g of res.goals) if (g.credits) lines.push({ label: `Objectif « ${g.goal.label} »`, amount: g.credits });
+  const lines = [{ label: t('{p} place sur {n}', { p: ord(me.position, true), n: rows.length }), amount: res.credits }];
+  for (const g of res.goals) if (g.credits) lines.push({ label: t('Objectif « {g} »', { g: g.goal.label }), amount: g.credits });
   showResults(rows, {
     trackName: `${EVENT.name} · ${session.trackName}`,
     credits: { total: lines.reduce((a, l) => a + l.amount, 0), lines },
@@ -655,7 +657,7 @@ function eventDone(rows) {
     if (g.packId) rewards.push({ packId: g.packId, gains: g.gains });
     if (g.motif) {
       const visual = carIcon(getCar(carId), { ...liveryFor(save, carId), motif: g.motif }, 260, 166);
-      rewards.push({ title: 'MOTIF EXCLUSIF', visual, note: 'Motif <b>GIGA RUSH</b> débloqué : équipe-le au garage !' });
+      rewards.push({ title: t('MOTIF EXCLUSIF'), visual, note: t('Motif <b>GIGA RUSH</b> débloqué : équipe-le au garage !') });
     }
   }
   if (rewards.length) {
@@ -759,7 +761,7 @@ function startElimination(withReveal = true) {
   show('pause', false);
   setRaceUi(false);
   updateMusic();
-  revealTrack(tracksForLeague(league), getTrackData(trackId), go, rivalFor(league), 'ÉLIMINATION');
+  revealTrack(tracksForLeague(league), getTrackData(trackId), go, rivalFor(league), t('ÉLIMINATION'));
 }
 
 /** Course classée : circuit tiré au sort parmi ceux de la ligue du joueur. */
@@ -795,7 +797,7 @@ refreshMenu();
 if (devMode) {
   const a = document.createElement('a');
   a.href = './editor.html';
-  a.textContent = "ÉDITEUR DE CIRCUITS";
+  a.textContent = t('ÉDITEUR DE CIRCUITS');
   a.className = 'menu-btn';
   a.style.textDecoration = 'none';
   $('menu-main').append(a);
@@ -945,10 +947,10 @@ const settingsScreen = createSettingsScreen({
   },
   accountInfo: () => {
     const om = onlineCached();
-    const since = new Date(save.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const since = new Date(save.createdAt).toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
     return `${avatarHtml(save.profile, 'av-m')}<div><b>${playerName(save)}${om?.tag ? ` <i>#${String(om.tag).padStart(4, '0')}</i>` : ''}</b>
-      <small>${currentTitle(save)} · pilote depuis le ${since}</small>
-      <small>${om?.friend_code ? `Code ami : <em>${om.friend_code}</em> · ` : ''}${saveStatus === 'unavailable' ? '<span class="err">Sauvegarde impossible sur ce navigateur (navigation privée ?)</span>' : 'Sauvegarde automatique ✓'}</small></div>`;
+      <small>${t(currentTitle(save))} · ${t('pilote depuis le {d}', { d: since })}</small>
+      <small>${om?.friend_code ? `${t('Code ami :')} <em>${om.friend_code}</em> · ` : ''}${saveStatus === 'unavailable' ? `<span class="err">${t('Sauvegarde impossible sur ce navigateur (navigation privée ?)')}</span>` : t('Sauvegarde automatique ✓')}</small></div>`;
   },
   onImport: (data) => {
     // Remplace toute la progression par celle du code, puis recharge le jeu
@@ -968,20 +970,20 @@ document.querySelectorAll('[data-legal]').forEach((a) => a.addEventListener('cli
 // Droit d'accès : télécharger tout ce que le serveur sait de moi
 $('btn-online-data').addEventListener('click', async () => {
   const msg = $('online-data-msg');
-  if (!onlineId()) { msg.textContent = 'Aucun profil en ligne sur cet appareil : rien n\'est stocké sur le serveur.'; return; }
-  msg.textContent = 'Récupération…';
+  if (!onlineId()) { msg.textContent = t('Aucun profil en ligne sur cet appareil : rien n\'est stocké sur le serveur.'); return; }
+  msg.textContent = t('Récupération…');
   try {
     const [profileData, friends, chrono] = await Promise.all([onlineRpc('player_card', { p_id: onlineId() }), onlineRpc('my_friends'), onlineRpc('tt_summary').catch(() => [])]);
     const records = chrono.filter((r) => r.my_time);
     const data = { exporté_le: new Date().toISOString(), identifiant_anonyme: onlineId(), profil: profileData,
       amis_et_demandes: friends.map((f) => ({ pseudo: `${f.name} #${String(f.tag).padStart(4, '0')}`, relation: f.relation })),
-      records_du_chrono: records.map((r) => ({ circuit: r.track_id, temps: r.my_time, place: r.my_rank, note: 'avec la trajectoire du tour (fantôme), visible par les autres joueurs' })) };
+      records_du_chrono: records.map((r) => ({ circuit: r.track_id, temps: r.my_time, place: r.my_rank, note: t('avec la trajectoire du tour (fantôme), visible par les autres joueurs') })) };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = 'neon-drive-mes-donnees.json'; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-    msg.innerHTML = `Fichier téléchargé. Le serveur connaît : ton pseudo <b>${profileData.name} #${String(profileData.tag).padStart(4, '0')}</b>, ton emblème, ton titre, ta voiture, ${profileData.trophies} trophées, ${profileData.races} courses, ${profileData.wins} victoires ${friends.length} ami(s) ou demande(s) et ${records.length} record(s) du chrono (avec leur fantôme). Rien d'autre.`;
-  } catch { msg.textContent = 'Pas de connexion : réessaie plus tard.'; }
+    msg.innerHTML = t('Fichier téléchargé. Le serveur connaît : ton pseudo <b>{name}</b>, ton emblème, ton titre, ta voiture, {tro} trophées, {races} courses, {wins} victoires, {fr} ami(s) ou demande(s) et {rec} record(s) du chrono (avec leur fantôme). Rien d\'autre.', { name: `${profileData.name} #${String(profileData.tag).padStart(4, '0')}`, tro: profileData.trophies, races: profileData.races, wins: profileData.wins, fr: friends.length, rec: records.length });
+  } catch { msg.textContent = t('Pas de connexion : réessaie plus tard.'); }
 });
 $('btn-pause-settings').addEventListener('click', () => settingsScreen.open({ inRace: true }));
 $('btn-train-back').addEventListener('click', () => showTrainingPicker(false));
@@ -991,11 +993,11 @@ $('btn-ranking').addEventListener('click', () => rankingScreen.open(onlineCached
 // Supprimer son profil en ligne (Réglages)
 $('btn-online-delete').addEventListener('click', async () => {
   const b = $('btn-online-delete');
-  if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'CONFIRMER LA SUPPRESSION ?'; return; }
+  if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = t('CONFIRMER LA SUPPRESSION ?'); return; }
   b.disabled = true;
-  try { await deleteOnlineProfile(); resetSent(); $('online-delete-msg').textContent = 'Profil en ligne supprimé. Il sera recréé (sans amis) au prochain lancement du jeu.'; }
-  catch { $('online-delete-msg').textContent = 'Pas de connexion : réessaie plus tard.'; b.disabled = false; }
-  b.dataset.confirm = ''; b.textContent = 'SUPPRIMER MON PROFIL EN LIGNE';
+  try { await deleteOnlineProfile(); resetSent(); $('online-delete-msg').textContent = t('Profil en ligne supprimé. Il sera recréé (sans amis) au prochain lancement du jeu.'); }
+  catch { $('online-delete-msg').textContent = t('Pas de connexion : réessaie plus tard.'); b.disabled = false; }
+  b.dataset.confirm = ''; b.textContent = t('SUPPRIMER MON PROFIL EN LIGNE');
 });
 $('btn-career').addEventListener('click', () => careerScreen.open());
 
@@ -1038,15 +1040,15 @@ runBoot({
   touch,
   skip: skipIntro,
   tasks: [
-    ['Allumage des néons…', () => Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 2500))])],
-    ['Chargement des icônes…', () => Promise.all(['trophy', 'credit', 'lock'].map((n) => iconImage(n).decode?.().catch(() => {})))],
-    ['Préparation des circuits…', async () => {
+    [t('Allumage des néons…'), () => Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 2500))])],
+    [t('Chargement des icônes…'), () => Promise.all(['trophy', 'credit', 'lock'].map((n) => iconImage(n).decode?.().catch(() => {})))],
+    [t('Préparation des circuits…'), async () => {
       // Plans des circuits calculés à l'avance (chrono, profil : affichage immédiat)
       for (const t of TRACKS) { if (!t.custom) minimap(t); await new Promise((r) => setTimeout(r, 0)); }
     }],
-    ['Chargement de ta progression…', () => {
+    [t('Chargement de ta progression…'), () => {
       refreshMenu();
-      if (saveStatus === 'restored') $('boot-status').textContent = 'Sauvegarde de secours restaurée.';
+      if (saveStatus === 'restored') $('boot-status').textContent = t('Sauvegarde de secours restaurée.');
     }],
   ],
   onEnter: () => {
@@ -1068,7 +1070,7 @@ runBoot({
 });
 
 // Accès pour les tests automatiques
-window.__ND = { audio: () => audio, music: () => music, session: () => session, loop: () => loop, perf, state: () => state, save: () => save };
+window.__ND = { missing: () => missingKeys(), audio: () => audio, music: () => music, session: () => session, loop: () => loop, perf, state: () => state, save: () => save };
 
 // Installation comme application + jeu hors ligne (version publiée uniquement)
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {

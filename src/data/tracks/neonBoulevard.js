@@ -6,10 +6,11 @@
 // Format : chaque point = [x, y] ou [x, y, largeur]. Le tracé est parcouru
 // dans l'ordre des points ; le premier point est sur la ligne de départ.
 
+import { t } from '../../i18n/index.js';
 export default {
   id: 'neon-boulevard',
   name: 'NEON BOULEVARD',
-  profile: 'Fluide',
+  profile: t('Fluide'),
   league: 'bronze',
   scale: 1.5,
   width: 250,

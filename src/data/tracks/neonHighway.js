@@ -4,10 +4,11 @@
 // grandes courbes rapides, une chicane et une boucle centrale technique.
 // N'apparaît pas en course classée (réservé à l'événement et à l'entraînement).
 
+import { t } from '../../i18n/index.js';
 export default {
   id: 'neon-highway',
   name: 'NEON HIGHWAY',
-  profile: 'Géant · 20 pilotes',
+  profile: t('Géant · 20 pilotes'),
   league: 'bronze',
   event: true,
   music: 'giga',

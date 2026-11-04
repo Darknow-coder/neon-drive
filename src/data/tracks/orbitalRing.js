@@ -3,10 +3,11 @@
 // spatiale : chicanes, épingle, piliers de structure et une fuite de liquide
 // de refroidissement qui rend un virage glissant.
 
+import { t } from '../../i18n/index.js';
 export default {
   id: 'orbital-ring',
   name: 'ORBITAL RING',
-  profile: 'Très technique',
+  profile: t('Très technique'),
   league: 'diamant',
   scale: 1.6,
   width: 215,

@@ -37,6 +37,7 @@ jobs:
           node tools/traitCheck.js
           node tools/musicCheck.js
           node tools/dailyCheck.js 10
+          node tools/i18nCheck.js
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

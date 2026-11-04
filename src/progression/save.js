@@ -12,6 +12,7 @@
 
 const KEY = 'neondrive.save';
 const BACKUP_KEY = 'neondrive.save.backup';
+import { t } from '../i18n/index.js';
 export const SAVE_VERSION = 13;
 
 export function defaultSave() {
@@ -467,10 +468,10 @@ export function importSaveCode(code) {
   const clean = String(code).replace(/\s+/g, '');
   const m = /^ND1\.([A-Za-z0-9+/=]+)\.([a-z0-9]+)$/.exec(clean);
   if (!m) throw new Error("Ce n'est pas un code de sauvegarde NEON//DRIVE.");
-  if (checksum(m[1]) !== m[2]) throw new Error('Code incomplet ou modifié (vérifie le copier-coller).');
+  if (checksum(m[1]) !== m[2]) throw new Error(t('Code incomplet ou modifié (vérifie le copier-coller).'));
   let raw;
   try { raw = JSON.parse(fromB64(m[1])); } catch { throw new Error('Code illisible.'); }
   const data = sanitize(migrate(raw));
-  if (!data) throw new Error('Données invalides.');
+  if (!data) throw new Error(t('Données invalides.'));
   return data;
 }

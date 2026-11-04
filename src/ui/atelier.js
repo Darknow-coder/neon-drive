@@ -7,6 +7,7 @@
 // (les effets sont produits par le même code qu'en course : render/carFx.js).
 // Un objet pas encore possédé peut être ESSAYÉ sur la voiture avant l'achat.
 
+import { t } from '../i18n/index.js';
 import { getCar, PAINT_COLORS } from '../data/cars.js';
 import { FINISHES, MOTIFS, TRAILS, SMOKES, NUMBER_STYLES } from '../data/shop.js';
 import { AVATARS, ownsAvatar } from '../data/profile.js';
@@ -61,11 +62,11 @@ export function createAtelier({ save, onSave, sfx, onClose }) {
   };
   function refreshSprite() { sprite = makeCarSprite(getCar(carId), 46, 24, colors()); }
 
-  function draw(t) {
+  function draw(now) {
     raf = requestAnimationFrame(draw);
-    if (t - last < 30) return; // ≈ 30 images/s
-    const dt = last ? Math.min(0.05, (t - last) / 1000) : 1 / 30;
-    last = t;
+    if (now - last < 30) return; // ≈ 30 images/s
+    const dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / 30;
+    last = now;
     const W = canvas.width, H = canvas.height;
     const SC = 4.2;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -78,7 +79,7 @@ export function createAtelier({ save, onSave, sfx, onClose }) {
     const moving = mode === 'boost' || mode === 'drift';
     if (moving) {
       ctx.strokeStyle = 'rgba(0,240,255,0.12)'; ctx.lineWidth = 2;
-      const off = (t / 6) % 60;
+      const off = (now / 6) % 60;
       for (let y = -60 + off; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(W * 0.15, y); ctx.lineTo(W * 0.85, y); ctx.stroke(); }
     } else {
       ctx.strokeStyle = 'rgba(0,240,255,0.3)'; ctx.lineWidth = 2;
@@ -119,17 +120,17 @@ export function createAtelier({ save, onSave, sfx, onClose }) {
     const custom = !PAINT_COLORS.some((c) => c.toLowerCase() === value.toLowerCase());
     const auto = part === 'glow' && !l.glow;
     return `<div class="at-sec"><div class="at-lbl">${label}</div><div class="at-sw">
-      ${part === 'glow' ? `<button class="at-auto${auto ? ' on' : ''}" data-auto="1">AUTO</button>` : ''}
-      ${PAINT_COLORS.map((c) => `<button class="swatch${!auto && c.toLowerCase() === value.toLowerCase() ? ' on' : ''}" style="background:${c};color:${c}" data-part="${part}" data-col="${c}" aria-label="Couleur ${c}"></button>`).join('')}
-      <button class="swatch at-wheel${custom && !auto ? ' on' : ''}" data-wheel="${part}" aria-label="Nuancier libre" style="${custom && !auto ? `--cur:${value}` : ''}"></button>
+      ${part === 'glow' ? `<button class="at-auto${auto ? ' on' : ''}" data-auto="1">${t('AUTO')}</button>` : ''}
+      ${PAINT_COLORS.map((c) => `<button class="swatch${!auto && c.toLowerCase() === value.toLowerCase() ? ' on' : ''}" style="background:${c};color:${c}" data-part="${part}" data-col="${c}" aria-label="${t('Couleur')} ${c}"></button>`).join('')}
+      <button class="swatch at-wheel${custom && !auto ? ' on' : ''}" data-wheel="${part}" aria-label="${t('Nuancier libre')}" style="${custom && !auto ? `--cur:${value}` : ''}"></button>
     </div>
     ${picker === part ? pickerHtml(value) : ''}</div>`;
   }
   function pickerHtml(value) {
     const { h, l } = hexHsl(value);
     return `<div class="at-picker">
-      <label>TEINTE<input type="range" min="0" max="359" value="${Math.round(h)}" id="at-hue"></label>
-      <label>LUMIÈRE<input type="range" min="18" max="88" value="${Math.round(l * 100)}" id="at-light"></label>
+      <label>${t('TEINTE')}<input type="range" min="0" max="359" value="${Math.round(h)}" id="at-hue"></label>
+      <label>${t('LUMIÈRE')}<input type="range" min="18" max="88" value="${Math.round(l * 100)}" id="at-light"></label>
       <span class="at-prev" style="background:${value}"></span></div>`;
   }
 
@@ -140,7 +141,7 @@ export function createAtelier({ save, onSave, sfx, onClose }) {
         const owned = ownsStyle(save, kind, it.id);
         const trying = trial && trial.kind === kind && trial.id === it.id;
         if (!owned && it.exclusive && !trying) {
-          return chip(it.name, { locked: true, data: `data-try="${kind}:${it.id}"`, price: 'EXCLUSIF' });
+          return chip(it.name, { locked: true, data: `data-try="${kind}:${it.id}"`, price: t('EXCLUSIF') });
         }
         return chip(it.name, { on: cur[kind] === it.id, locked: !owned, data: owned ? `data-eq="${kind}:${it.id}"` : `data-try="${kind}:${it.id}"`, price: owned ? null : it.price });
       }).join('');
@@ -152,15 +153,15 @@ export function createAtelier({ save, onSave, sfx, onClose }) {
     const cur = liveryFor(save, carId);
     const n = cur.number;
     const avatars = AVATARS.filter((a) => ownsAvatar(save, a.id));
-    return `<div class="at-sec"><div class="at-lbl">NUMÉRO DE COURSE</div>
+    return `<div class="at-sec"><div class="at-lbl">${t('NUMÉRO DE COURSE')}</div>
       <div class="at-num">
-        ${chip('AUCUN', { on: !n, data: 'data-num="0"' })}
+        ${chip(t('AUCUN'), { on: !n, data: 'data-num="0"' })}
         <button class="at-step" data-step="-1">−</button><b class="at-numval">${n ? String(n).padStart(2, '0') : '––'}</b><button class="at-step" data-step="1">+</button>
-        ${chip('AU HASARD', { data: 'data-num="rnd"' })}
+        ${chip(t('AU HASARD'), { data: 'data-num="rnd"' })}
       </div>
       <div class="at-chips">${NUMBER_STYLES.map((st) => chip(st.name, { on: cur.numStyle === st.id && n > 0, data: `data-nstyle="${st.id}"` })).join('')}</div></div>
-      <div class="at-sec"><div class="at-lbl">AUTOCOLLANT <span>(tes emblèmes)</span></div>
-      <div class="at-decals">${chip('AUCUN', { on: cur.decal === 'none', data: 'data-decal="none"' })}
+      <div class="at-sec"><div class="at-lbl">${t('AUTOCOLLANT')} <span>${t('(tes emblèmes)')}</span></div>
+      <div class="at-decals">${chip(t('AUCUN'), { on: cur.decal === 'none', data: 'data-decal="none"' })}
         ${avatars.map((a) => `<button class="at-decal${cur.decal === a.id ? ' on' : ''}" data-decal="${a.id}" title="${a.name}" style="--ac:${cur.accent}">${avatarSvg(a.id)}</button>`).join('')}</div></div>`;
   }
 
@@ -169,12 +170,12 @@ export function createAtelier({ save, onSave, sfx, onClose }) {
     const it = LISTS[trial.kind].find((x) => x.id === trial.id);
     const k = STYLE_KINDS[trial.kind];
     if (it.exclusive) {
-      const how = it.exclusive === 'season' ? 'le PASSE DE SAISON' : it.exclusive === 'career' ? 'le mode CARRIÈRE' : 'un ÉVÉNEMENT';
-      return `<div class="at-trial"><div><b>ESSAI : ${it.name}</b><span>${it.desc} Exclusif : à gagner dans ${how}.</span></div><button class="menu-btn small-btn" data-cancel="1">OK</button></div>`;
+      const how = it.exclusive === 'season' ? t('le PASSE DE SAISON') : it.exclusive === 'career' ? t('le mode CARRIÈRE') : t('un ÉVÉNEMENT');
+      return `<div class="at-trial"><div><b>${t('ESSAI :')} ${it.name}</b><span>${it.desc} ${t('Exclusif : à gagner dans {h}.', { h: how })}</span></div><button class="menu-btn small-btn" data-cancel="1">OK</button></div>`;
     }
     const can = save.credits >= it.price;
-    return `<div class="at-trial"><div><b>ESSAI : ${k.label} ${it.name}</b><span>${it.desc}</span></div>
-      <button class="menu-btn primary at-buy" data-buy="1" ${can ? '' : 'disabled'}>${can ? `ACHETER ${cr(it.price)}` : `IL TE MANQUE ${cr(it.price - save.credits)}`}</button>
+    return `<div class="at-trial"><div><b>${t('ESSAI :')} ${k.label} ${it.name}</b><span>${it.desc}</span></div>
+      <button class="menu-btn primary at-buy" data-buy="1" ${can ? '' : 'disabled'}>${can ? `${t('ACHETER')} ${cr(it.price)}` : `${t('IL TE MANQUE')} ${cr(it.price - save.credits)}`}</button>
       <button class="menu-btn small-btn" data-cancel="1">✕</button></div>`;
   }
 
@@ -186,10 +187,10 @@ export function createAtelier({ save, onSave, sfx, onClose }) {
     document.querySelectorAll('#at-modes button').forEach((b) => b.classList.toggle('on', b.dataset.mode === mode));
     const panel = $('at-panel');
     const keep = panel.scrollTop;
-    if (tab === 'colors') panel.innerHTML = swatchRow('body', 'CARROSSERIE') + swatchRow('accent', 'ACCENT') + swatchRow('glow', 'NÉON <span>(lueur sous la voiture, contours, fumée)</span>');
-    if (tab === 'style') panel.innerHTML = stylePanel([['finish', 'FINITION'], ['motif', 'MOTIF']]);
+    if (tab === 'colors') panel.innerHTML = swatchRow('body', t('CARROSSERIE')) + swatchRow('accent', t('ACCENT')) + swatchRow('glow', `${t('NÉON')} <span>${t('(lueur sous la voiture, contours, fumée)')}</span>`);
+    if (tab === 'style') panel.innerHTML = stylePanel([['finish', t('FINITION')], ['motif', t('MOTIF')]]);
     if (tab === 'deco') panel.innerHTML = decoPanel();
-    if (tab === 'fx') panel.innerHTML = stylePanel([['trail', 'TRAÎNÉE DE BOOST'], ['smoke', 'FUMÉE DE DRIFT']]);
+    if (tab === 'fx') panel.innerHTML = stylePanel([['trail', t('TRAÎNÉE DE BOOST')], ['smoke', t('FUMÉE DE DRIFT')]]);
     panel.scrollTop = keep;
     $('at-trialbox').innerHTML = trialBar();
     $('at-msg').textContent = msg;
@@ -259,9 +260,9 @@ export function createAtelier({ save, onSave, sfx, onClose }) {
       const r = buyStyle(save, trial.kind, trial.id);
       if (r.ok) {
         equipStyle(save, carId, trial.kind, trial.id);
-        msg = `${LISTS[trial.kind].find((x) => x.id === trial.id).name} : acheté et équipé ! (utilisable sur toutes tes voitures)`;
+        msg = t('{x} : acheté et équipé ! (utilisable sur toutes tes voitures)', { x: LISTS[trial.kind].find((x) => x.id === trial.id).name });
         trial = null; sfx?.unlock?.(); save1();
-      } else msg = 'Pas assez de crédits.';
+      } else msg = t('Pas assez de crédits.');
       render();
     });
   }
@@ -275,17 +276,17 @@ export function createAtelier({ save, onSave, sfx, onClose }) {
   document.querySelectorAll('#at-modes button').forEach((b) => b.addEventListener('click', () => { mode = b.dataset.mode; sfx?.click?.(); render(); }));
   $('at-copy').addEventListener('click', () => {
     const b = $('at-copy');
-    if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'CONFIRMER : COPIER SUR TOUTES ?'; return; }
+    if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = t('CONFIRMER : COPIER SUR TOUTES ?'); return; }
     copyLiveryToAll(save, carId); save1();
-    b.dataset.confirm = ''; b.textContent = 'COPIER SUR TOUTES MES VOITURES';
-    msg = `Le look de ta ${getCar(carId).name} est copié sur toutes tes voitures.`; sfx?.unlock?.(); render();
+    b.dataset.confirm = ''; b.textContent = t('COPIER SUR TOUTES MES VOITURES');
+    msg = t('Le look de ta {c} est copié sur toutes tes voitures.', { c: getCar(carId).name }); sfx?.unlock?.(); render();
   });
   $('at-reset').addEventListener('click', () => {
     const b = $('at-reset');
-    if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = 'CONFIRMER ?'; return; }
+    if (b.dataset.confirm !== '1') { b.dataset.confirm = '1'; b.textContent = t('CONFIRMER ?'); return; }
     resetLivery(save, carId); save1();
-    b.dataset.confirm = ''; b.textContent = 'D\'ORIGINE';
-    trial = null; picker = null; msg = 'Couleurs et décorations d\'origine remises.'; sfx?.click?.(); render();
+    b.dataset.confirm = ''; b.textContent = t('D\'ORIGINE');
+    trial = null; picker = null; msg = t('Couleurs et décorations d\'origine remises.'); sfx?.click?.(); render();
   });
   function close() {
     cancelAnimationFrame(raf);
@@ -300,8 +301,8 @@ export function createAtelier({ save, onSave, sfx, onClose }) {
       carId = id; tab = startTab; trial = null; picker = null; msg = '';
       mode = tab === 'fx' ? 'boost' : tab === 'deco' ? 'front' : 'spin';
       for (const b of [$('at-copy'), $('at-reset')]) b.dataset.confirm = '';
-      $('at-copy').textContent = 'COPIER SUR TOUTES MES VOITURES';
-      $('at-reset').textContent = 'D\'ORIGINE';
+      $('at-copy').textContent = t('COPIER SUR TOUTES MES VOITURES');
+      $('at-reset').textContent = t('D\'ORIGINE');
       particles.clear();
       render();
       $('atelier').classList.remove('hidden');

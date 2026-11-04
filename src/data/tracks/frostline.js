@@ -2,10 +2,11 @@
 // Profil : technique sur la neige. Des épingles entre les sapins, une plaque
 // de verglas : la piste glisse partout, il faut freiner plus tôt.
 
+import { t } from '../../i18n/index.js';
 export default {
   id: 'frostline',
   name: 'FROSTLINE',
-  profile: 'Technique · Neige',
+  profile: t('Technique · Neige'),
   league: 'argent',
   laps: 2,
   scale: 1.5,

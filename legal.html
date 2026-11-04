@@ -30,8 +30,17 @@
   </main>
   <script type="module">
     import { LEGAL, LEGAL_UPDATED } from '/src/data/legal.js';
+    import { LANG } from '/src/i18n/index.js';
+    const en = LANG === 'en';
+    document.documentElement.lang = LANG;
+    if (en) {
+      document.title = 'NEON//DRIVE — Privacy and terms';
+      const nav = document.querySelectorAll('nav a');
+      ['PRIVACY', 'TERMS OF USE', 'LEGAL NOTICE'].forEach((x, k) => { nav[k].textContent = x; });
+      document.querySelector('.back').textContent = '‹ Back to the game';
+    }
     document.getElementById('content').innerHTML = Object.entries(LEGAL)
-      .map(([id, d]) => `<section id="${id}"><h2>${d.title}</h2>${d.html()}</section>`).join('') + `<p>Mise à jour : ${LEGAL_UPDATED}</p>`;
+      .map(([id, d]) => `<section id="${id}"><h2>${d.title}</h2>${d.html()}</section>`).join('') + `<p>${en ? 'Updated:' : 'Mise à jour :'} ${LEGAL_UPDATED}</p>`;
     if (location.hash) document.querySelector(location.hash)?.scrollIntoView();
   </script>
 </body>

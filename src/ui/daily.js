@@ -1,5 +1,6 @@
 // Écran du DÉFI DU JOUR : présentation du défi, 3 étoiles, série de jours.
 
+import { t, fmtNum, LOCALE, ord, many } from '../i18n/index.js';
 import { DAILY_FORMATS, DAILY_RULES, TRACK_TWISTS, STREAK_REWARDS, DAILY_STAR_CREDITS } from '../data/daily.js';
 import { weatherOf } from '../data/weather.js';
 import { getCar, TRAITS } from '../data/cars.js';
@@ -19,8 +20,8 @@ const $ = (id) => document.getElementById(id);
 
 /** Textes des 3 objectifs. */
 export function dailyGoals(ch, targets) {
-  if (ch.format === 'time') return (targets ?? [0, 0, 0]).map((t) => (t ? `Termine en moins de ${fmtSec(t)}` : 'Calcul du temps…'));
-  return ch.places.map((p) => (p === 1 ? 'Gagne' : `Finis dans le top ${p}`));
+  if (ch.format === 'time') return (targets ?? [0, 0, 0]).map((x) => (x ? t('Termine en moins de {t}', { t: fmtSec(x) }) : t('Calcul du temps…')));
+  return ch.places.map((p) => (p === 1 ? t('Gagne') : t('Finis dans le top {p}', { p })));
 }
 
 /** Calcule (une fois par jour) les temps à battre du défi chrono. */
@@ -79,26 +80,26 @@ export function createDailyScreen({ save, onSave, sfx, onPlay, onClose }) {
     const d = save.daily;
     const fmt = DAILY_FORMATS[ch.format];
     const base = getTrackData(ch.base);
-    $('daily-credits').innerHTML = `${ico('credit')}<b class="cr-num">${save.credits.toLocaleString('fr-FR')}</b>`;
-    $('dy-date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
+    $('daily-credits').innerHTML = `${ico('credit')}<b class="cr-num">${fmtNum(save.credits)}</b>`;
+    $('dy-date').textContent = new Date().toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
     $('dy-title').textContent = ch.track.name;
     const map = $('dy-map'); map.innerHTML = ''; map.append(miniMap(ch));
     // Règles du jour (étiquettes)
-    const chips = [`<span class="dyc fmt">${fmt.name}${fmt.laps ? ` · ${fmt.laps} tours` : ''}</span>`];
+    const chips = [`<span class="dyc fmt">${fmt.name}${fmt.laps ? ` · ${t('{n} tours', { n: fmt.laps })}` : ''}</span>`];
     if (ch.reverse) chips.push(`<span class="dyc twist" title="${TRACK_TWISTS.reverse.desc}">⇄ ${TRACK_TWISTS.reverse.name}</span>`);
     const wx = ch.track.weather;
-    if (wx && wx !== 'clear') chips.push(`<span class="dyc wx">${ch.weather ? 'SURPRISE : ' : ''}${weatherOf(wx).name}</span>`);
+    if (wx && wx !== 'clear') chips.push(`<span class="dyc wx">${ch.weather ? t('SURPRISE : ') : ''}${weatherOf(wx).name}</span>`);
     if (ch.rule !== 'none') chips.push(`<span class="dyc rule">${DAILY_RULES[ch.rule].name}</span>`);
     $('dy-chips').innerHTML = chips.join('');
     // Explications
     const lines = [];
-    if (ch.format === 'last') lines.push('Tu pars en dernière position.');
-    if (ch.format === 'time') lines.push('Seul en piste : bats les 3 temps.');
-    if (ch.format === 'elim') lines.push('Le dernier est éliminé à chaque tour.');
-    if (ch.reverse) lines.push(`${base.name} dans l'autre sens.`);
+    if (ch.format === 'last') lines.push(t('Tu pars en dernière position.'));
+    if (ch.format === 'time') lines.push(t('Seul en piste : bats les 3 temps.'));
+    if (ch.format === 'elim') lines.push(t('Le dernier est éliminé à chaque tour.'));
+    if (ch.reverse) lines.push(t('{c} dans l\'autre sens.', { c: base.name }));
     if (ch.weather) {
-      const wd = weatherOf(ch.weather).desc || 'ambiance inhabituelle';
-      lines.push(`${weatherOf(ch.weather).name} sur ${base.name} : ${wd.charAt(0).toLowerCase() + wd.slice(1)}${/[!.]$/.test(wd) ? '' : '.'}`);
+      const wd = weatherOf(ch.weather).desc || t('ambiance inhabituelle');
+      lines.push(`${t('{w} sur {c} :', { w: weatherOf(ch.weather).name, c: base.name })} ${wd.charAt(0).toLowerCase() + wd.slice(1)}${/[!.]$/.test(wd) ? '' : '.'}`);
     }
     if (ch.rule !== 'none') lines.push(DAILY_RULES[ch.rule].desc);
     $('dy-desc').innerHTML = lines.map((l) => `<span>${l}</span>`).join('');
@@ -108,23 +109,23 @@ export function createDailyScreen({ save, onSave, sfx, onPlay, onClose }) {
     if (ch.car) {
       const c = getCar(ch.car);
       carBox.append(carIcon(c, c.colors, 110, 110));
-      carBox.insertAdjacentHTML('beforeend', `<div><small>${ch.rule === 'oneCar' ? 'TOUT LE MONDE EN' : 'VOITURE IMPOSÉE (PRÊTÉE)'}</small><b>${c.name}</b>${c.trait ? `<i>${TRAITS[c.trait].name}</i>` : ''}</div>`);
-    } else carBox.innerHTML = '<div><small>VOITURE</small><b>AU CHOIX</b><i>ta voiture du garage</i></div>';
+      carBox.insertAdjacentHTML('beforeend', `<div><small>${ch.rule === 'oneCar' ? t('TOUT LE MONDE EN') : t('VOITURE IMPOSÉE (PRÊTÉE)')}</small><b>${c.name}</b>${c.trait ? `<i>${TRAITS[c.trait].name}</i>` : ''}</div>`);
+    } else carBox.innerHTML = `<div><small>${t('VOITURE')}</small><b>${t('AU CHOIX')}</b><i>${t('ta voiture du garage')}</i></div>`;
     // Objectifs
     const goals = dailyGoals(ch, d.targets);
     $('dy-goals').innerHTML = `${starsHtml(d.stars, 'big')}<div class="dyg">${goals.map((g, k) => `<span class="${k < d.stars ? 'ok' : ''}">${ico('star')}${g}</span>`).join('')}</div>
-      ${d.best !== null ? `<div class="dy-best">Ton meilleur aujourd'hui : <b>${ch.format === 'time' ? fmtSec(d.best) : d.best === 1 ? '1re place' : `${d.best}e place`}</b></div>` : ''}
-      <div class="dy-starcr">+${DAILY_STAR_CREDITS} ${ico('credit')} par nouvelle étoile · essais illimités</div>`;
+      ${d.best !== null ? `<div class="dy-best">${t('Ton meilleur aujourd\'hui :')} <b>${ch.format === 'time' ? fmtSec(d.best) : t('{p} place', { p: ord(d.best, true) })}</b></div>` : ''}
+      <div class="dy-starcr">+${DAILY_STAR_CREDITS} ${ico('credit')} ${t('par nouvelle étoile · essais illimités')}</div>`;
     // Série
     const streak = currentStreak(save);
     const doneToday = d.lastDone === dayKey();
     const nextIdx = doneToday ? streak : streak + 1; // jour de série visé par le prochain succès
-    $('dy-streak').innerHTML = `<div class="dys-head"><b>${ico('flame')} SÉRIE : ${streak} JOUR${streak > 1 ? 'S' : ''}</b><span>${doneToday ? '✓ Défi réussi aujourd\'hui' : 'Réussis le défi (1 étoile) pour continuer ta série'}</span></div>
+    $('dy-streak').innerHTML = `<div class="dys-head"><b>${ico('flame')} ${t(many(streak) ? 'SÉRIE : {n} JOURS' : 'SÉRIE : {n} JOUR', { n: streak })}</b><span>${doneToday ? t('✓ Défi réussi aujourd\'hui') : t('Réussis le défi (1 étoile) pour continuer ta série')}</span></div>
       <div class="dys-days">${STREAK_REWARDS.map((r, k) => {
         const dayN = Math.floor((Math.max(1, nextIdx) - 1) / 7) * 7 + k + 1;
         const got = dayN <= streak;
         const next = dayN === nextIdx && !doneToday;
-        return `<div class="dys-d ${got ? 'got' : ''} ${next ? 'next' : ''} ${k === 6 ? 'big' : ''}"><small>JOUR ${dayN}</small><span>${rewardText(r)}</span></div>`;
+        return `<div class="dys-d ${got ? 'got' : ''} ${next ? 'next' : ''} ${k === 6 ? 'big' : ''}"><small>${t('JOUR {n}', { n: dayN })}</small><span>${rewardText(r)}</span></div>`;
       }).join('')}</div>`;
     tickTimer();
   }
@@ -133,7 +134,7 @@ export function createDailyScreen({ save, onSave, sfx, onPlay, onClose }) {
     const ms = msUntilMidnight();
     const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000), sec = Math.floor((ms % 60000) / 1000);
     const p = (n) => String(n).padStart(2, '0');
-    $('dy-timer').textContent = `Nouveau défi dans ${p(h)}:${p(m)}:${p(sec)}`;
+    $('dy-timer').textContent = t('Nouveau défi dans {t}', { t: `${p(h)}:${p(m)}:${p(sec)}` });
     if (ms < 1000 && !$('daily').classList.contains('hidden')) setTimeout(render, 1500);
   }
 
@@ -145,7 +146,7 @@ export function createDailyScreen({ save, onSave, sfx, onPlay, onClose }) {
     open(after = null) {
       ch = dailyChallenge();
       $('daily').classList.remove('hidden');
-      $('dy-goals').innerHTML = '<div class="dy-best">Préparation du défi…</div>';
+      $('dy-goals').innerHTML = `<div class="dy-best">${t('Préparation du défi…')}</div>`;
       // (calcul des temps du chrono juste après l'affichage)
       setTimeout(() => {
         ensureTargets(save, ch, onSave);
@@ -154,7 +155,7 @@ export function createDailyScreen({ save, onSave, sfx, onPlay, onClose }) {
         timer = setInterval(tickTimer, 1000);
         if (after?.streakReward) {
           const { reward, got } = after.streakReward;
-          showRewards(save, [{ title: `SÉRIE : JOUR ${after.streak}`, credits: 0, note: `Défi du jour réussi ! Récompense de série : <b>${rewardText(reward)}</b>` }, ...toScreens(save, [got])], { sfx, onClose: render });
+          showRewards(save, [{ title: t('SÉRIE : JOUR {n}', { n: after.streak }), credits: 0, note: t('Défi du jour réussi ! Récompense de série : <b>{r}</b>', { r: rewardText(reward) }) }, ...toScreens(save, [got])], { sfx, onClose: render });
         }
       }, 30);
     },

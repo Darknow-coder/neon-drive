@@ -4,10 +4,11 @@
 // coulissent d'un bord à l'autre : leur mouvement est régulier, à toi de
 // trouver le bon moment pour passer.
 
+import { t } from '../../i18n/index.js';
 export default {
   id: 'citadel',
   name: 'CITADEL',
-  profile: 'Ultime · Pluie',
+  profile: t('Ultime · Pluie'),
   league: 'elite',
   scale: 1.5,
   width: 235,

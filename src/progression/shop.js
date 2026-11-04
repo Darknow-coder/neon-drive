@@ -3,6 +3,7 @@
 // Les offres du jour sont générées à partir de la date et du joueur (graine) :
 // elles restent identiques si on recharge la page, et changent à minuit.
 
+import { t } from '../i18n/index.js';
 import { CARS, getCar } from '../data/cars.js';
 import { PACKS, UNLOCK_FRAGMENTS, MAX_LEVEL } from '../data/economy.js';
 import { DAILY_GIFTS, FINISHES, MOTIFS, TRAILS, SMOKES, OFFERS, AVG_CREDITS_PER_RACE } from '../data/shop.js';
@@ -34,10 +35,10 @@ export const racesFor = (missing) => Math.max(1, Math.ceil(missing / AVG_CREDITS
 // ---------- Cosmétiques ----------
 // Les 4 familles de cosmétiques : liste, case de la sauvegarde, objets gratuits
 export const STYLE_KINDS = {
-  finish: { list: FINISHES, key: 'finishes', free: ['standard'], label: 'FINITION' },
-  motif: { list: MOTIFS, key: 'motifs', free: ['origin', 'none'], label: 'MOTIF' },
-  trail: { list: TRAILS, key: 'trails', free: ['neon'], label: 'TRAÎNÉE DE BOOST' },
-  smoke: { list: SMOKES, key: 'smokes', free: ['standard'], label: 'FUMÉE DE DRIFT' },
+  finish: { list: FINISHES, key: 'finishes', free: ['standard'], label: t('FINITION') },
+  motif: { list: MOTIFS, key: 'motifs', free: ['origin', 'none'], label: t('MOTIF') },
+  trail: { list: TRAILS, key: 'trails', free: ['neon'], label: t('TRAÎNÉE DE BOOST') },
+  smoke: { list: SMOKES, key: 'smokes', free: ['standard'], label: t('FUMÉE DE DRIFT') },
 };
 export function ownsStyle(save, kind, id) {
   const k = STYLE_KINDS[kind];

@@ -1,6 +1,7 @@
 // Profil du joueur : identité (pseudo, emblème, titre), statistiques et succès.
 // Contient aussi l'écran « Bienvenue, pilote » du premier lancement.
 
+import { t, fmtNum, LOCALE, ord } from '../i18n/index.js';
 import { AVATARS, AVATAR_COLORS, ACHIEVEMENT_REWARDS, randomName, kmOf, NAME_MAX, ownsAvatar } from '../data/profile.js';
 import {
   setIdentity, cleanName, playerName, currentTitle, unlockedTitles, favorite,
@@ -17,7 +18,7 @@ import { minimap } from './timeTrialSelect.js';
 import { showRewards } from './packOpen.js';
 
 const $ = (id) => document.getElementById(id);
-const fmt = (n) => Math.floor(n).toLocaleString('fr-FR');
+const fmt = (n) => fmtNum(Math.floor(n));
 
 function duration(s) {
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
@@ -31,18 +32,18 @@ export function createProfile({ save, onSave, sfx, onClose }) {
   function renderId() {
     const league = leagueFor(save.trophies);
     const best = leagueFor(save.career.maxTrophies);
-    const since = new Date(save.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    const since = new Date(save.createdAt).toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' });
     $('pf-id').innerHTML = `
-      <button class="pf-avatar-btn" id="pf-edit-av" aria-label="Modifier mon emblème">${avatarHtml(save.profile, 'av-l')}<span class="pf-edit">${ico('edit')}</span></button>
+      <button class="pf-avatar-btn" id="pf-edit-av" aria-label="${t('Modifier mon emblème')}">${avatarHtml(save.profile, 'av-l')}<span class="pf-edit">${ico('edit')}</span></button>
       <div class="pf-name">${playerName(save)}</div>
-      <div class="pf-title">${currentTitle(save)}</div>
-      <button class="menu-btn small-btn pf-modify" id="pf-edit">${ico('edit')} MODIFIER</button>
+      <div class="pf-title">${t(currentTitle(save))}</div>
+      <button class="menu-btn small-btn pf-modify" id="pf-edit">${ico('edit')} ${t('MODIFIER')}</button>
       <div class="pf-league" style="--lc:${league.color}">
         <span class="pf-lbadge">${league.name}</span>
         <span class="pf-tro">${ico('trophy')}<b>${fmt(save.trophies)}</b></span>
       </div>
-      <div class="pf-meta">Record : <b>${fmt(save.career.maxTrophies)}</b> trophées (ligue ${best.name})</div>
-      <div class="pf-meta">Pilote depuis le ${since}</div>`;
+      <div class="pf-meta">${t('Record : <b>{n}</b> trophées (ligue {l})', { n: fmt(save.career.maxTrophies), l: best.name })}</div>
+      <div class="pf-meta">${t('Pilote depuis le {d}', { d: since })}</div>`;
     $('pf-edit').addEventListener('click', () => openIdentity());
     $('pf-edit-av').addEventListener('click', () => openIdentity());
   }
@@ -57,23 +58,23 @@ export function createProfile({ save, onSave, sfx, onClose }) {
     const el = $('pf-stats');
     el.innerHTML = `
       <div class="pf-big">
-        ${tile('COURSES', fmt(c.races))}
-        ${tile('VICTOIRES', fmt(c.wins), '', 'gold')}
-        ${tile('PODIUMS', fmt(c.podiums))}
-        ${tile('TAUX DE VICTOIRE', `${rate} %`)}
+        ${tile(t('COURSES'), fmt(c.races))}
+        ${tile(t('VICTOIRES'), fmt(c.wins), '', 'gold')}
+        ${tile(t('PODIUMS'), fmt(c.podiums))}
+        ${tile(t('TAUX DE VICTOIRE'), `${rate} %`)}
       </div>
       <div class="pf-grid">
-        ${tile('Coupes gagnées', fmt(cups), `${fmt(save.cupStats.played)} jouée${save.cupStats.played > 1 ? 's' : ''}`)}
-        ${tile('Éliminations gagnées', fmt(c.elimWins), `${fmt(c.elimPlayed)} jouée${c.elimPlayed > 1 ? 's' : ''}`)}
-        ${tile('Médailles chrono', fmt(medals))}
-        ${tile('Rivaux battus', `${Object.keys(save.rivalsBeaten).length} / ${LEAGUES.length}`)}
-        ${tile('Distance', `${fmt(kmOf(c.distance))} km`)}
-        ${tile('Temps au volant', duration(c.playTime))}
-        ${tile('Crédits gagnés', fmt(c.creditsEarned))}
-        ${tile('Missions', fmt(c.missionsDone))}
+        ${tile(t('Coupes gagnées'), fmt(cups), t('{n} jouée(s)', { n: fmt(save.cupStats.played) }))}
+        ${tile(t('Éliminations gagnées'), fmt(c.elimWins), t('{n} jouée(s)', { n: fmt(c.elimPlayed) }))}
+        ${tile(t('Médailles chrono'), fmt(medals))}
+        ${tile(t('Rivaux battus'), `${Object.keys(save.rivalsBeaten).length} / ${LEAGUES.length}`)}
+        ${tile(t('Distance'), `${fmt(kmOf(c.distance))} km`)}
+        ${tile(t('Temps au volant'), duration(c.playTime))}
+        ${tile(t('Crédits gagnés'), fmt(c.creditsEarned))}
+        ${tile(t('Missions'), fmt(c.missionsDone))}
       </div>
       <div class="pf-favs" id="pf-favs"></div>
-      <div class="pf-sec">DERNIÈRES COURSES CLASSÉES</div>
+      <div class="pf-sec">${t('DERNIÈRES COURSES CLASSÉES')}</div>
       <div class="pf-history" id="pf-history"></div>`;
 
     // Voiture et circuit préférés
@@ -87,21 +88,21 @@ export function createProfile({ save, onSave, sfx, onClose }) {
       d.querySelector('.pf-fav-media').append(media);
       favs.append(d);
     };
-    if (fc) { const car = getCar(fc.id); card('VOITURE PRÉFÉRÉE', car.name, `${fc.count} course${fc.count > 1 ? 's' : ''}`, carIcon(car, liveryFor(save, car.id), 96, 58)); }
+    if (fc) { const car = getCar(fc.id); card(t('VOITURE PRÉFÉRÉE'), car.name, t('{n} course(s)', { n: fc.count }), carIcon(car, liveryFor(save, car.id), 96, 58)); }
     if (ft) {
       const td = getTrackData(ft.id);
       const img = new Image();
       img.src = minimap(td).toDataURL();
-      card('CIRCUIT PRÉFÉRÉ', td.name, `${ft.count} course${ft.count > 1 ? 's' : ''}`, img);
+      card(t('CIRCUIT PRÉFÉRÉ'), td.name, t('{n} course(s)', { n: ft.count }), img);
     }
-    if (!fc && !ft) favs.innerHTML = '<div class="pf-empty">Tes voiture et circuit préférés apparaîtront ici après tes premières courses.</div>';
+    if (!fc && !ft) favs.innerHTML = `<div class="pf-empty">${t('Tes voiture et circuit préférés apparaîtront ici après tes premières courses.')}</div>`;
 
     // Dernières courses
     const hist = $('pf-history');
     const rows = save.history.slice().reverse();
     hist.innerHTML = rows.length
-      ? rows.map((h) => `<div class="pf-h p${Math.min(h.position, 4)}"><i>${h.position}${h.position === 1 ? 're' : 'e'}</i><span>${getTrackData(h.trackId).name}</span><small>${getCar(h.carId).name}</small><b>${h.gained ? `+${h.gained}` : '0'} ${ico('trophy')}</b></div>`).join('')
-      : '<div class="pf-empty">Aucune course classée pour l\'instant.</div>';
+      ? rows.map((h) => `<div class="pf-h p${Math.min(h.position, 4)}"><i>${ord(h.position, true)}</i><span>${getTrackData(h.trackId).name}</span><small>${getCar(h.carId).name}</small><b>${h.gained ? `+${h.gained}` : '0'} ${ico('trophy')}</b></div>`).join('')
+      : `<div class="pf-empty">${t('Aucune course classée pour l\'instant.')}</div>`;
   }
 
   // ------------------------------------------------------------ Succès
@@ -110,12 +111,12 @@ export function createProfile({ save, onSave, sfx, onClose }) {
     const done = list.reduce((a, s) => a + s.claimed, 0);
     const total = list.length * 3;
     const el = $('pf-ach');
-    el.innerHTML = `<div class="ach-head"><span>${done} / ${total} paliers</span><div class="ach-total"><i style="width:${(done / total) * 100}%"></i></div></div>`;
+    el.innerHTML = `<div class="ach-head"><span>${t('{a} / {b} paliers', { a: done, b: total })}</span><div class="ach-total"><i style="width:${(done / total) * 100}%"></i></div></div>`;
     // Plusieurs récompenses en attente : tout récupérer d'un coup
     if (list.filter((s) => s.claimable).length >= 2) {
       const all = document.createElement('button');
       all.className = 'menu-btn primary';
-      all.textContent = 'TOUT RÉCUPÉRER';
+      all.textContent = t('TOUT RÉCUPÉRER');
       all.addEventListener('click', () => {
         const got = claimAllAchievements(save);
         if (!got.count) return;
@@ -124,8 +125,8 @@ export function createProfile({ save, onSave, sfx, onClose }) {
         render();
         showRewards(save, [{
           credits: got.credits,
-          title: `${got.count} PALIERS DE SUCCÈS`,
-          note: got.titles.length ? `Nouveau${got.titles.length > 1 ? 'x' : ''} titre${got.titles.length > 1 ? 's' : ''} : <b>${got.titles.map((t) => `« ${t} »`).join(', ')}</b>` : '',
+          title: t('{n} PALIERS DE SUCCÈS', { n: got.count }),
+          note: got.titles.length ? `${got.titles.length > 1 ? t('Nouveaux titres :') : t('Nouveau titre :')} <b>${got.titles.map((x) => `« ${t(x)} »`).join(', ')}</b>` : '',
         }], { sfx, onClose: render });
       });
       el.querySelector('.ach-head').append(all);
@@ -142,18 +143,18 @@ export function createProfile({ save, onSave, sfx, onClose }) {
         <div class="ach-pips">${pips}</div>
         <div class="ach-body">
           <div class="ach-name">${s.def.name}${s.complete ? '' : ` <small>${['I', 'II', 'III'][s.tier]}</small>`}</div>
-          <div class="ach-text">${s.complete ? `Terminé ! Titre gagné : « ${s.def.title} »` : s.def.text(s.target)}</div>
+          <div class="ach-text">${s.complete ? t('Terminé ! Titre gagné : « {x} »', { x: t(s.def.title) }) : s.def.text(s.target)}</div>
           ${s.complete ? '' : `<div class="ach-bar"><i style="width:${pct}%"></i></div><div class="ach-num">${fmt(Math.min(s.value, s.target))} / ${fmt(s.target)}${unit}</div>`}
         </div>
         <div class="ach-side"></div>`;
       const side = d.querySelector('.ach-side');
       if (s.complete) side.innerHTML = '<span class="ach-done">✓</span>';
       else {
-        side.innerHTML = `<div class="ach-rew">${ico('credit')}${ACHIEVEMENT_REWARDS[s.tier]}</div>${s.tier === 2 ? `<div class="ach-tt">+ titre</div>` : ''}`;
+        side.innerHTML = `<div class="ach-rew">${ico('credit')}${ACHIEVEMENT_REWARDS[s.tier]}</div>${s.tier === 2 ? `<div class="ach-tt">${t('+ titre')}</div>` : ''}`;
         if (s.claimable) {
           const b = document.createElement('button');
           b.className = 'menu-btn primary';
-          b.textContent = 'RÉCUPÉRER';
+          b.textContent = t('RÉCUPÉRER');
           b.addEventListener('click', () => {
             const got = claimAchievement(save, s.def.id);
             if (!got) return;
@@ -162,8 +163,8 @@ export function createProfile({ save, onSave, sfx, onClose }) {
             render();
             showRewards(save, [{
               credits: got.credits,
-              title: `SUCCÈS ${got.name} ${['I', 'II', 'III'][got.tier - 1]}`,
-              note: got.title ? `Nouveau titre débloqué : <b>« ${got.title} »</b>` : '',
+              title: t('SUCCÈS {n} {k}', { n: got.name, k: ['I', 'II', 'III'][got.tier - 1] }),
+              note: got.title ? t('Nouveau titre débloqué : <b>« {x} »</b>', { x: t(got.title) }) : '',
             }], { sfx, onClose: render });
           });
           side.append(b);
@@ -193,15 +194,15 @@ export function createProfile({ save, onSave, sfx, onClose }) {
   let draft = null;
   let idDone = null;
   function renderIdentity() {
-    $('id-preview').innerHTML = `${avatarHtml(draft, 'av-l')}<div class="id-pname">${(cleanName(draft.name).name ?? draft.name.toUpperCase()) || '…'}</div><div class="id-ptitle">${draft.title ?? currentTitle(save)}</div>`;
+    $('id-preview').innerHTML = `${avatarHtml(draft, 'av-l')}<div class="id-pname">${(cleanName(draft.name).name ?? draft.name.toUpperCase()) || '…'}</div><div class="id-ptitle">${t(draft.title ?? currentTitle(save))}</div>`;
     $('id-avatars').innerHTML = AVATARS.map((a) => {
       const owned = ownsAvatar(save, a.id);
-      return `<button class="id-av ${a.id === draft.avatar ? 'on' : ''} ${owned ? '' : 'locked'} ${a.exclusive ? 'excl' : ''}" data-av="${a.id}" ${owned ? '' : 'disabled'} title="${owned ? a.name : a.unlock ? `${a.name} : ${a.unlock}` : `${a.name} : niveau ${a.tier} du passe de saison`}" style="--ac:${draft.color}">${avatarSvg(a.id)}${owned ? '' : `<small>${a.tier ? `NIV ${a.tier}` : 'CARRIÈRE'}</small>`}</button>`;
+      return `<button class="id-av ${a.id === draft.avatar ? 'on' : ''} ${owned ? '' : 'locked'} ${a.exclusive ? 'excl' : ''}" data-av="${a.id}" ${owned ? '' : 'disabled'} title="${owned ? a.name : a.unlock ? `${a.name} : ${a.unlock}` : t('{a} : niveau {n} du passe de saison', { a: a.name, n: a.tier })}" style="--ac:${draft.color}">${avatarSvg(a.id)}${owned ? '' : `<small>${a.tier ? t('NIV {n}', { n: a.tier }) : t('CARRIÈRE')}</small>`}</button>`;
     }).join('');
-    $('id-colors').innerHTML = AVATAR_COLORS.map((c) => `<button class="id-col ${c === draft.color ? 'on' : ''}" data-col="${c}" style="--c:${c}" aria-label="Couleur ${c}"></button>`).join('');
+    $('id-colors').innerHTML = AVATAR_COLORS.map((c) => `<button class="id-col ${c === draft.color ? 'on' : ''}" data-col="${c}" style="--c:${c}" aria-label="${t('Couleur')} ${c}"></button>`).join('');
     const titles = unlockedTitles(save);
-    $('id-titles').innerHTML = titles.map((t) => `<button class="id-tt ${t === (draft.title ?? currentTitle(save)) ? 'on' : ''}" data-tt="${t}">${t}</button>`).join('')
-      + (titles.length === 1 ? '<span class="id-tt-note">Termine des succès pour gagner d\'autres titres.</span>' : '');
+    $('id-titles').innerHTML = titles.map((x) => `<button class="id-tt ${x === (draft.title ?? currentTitle(save)) ? 'on' : ''}" data-tt="${x}">${t(x)}</button>`).join('')
+      + (titles.length === 1 ? `<span class="id-tt-note">${t('Termine des succès pour gagner d\'autres titres.')}</span>` : '');
     $('id-avatars').querySelectorAll('button:not([disabled])').forEach((b) => b.addEventListener('click', () => { draft.avatar = b.dataset.av; sfx?.click?.(); renderIdentity(); }));
     $('id-colors').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { draft.color = b.dataset.col; sfx?.click?.(); renderIdentity(); }));
     $('id-titles').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { draft.title = b.dataset.tt; sfx?.click?.(); renderIdentity(); }));
@@ -211,11 +212,11 @@ export function createProfile({ save, onSave, sfx, onClose }) {
   function openIdentity({ welcome = false, onDone } = {}) {
     idDone = onDone ?? null;
     draft = { name: save.profile.name ?? randomName(), avatar: save.profile.avatar, color: save.profile.color, title: currentTitle(save) };
-    $('id-title').textContent = welcome ? 'BIENVENUE, PILOTE !' : 'MON IDENTITÉ';
-    $('id-sub').textContent = welcome ? 'Choisis ton pseudo et ton emblème. Tu pourras les changer à tout moment dans ton profil.' : 'Pseudo, emblème, couleur et titre.';
+    $('id-title').textContent = welcome ? t('BIENVENUE, PILOTE !') : t('MON IDENTITÉ');
+    $('id-sub').textContent = welcome ? t('Choisis ton pseudo et ton emblème. Tu pourras les changer à tout moment dans ton profil.') : t('Pseudo, emblème, couleur et titre.');
     $('id-cancel').classList.toggle('hidden', welcome);
     $('id-titles-wrap').classList.toggle('hidden', welcome);
-    $('id-ok').textContent = welcome ? "C'EST PARTI !" : 'ENREGISTRER';
+    $('id-ok').textContent = welcome ? t("C'EST PARTI !") : t('ENREGISTRER');
     $('id-input').value = draft.name;
     $('id-input').maxLength = NAME_MAX;
     $('id-error').textContent = '';
@@ -241,7 +242,7 @@ export function createProfile({ save, onSave, sfx, onClose }) {
   });
 
   return {
-    open(t = 'stats') { tab = t; render(); $('profile').classList.remove('hidden'); },
+    open(tb = 'stats') { tab = tb; render(); $('profile').classList.remove('hidden'); },
     openIdentity,
   };
 }

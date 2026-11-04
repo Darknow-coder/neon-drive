@@ -3,10 +3,11 @@
 // à haute vitesse et une épingle à gauche qui récompense le drift.
 // Une plaque de boost sur la ligne opposée.
 
+import { t } from '../../i18n/index.js';
 export default {
   id: 'pulsar-speedway',
   name: 'PULSAR SPEEDWAY',
-  profile: 'Rapide',
+  profile: t('Rapide'),
   league: 'bronze',
   scale: 1.6,
   width: 270,

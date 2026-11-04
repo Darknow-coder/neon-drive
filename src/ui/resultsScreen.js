@@ -1,3 +1,5 @@
+import { t, ord, many } from '../i18n/index.js';
+import { missionText } from '../progression/missions.js';
 // Écran de résultats de fin de course.
 
 import { playerLabel } from './playerLabel.js';
@@ -12,9 +14,9 @@ const el = (id) => document.getElementById(id);
 export function showResults(rows, { trackName, reward = null, training = false, credits = null, missions = [], event = null, season = null, career = null }) {
   const me = rows.find((r) => r.isPlayer);
   const p = me ? me.position : rows.length;
-  el('res-place').innerHTML = `${p}<sup>${p === 1 ? 'er' : 'e'}</sup>`;
+  el('res-place').innerHTML = `${p}<sup>${ord(p).slice(String(p).length)}</sup>`;
   el('res-title').textContent =
-    p === 1 ? 'VICTOIRE !' : p <= 3 ? 'PODIUM !' : p <= 5 ? 'BIEN JOUÉ' : 'COURSE TERMINÉE';
+    p === 1 ? t('VICTOIRE !') : p <= 3 ? t('PODIUM !') : p <= 5 ? t('BIEN JOUÉ') : t('COURSE TERMINÉE');
   el('res-track').textContent = trackName;
 
   const bestOfRace = Math.min(...rows.map((r) => r.bestLap));
@@ -37,7 +39,7 @@ export function showResults(rows, { trackName, reward = null, training = false, 
     else if (r.isRival) tr.className = 'rival';
     // Encore en piste : temps estimé s'il est proche de l'arrivée, sinon « non terminé »
     const far = r.estimated && r.gap > 15 && !r.label;
-    const time = far ? 'NON TERMINÉ' : r.position === 1 ? formatTime(r.time) : `+${r.gap.toFixed(2)} s`;
+    const time = far ? t('NON TERMINÉ') : r.position === 1 ? formatTime(r.time) : `+${r.gap.toFixed(2)} s`;
     tr.innerHTML = `
       <td class="pos">${r.position}</td>
       <td class="name"><i style="background:${r.colors.body};box-shadow:0 0 6px ${r.colors.glow}"></i>${r.isPlayer ? playerLabel() : r.isRival ? `★ ${r.name}` : r.name}</td>
@@ -52,20 +54,20 @@ export function showResults(rows, { trackName, reward = null, training = false, 
   if (credits) {
     cb.innerHTML = `<span class="ct">${ico('credit', 'big')}+${credits.total}</span>` +
       credits.lines.map((l) => `<span class="cl">${l.label} <b>+${l.amount}</b></span>`).join('') +
-      (credits.shopHint ? `<span class="shop-hint">De quoi t'offrir en boutique : <b>${credits.shopHint}</b></span>` : '');
+      (credits.shopHint ? `<span class="shop-hint">${t('De quoi t\'offrir en boutique :')} <b>${credits.shopHint}</b></span>` : '');
   }
 
   // Carrière : étoiles du défi
   const cb2 = el('res-career');
   cb2.classList.toggle('hidden', !career);
-  el('btn-menu').textContent = career ? (career.backLabel ?? 'CARRIÈRE') : 'MENU';
+  el('btn-menu').textContent = career ? (career.backLabel ?? t('CARRIÈRE')) : 'MENU';
   if (career) {
     const goals = career.goals ?? stageGoals(career.stage);
     cb2.innerHTML = `<div class="rc-stars">${[0, 1, 2].map((k) => `<i class="${k < career.stars ? 'on' : ''} ${k >= career.prev && k < career.stars ? 'new' : ''}" style="animation-delay:${0.25 + k * 0.25}s">${ico('star')}</i>`).join('')}</div>
       <div class="rc-goals">${goals.map((g, k) => `<span class="${k < career.stars ? 'ok' : ''}">${k < career.stars ? '✓' : '✗'} ${g}</span>`).join('')}</div>
       ${career.extra ? `<div class="rc-done">${career.extra}</div>` : ''}
-      ${career.chapterDone ? `<div class="rc-done">CHAPITRE ${career.chapterDone.chapter.n} TERMINÉ ! Récompenses sur l'écran Carrière</div>` : ''}
-      ${career.stars === 0 ? '<div class="rc-fail">Objectif manqué : réessaie !</div>' : ''}`;
+      ${career.chapterDone ? `<div class="rc-done">${t('CHAPITRE {n} TERMINÉ ! Récompenses sur l\'écran Carrière', { n: career.chapterDone.chapter.n })}</div>` : ''}
+      ${career.stars === 0 ? `<div class="rc-fail">${t('Objectif manqué : réessaie !')}</div>` : ''}`;
   }
 
   // Passe de saison : XP gagnée
@@ -73,9 +75,9 @@ export function showResults(rows, { trackName, reward = null, training = false, 
   sp.classList.toggle('hidden', !season);
   if (season) {
     const lv = seasonLevel(season.xp);
-    sp.innerHTML = `<span class="rp-t">${ico('pass')} PASSE DE SAISON</span><b>+${season.gained} XP</b>${season.doubled ? '<i>×2</i>' : ''}
-      <span class="rp-lvl">NIV. ${lv.level}</span><span class="rp-bar"><em style="width:${(lv.into / lv.need) * 100}%"></em></span>
-      ${season.after > season.before ? `<span class="rp-up">NIVEAU ${season.after} ATTEINT ! Récompense dans le PASSE</span>` : ''}`;
+    sp.innerHTML = `<span class="rp-t">${ico('pass')} ${t('PASSE DE SAISON')}</span><b>+${season.gained} XP</b>${season.doubled ? '<i>×2</i>' : ''}
+      <span class="rp-lvl">${t('NIV.')} ${lv.level}</span><span class="rp-bar"><em style="width:${(lv.into / lv.need) * 100}%"></em></span>
+      ${season.after > season.before ? `<span class="rp-up">${t('NIVEAU {n} ATTEINT ! Récompense dans le PASSE', { n: season.after })}</span>` : ''}`;
   }
 
   // Missions qui ont progressé
@@ -83,8 +85,8 @@ export function showResults(rows, { trackName, reward = null, training = false, 
   mb.classList.toggle('hidden', !missions.length);
   if (missions.length) {
     const done = missions.filter((c) => c.done).length;
-    mb.innerHTML = `<div class="rt">${done ? `MISSION${done > 1 ? 'S' : ''} ACCOMPLIE${done > 1 ? 'S' : ''} ! RÉCUPÈRE TA RÉCOMPENSE DANS MISSIONS` : 'MISSIONS'}</div>` +
-      missions.map((c) => `<span class="${c.done ? 'ok' : ''}">${c.mission.text} <b>${c.done ? '✓' : `${c.after}/${c.mission.target}`}</b></span>`).join('');
+    mb.innerHTML = `<div class="rt">${done ? (many(done) ? t('MISSIONS ACCOMPLIES ! RÉCUPÈRE TA RÉCOMPENSE DANS MISSIONS') : t('MISSION ACCOMPLIE ! RÉCUPÈRE TA RÉCOMPENSE DANS MISSIONS')) : 'MISSIONS'}</div>` +
+      missions.map((c) => `<span class="${c.done ? 'ok' : ''}">${missionText(c.mission)} <b>${c.done ? '✓' : `${c.after}/${c.mission.target}`}</b></span>`).join('');
   }
 
   // Trophées et ligue
@@ -95,12 +97,12 @@ export function showResults(rows, { trackName, reward = null, training = false, 
   el('res-rival').classList.add('hidden');
   el('res-record').classList.add('hidden');
   if (training) {
-    el('res-record').textContent = 'ENTRAÎNEMENT — PAS DE TROPHÉES';
+    el('res-record').textContent = t('ENTRAÎNEMENT — PAS DE TROPHÉES');
     el('res-record').classList.remove('hidden');
   }
   if (event) {
     if (event.goals.length) {
-      el('res-promo').textContent = `OBJECTIF${event.goals.length > 1 ? 'S' : ''} ATTEINT${event.goals.length > 1 ? 'S' : ''} : ${event.goals.join(' · ')} !`;
+      el('res-promo').textContent = t(many(event.goals.length) ? 'OBJECTIFS ATTEINTS : {g} !' : 'OBJECTIF ATTEINT : {g} !', { g: event.goals.join(' · ') });
       el('res-promo').classList.remove('hidden');
     }
     if (event.record) {
@@ -116,13 +118,13 @@ export function showResults(rows, { trackName, reward = null, training = false, 
       rb.classList.remove('hidden');
       rb.classList.toggle('won', reward.rivalBeaten);
       rb.textContent = reward.rivalBeaten
-        ? `★ RIVAL ${rivalRow.name} BATTU ! +${reward.rivalBonus} TROPHÉES BONUS${reward.firstRivalWin ? ' — PREMIÈRE FOIS !' : ''}`
-        : `★ ${rivalRow.name} a fini devant toi — bats-le pour +3 trophées bonus`;
+        ? `★ ${t('RIVAL {r} BATTU ! +{n} TROPHÉES BONUS', { r: rivalRow.name, n: reward.rivalBonus })}${reward.firstRivalWin ? ` — ${t('PREMIÈRE FOIS !')}` : ''}`
+        : `★ ${t('{r} a fini devant toi — bats-le pour +3 trophées bonus', { r: rivalRow.name })}`;
     }
     const tag = el('res-league');
     tag.textContent = reward.newLeague.name;
     tag.style.color = reward.newLeague.color;
-    el('res-total').textContent = `${reward.after} trophée${reward.after > 1 ? 's' : ''}`;
+    el('res-total').textContent = t(many(reward.after) ? '{n} trophées' : '{n} trophée', { n: reward.after });
     // La barre part de l'ancienne valeur puis se remplit
     const fill = el('res-fill');
     fill.style.transition = 'none';
@@ -132,17 +134,17 @@ export function showResults(rows, { trackName, reward = null, training = false, 
     setTimeout(() => { fill.style.width = `${Math.round(leagueProgress(reward.after) * 100)}%`; }, 350);
     if (reward.promoted) {
       const unlocked = reward.unlockedTracks.map((t) => t.name).join(', ');
-      el('res-promo').textContent = `NOUVELLE LIGUE : ${reward.newLeague.name} !${unlocked ? ` — circuit débloqué : ${unlocked}` : ''}`;
+      el('res-promo').textContent = `${t('NOUVELLE LIGUE : {l} !', { l: reward.newLeague.name })}${unlocked ? ` — ${t('circuit débloqué : {c}', { c: unlocked })}` : ''}`;
       el('res-promo').classList.remove('hidden');
     }
     if (reward.unlockedCars?.length) {
-      el('res-cars').textContent = `NOUVELLE VOITURE DÉBLOQUÉE : ${reward.unlockedCars.map((c) => c.name).join(', ')} — à essayer dans le garage !`;
+      el('res-cars').textContent = t('NOUVELLE VOITURE DÉBLOQUÉE : {c} — à essayer dans le garage !', { c: reward.unlockedCars.map((c) => c.name).join(', ') });
       el('res-cars').classList.remove('hidden');
     }
     if (reward.newRecord) {
       el('res-record').textContent = reward.previousRecord
-        ? `NOUVEAU RECORD DU TOUR : ${formatTime(me.bestLap)} (avant : ${formatTime(reward.previousRecord)})`
-        : `PREMIER RECORD DU TOUR : ${formatTime(me.bestLap)}`;
+        ? t('NOUVEAU RECORD DU TOUR : {a} (avant : {b})', { a: formatTime(me.bestLap), b: formatTime(reward.previousRecord) })
+        : t('PREMIER RECORD DU TOUR : {a}', { a: formatTime(me.bestLap) });
       el('res-record').classList.remove('hidden');
     }
   }

@@ -1,6 +1,7 @@
 // Règles du DÉFI DU JOUR (sans affichage, testable).
 // save.daily = { day, stars, best, targets, streak, lastDone, total, rewardDay }
 
+import { t } from '../i18n/index.js';
 import { DAILY_FORMATS, DAILY_TIME_FACTORS, DAILY_RULES, SURPRISE_WEATHERS, DAILY_STAR_CREDITS, STREAK_REWARDS } from '../data/daily.js';
 import { TRACKS, trackVariant } from '../data/tracks/index.js';
 import { CARS, getCar } from '../data/cars.js';
@@ -133,7 +134,7 @@ export const dailyBadge = (save, day = dayKey()) => (save.daily.day === day && s
 export function challengeSummary(ch) {
   const parts = [ch.track.name];
   if (ch.rule !== 'none') parts.push(DAILY_RULES[ch.rule].name);
-  else if (ch.weather) parts.push('MÉTÉO SURPRISE');
+  else if (ch.weather) parts.push(t('MÉTÉO SURPRISE'));
   if (ch.car) parts.push(getCar(ch.car).name);
   return parts.join(' · ');
 }

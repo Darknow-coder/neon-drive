@@ -17,11 +17,12 @@
 //   { type: 'event', id: … }             événement / saison
 // Les adversaires IA peuvent utiliser toutes les voitures, débloquées ou non.
 
+import { t } from '../i18n/index.js';
 export const CARS = [
   {
     id: 'nova',
     name: 'NOVA',
-    tagline: 'Équilibrée, idéale pour débuter',
+    tagline: t('Équilibrée, idéale pour débuter'),
     stats: { speed: 6, accel: 6, handling: 6, drift: 6, toughness: 6 },
     shape: 'sleek',
     design: { cockpit: 'bubble', wheels: 'covered', livery: 'twin', spoiler: 'bar', lights: 'dual', extras: ['intakes'] },
@@ -31,7 +32,7 @@ export const CARS = [
   {
     id: 'volt',
     name: 'VOLT',
-    tagline: 'Accélération foudroyante',
+    tagline: t('Accélération foudroyante'),
     stats: { speed: 5, accel: 9, handling: 6, drift: 6, toughness: 4 },
     shape: 'sleek',
     design: { lm: 0.9, wm: 1.05, cockpit: 'front', wheels: 'pods', livery: 'bolt', spoiler: 'split', lights: 'bar', extras: ['exhaust'] },
@@ -41,7 +42,7 @@ export const CARS = [
   {
     id: 'halo',
     name: 'HALO',
-    tagline: 'Maniabilité exceptionnelle',
+    tagline: t('Maniabilité exceptionnelle'),
     stats: { speed: 5, accel: 6, handling: 9, drift: 5, toughness: 5 },
     shape: 'round',
     design: { lm: 0.95, wm: 1.02, cockpit: 'big', livery: 'side', spoiler: 'none', lights: 'quad', extras: ['ring', 'fins'] },
@@ -51,7 +52,7 @@ export const CARS = [
   {
     id: 'razor',
     name: 'RAZOR',
-    tagline: 'Très rapide, exigeante en virage',
+    tagline: t('Très rapide, exigeante en virage'),
     stats: { speed: 9, accel: 6, handling: 4, drift: 5, toughness: 6 },
     shape: 'wedge',
     design: { lm: 1.08, wm: 0.92, cockpit: 'slit', livery: 'single', spoiler: 'wide', lights: 'bar', extras: ['blades'] },
@@ -61,7 +62,7 @@ export const CARS = [
   {
     id: 'titan',
     name: 'TITAN',
-    tagline: 'Lourde et robuste au contact',
+    tagline: t('Lourde et robuste au contact'),
     stats: { speed: 7, accel: 4, handling: 6, drift: 4, toughness: 9 },
     shape: 'heavy',
     design: { lm: 1.02, wm: 1.08, cockpit: 'rear', livery: 'side', spoiler: 'none', lights: 'quad', extras: ['armor', 'bullbar', 'exhaust'] },
@@ -71,7 +72,7 @@ export const CARS = [
   {
     id: 'spectre',
     name: 'SPECTRE',
-    tagline: 'La reine du drift',
+    tagline: t('La reine du drift'),
     stats: { speed: 5, accel: 6, handling: 7, drift: 9, toughness: 3 },
     shape: 'blade',
     design: { lm: 1.08, wm: 0.9, cockpit: 'slit', wheels: 'pods', livery: 'split', spoiler: 'split', lights: 'dual', extras: ['fins'] },
@@ -81,7 +82,7 @@ export const CARS = [
   {
     id: 'comet',
     name: 'COMET',
-    tagline: 'Fusée en ligne droite',
+    tagline: t('Fusée en ligne droite'),
     stats: { speed: 8, accel: 7, handling: 4, drift: 5, toughness: 6 },
     shape: 'formula',
     design: { lm: 1.1, wm: 0.95, cockpit: 'open', wheels: 'exposed', livery: 'single', spoiler: 'wide', lights: 'dual', extras: ['frontwing', 'exhaust'] },
@@ -91,7 +92,7 @@ export const CARS = [
   {
     id: 'bastion',
     name: 'BASTION',
-    tagline: 'Blindée et précise',
+    tagline: t('Blindée et précise'),
     stats: { speed: 6, accel: 5, handling: 7, drift: 3, toughness: 9 },
     shape: 'tank',
     design: { cockpit: 'front', livery: 'chevron', spoiler: 'bar', lights: 'bar', extras: ['armor', 'skirts'] },
@@ -102,7 +103,7 @@ export const CARS = [
   {
     id: 'pixie',
     name: 'PIXIE',
-    tagline: 'Mini à 3 roues, nerveuse et minuscule',
+    tagline: t('Mini à 3 roues, nerveuse et minuscule'),
     stats: { speed: 3, accel: 9, handling: 10, drift: 6, toughness: 2 },
     trait: 'agile',
     size: { length: 38, width: 20 },
@@ -114,7 +115,7 @@ export const CARS = [
   {
     id: 'ionix',
     name: 'IONIX',
-    tagline: 'Électrique : son boost se recharge tout seul',
+    tagline: t('Électrique : son boost se recharge tout seul'),
     stats: { speed: 6, accel: 7, handling: 6, drift: 4, toughness: 5 },
     trait: 'regen',
     shape: 'pod',
@@ -125,7 +126,7 @@ export const CARS = [
   {
     id: 'goliath',
     name: 'GOLIATH',
-    tagline: 'Muscle car : écarte tout sur son passage',
+    tagline: t('Muscle car : écarte tout sur son passage'),
     stats: { speed: 9, accel: 4, handling: 4, drift: 4, toughness: 9 },
     trait: 'ram',
     size: { length: 51, width: 27 },
@@ -137,7 +138,7 @@ export const CARS = [
   {
     id: 'hyperion',
     name: 'HYPERION',
-    tagline: 'Prototype en lévitation : ne craint pas les sols glissants',
+    tagline: t('Prototype en lévitation : ne craint pas les sols glissants'),
     stats: { speed: 8, accel: 5, handling: 6, drift: 5, toughness: 3 },
     trait: 'hover',
     shape: 'proto',
@@ -148,7 +149,7 @@ export const CARS = [
   {
     id: 'aurora',
     name: 'AURORA',
-    tagline: 'Exclusive Saison 1 · rapide et vive',
+    tagline: t('Exclusive Saison 1 · rapide et vive'),
     stats: { speed: 7, accel: 7, handling: 6, drift: 5, toughness: 5 },
     shape: 'blade',
     design: { lm: 1.05, wm: 0.96, cockpit: 'bubble', wheels: 'covered', livery: 'stars', spoiler: 'wide', lights: 'quad', extras: ['fins', 'intakes'] },
@@ -159,10 +160,10 @@ export const CARS = [
 
 // Capacités spéciales (même règle pour le joueur et les IA)
 export const TRAITS = {
-  agile: { name: 'AGILE', desc: 'Toute petite : se faufile dans les trous et tourne sur place.' },
-  regen: { name: 'RECHARGE', desc: 'Le boost se recharge tout seul en roulant, et encore plus en freinant.' },
-  ram: { name: 'BÉLIER', desc: 'Très lourde : écarte les autres voitures et perd peu de vitesse contre les murs.' },
-  hover: { name: 'LÉVITATION', desc: 'Flotte au-dessus du sol : glisse beaucoup moins sous la pluie, la neige et sur le verglas.' },
+  agile: { name: t('AGILE'), desc: t('Toute petite : se faufile dans les trous et tourne sur place.') },
+  regen: { name: t('RECHARGE'), desc: t('Le boost se recharge tout seul en roulant, et encore plus en freinant.') },
+  ram: { name: t('BÉLIER'), desc: t('Très lourde : écarte les autres voitures et perd peu de vitesse contre les murs.') },
+  hover: { name: t('LÉVITATION'), desc: t('Flotte au-dessus du sol : glisse beaucoup moins sous la pluie, la neige et sur le verglas.') },
 };
 
 export const getCar = (id) => CARS.find((c) => c.id === id) ?? CARS[0];
@@ -175,9 +176,9 @@ export const PAINT_COLORS = [
 
 // Libellés des caractéristiques (garage)
 export const STAT_LABELS = {
-  speed: 'Vitesse max',
-  accel: 'Accélération',
-  handling: 'Maniabilité',
-  drift: 'Drift',
-  toughness: 'Robustesse',
+  speed: t('Vitesse max'),
+  accel: t('Accélération'),
+  handling: t('Maniabilité'),
+  drift: t('Drift'),
+  toughness: t('Robustesse'),
 };

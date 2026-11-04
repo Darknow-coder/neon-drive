@@ -2,6 +2,7 @@
 // Tous les montants sont réglables ici (équilibrage).
 
 // ---------- Crédits gagnés en course ----------
+import { t } from '../i18n/index.js';
 export const CREDITS = {
   position: [60, 45, 35, 25, 15, 10],  // selon la place (1re → 6e)
   perDriftSecond: 1, maxDrift: 20,     // bonus de drift
@@ -29,9 +30,9 @@ export const AI_CAR_LEVEL = { bronze: 1, argent: 2, or: 3, diamant: 4, elite: 5 
 // Fragments nécessaires pour débloquer une voiture AVANT son palier de trophées
 export const UNLOCK_FRAGMENTS = { volt: 20, pixie: 25, halo: 30, razor: 40, titan: 50, spectre: 60, ionix: 70, comet: 80, goliath: 90, bastion: 100, hyperion: 120 };
 export const PACKS = {
-  small: { name: 'PACK NÉON', fragments: 6, price: 120, color: '#00f0ff' },
-  medium: { name: 'PACK PLASMA', fragments: 15, price: 280, color: '#ff2bd6' },
-  large: { name: 'PACK HYPERNOVA', fragments: 35, price: 600, color: '#ffd34d' },
+  small: { name: t('PACK NÉON'), fragments: 6, price: 120, color: '#00f0ff' },
+  medium: { name: t('PACK PLASMA'), fragments: 15, price: 280, color: '#ff2bd6' },
+  large: { name: t('PACK HYPERNOVA'), fragments: 35, price: 600, color: '#ffd34d' },
 };
 
 // ---------- Route des trophées ----------

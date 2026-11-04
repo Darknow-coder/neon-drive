@@ -1,5 +1,6 @@
 // Règles de l'économie (sans affichage, testées dans tools/progressionCheck.js).
 
+import { t, ord } from '../i18n/index.js';
 import { CREDITS, UPGRADE_COST, MAX_LEVEL, UNLOCK_FRAGMENTS, PACKS, TROPHY_ROAD } from '../data/economy.js';
 import { CARS, getCar } from '../data/cars.js';
 import { isOwned } from './garage.js';
@@ -9,11 +10,11 @@ import { isOwned } from './garage.js';
 export function raceCredits({ position, driftTime = 0, overtakes = 0, clean = false, rivalBeaten = false }) {
   const lines = [];
   const add = (label, amount) => { if (amount > 0) lines.push({ label, amount }); };
-  add(`${position}${position === 1 ? 're' : 'e'} place`, CREDITS.position[position - 1] ?? 0);
-  add(`Drift (${Math.floor(driftTime)} s)`, Math.min(CREDITS.maxDrift, Math.floor(driftTime * CREDITS.perDriftSecond)));
-  add(`Dépassements (${overtakes})`, Math.min(CREDITS.maxOvertakes, overtakes * CREDITS.perOvertake));
-  if (clean) add('Course propre', CREDITS.clean);
-  if (rivalBeaten) add('Rival battu', CREDITS.rival);
+  add(t('{p} place', { p: ord(position, true) }), CREDITS.position[position - 1] ?? 0);
+  add(t('Drift ({n} s)', { n: Math.floor(driftTime) }), Math.min(CREDITS.maxDrift, Math.floor(driftTime * CREDITS.perDriftSecond)));
+  add(t('Dépassements ({n})', { n: overtakes }), Math.min(CREDITS.maxOvertakes, overtakes * CREDITS.perOvertake));
+  if (clean) add(t('Course propre'), CREDITS.clean);
+  if (rivalBeaten) add(t('Rival battu'), CREDITS.rival);
   return { lines, total: lines.reduce((s, l) => s + l.amount, 0) };
 }
 
@@ -28,10 +29,10 @@ export function upgradeCost(save, carId) {
 
 /** Améliore une voiture si possible. Retourne le nouveau niveau ou une raison d'échec. */
 export function upgradeCar(save, carId) {
-  if (!isOwned(save, carId)) return { ok: false, reason: 'Voiture non débloquée' };
+  if (!isOwned(save, carId)) return { ok: false, reason: t('Voiture non débloquée') };
   const cost = upgradeCost(save, carId);
   if (!cost) return { ok: false, reason: 'Niveau maximum atteint' };
-  if (save.credits < cost.credits) return { ok: false, reason: 'Crédits insuffisants' };
+  if (save.credits < cost.credits) return { ok: false, reason: t('Crédits insuffisants') };
   if (fragmentsOf(save, carId) < cost.fragments) return { ok: false, reason: 'Fragments insuffisants' };
   save.credits -= cost.credits;
   save.cars.fragments[carId] -= cost.fragments;
@@ -88,7 +89,7 @@ export function openPack(save, packId, rng = Math.random) {
 
 export function buyPack(save, packId, rng) {
   const pack = PACKS[packId];
-  if (!pack || save.credits < pack.price) return { ok: false, reason: 'Crédits insuffisants' };
+  if (!pack || save.credits < pack.price) return { ok: false, reason: t('Crédits insuffisants') };
   save.credits -= pack.price;
   return { ok: true, gains: openPack(save, packId, rng) };
 }

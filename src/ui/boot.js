@@ -2,23 +2,25 @@
 // voitures…), astuces, puis « touche l'écran pour jouer ». Ce premier geste
 // permet aussi de lancer la musique (les navigateurs l'exigent).
 
+import { t } from '../i18n/index.js';
+
 const $ = (id) => document.getElementById(id);
 const frame = () => new Promise((r) => requestAnimationFrame(() => r()));
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export const TIPS = [
-  'Freine en tournant fort pour lancer un drift : il remplit ta jauge de boost.',
-  'Finis devant le rival de ta ligue pour gagner des trophées en plus.',
-  'Les plaques au sol donnent une poussée gratuite : vise-les !',
-  'Reste dans l\'aspiration d\'une voiture : tu iras plus vite qu\'elle.',
-  'En chrono, bats ton fantôme pour décrocher les médailles.',
-  'Les succès de ton profil rapportent des crédits et des titres.',
-  'Une course sans toucher les murs rapporte un bonus de crédits.',
-  'Bloqué contre un mur ? Le bouton ⟲ te replace sur la piste.',
-  'Améliore ta voiture au garage avec des crédits et des fragments.',
-  'Chaque jour, la boutique change et un cadeau gratuit t\'attend.',
-  'En élimination, le dernier est éliminé à chaque tour : ne traîne pas !',
-  'Les IA ne trichent jamais : leur niveau est fixé avant le départ.',
+  t('Freine en tournant fort pour lancer un drift : il remplit ta jauge de boost.'),
+  t('Finis devant le rival de ta ligue pour gagner des trophées en plus.'),
+  t('Les plaques au sol donnent une poussée gratuite : vise-les !'),
+  t('Reste dans l\'aspiration d\'une voiture : tu iras plus vite qu\'elle.'),
+  t('En chrono, bats ton fantôme pour décrocher les médailles.'),
+  t('Les succès de ton profil rapportent des crédits et des titres.'),
+  t('Une course sans toucher les murs rapporte un bonus de crédits.'),
+  t('Bloqué contre un mur ? Le bouton ⟲ te replace sur la piste.'),
+  t('Améliore ta voiture au garage avec des crédits et des fragments.'),
+  t('Chaque jour, la boutique change et un cadeau gratuit t\'attend.'),
+  t('En élimination, le dernier est éliminé à chaque tour : ne traîne pas !'),
+  t('Les IA ne trichent jamais : leur niveau est fixé avant le départ.'),
 ];
 
 /**
@@ -43,7 +45,7 @@ export async function runBoot({ tasks, version, touch, skip = false, onEnter }) 
   const showTip = () => {
     tip.classList.remove('in');
     void tip.offsetWidth;
-    tip.innerHTML = `<b>ASTUCE</b> ${TIPS[tipIndex++ % TIPS.length]}`;
+    tip.innerHTML = `<b>${t('ASTUCE')}</b> ${TIPS[tipIndex++ % TIPS.length]}`;
     tip.classList.add('in');
   };
   showTip();
@@ -64,10 +66,10 @@ export async function runBoot({ tasks, version, touch, skip = false, onEnter }) 
   const left = 1500 - (performance.now() - t0);
   if (left > 0) await wait(left);
 
-  status.textContent = 'Prêt !';
+  status.textContent = t('Prêt !');
   el.classList.add('ready');
   const go = $('boot-go');
-  go.textContent = touch ? 'TOUCHE L\'ÉCRAN POUR JOUER' : 'CLIQUE OU APPUIE SUR UNE TOUCHE';
+  go.textContent = touch ? t('TOUCHE L\'ÉCRAN POUR JOUER') : t('CLIQUE OU APPUIE SUR UNE TOUCHE');
   go.classList.remove('hidden');
 
   // On attend le CLIC (doigt relevé) et non le simple contact : sinon, sur

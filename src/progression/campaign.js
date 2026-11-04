@@ -1,6 +1,7 @@
 // Règles du mode CARRIÈRE (sans affichage, testable).
 // Sauvegarde : save.campaign = { stars: {idDéfi: 0-3}, best: {idDéfi: valeur}, done: [idChapitre], seen: [idChapitre], allStars: bool }
 
+import { t } from '../i18n/index.js';
 import { CHAPTERS, ALL_STAGES, DUEL_STARS_NEEDED, STAR_CREDITS, ALL_STARS_REWARD, TIME_START_ALLOWANCE, TIME_FACTORS, DUEL_MARGINS, stageById } from '../data/career.js';
 import { NEON_TIMES } from '../data/timeTrialTargets.js';
 import { CAREER_TIMES } from '../data/careerTargets.js';
@@ -59,7 +60,7 @@ export function campaignStatus(save) {
     return {
       ch,
       unlocked: prevDone && leagueOk,
-      lockReason: !prevDone ? `Gagne le duel du chapitre ${k}` : !leagueOk ? `Atteins la ligue ${league.name} (${league.min} trophées)` : '',
+      lockReason: !prevDone ? t('Gagne le duel du chapitre {k}', { k }) : !leagueOk ? t('Atteins la ligue {l} ({n} trophées)', { l: league.name, n: league.min }) : '',
       stars,
       duelUnlocked: stars >= DUEL_STARS_NEEDED,
       duelStars: starsOf(save, ch.duel.id),

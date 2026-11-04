@@ -17,29 +17,30 @@
 //   boostStraight utilise le boost uniquement en ligne droite (sinon dès que possible)
 //   reaction     temps de réaction (s) pour anticiper les freinages
 
+import { t } from '../i18n/index.js';
 export const AI_PROFILES = {
   aggressive: {
-    label: 'Agressif',
+    label: t('Agressif'),
     gripUse: 0.93, brakeUse: 0.78, driftUse: 0.95, lineFocus: 0.85,
     aggression: 0.95, caution: 0.15, mistakeRate: 1.6, boostStraight: false, reaction: 0.12,
   },
   cautious: {
-    label: 'Prudent',
+    label: t('Prudent'),
     gripUse: 0.88, brakeUse: 0.7, driftUse: 0.6, lineFocus: 0.95,
     aggression: 0.25, caution: 0.95, mistakeRate: 0.6, boostStraight: true, reaction: 0.18,
   },
   cornering: {
-    label: 'Spécialiste des virages',
+    label: t('Spécialiste des virages'),
     gripUse: 0.96, brakeUse: 0.8, driftUse: 1.0, lineFocus: 0.97,
     aggression: 0.5, caution: 0.5, mistakeRate: 0.9, boostStraight: false, reaction: 0.1,
   },
   speed: {
-    label: 'Spécialiste de la vitesse',
+    label: t('Spécialiste de la vitesse'),
     gripUse: 0.88, brakeUse: 0.76, driftUse: 0.7, lineFocus: 0.9,
     aggression: 0.6, caution: 0.4, mistakeRate: 1.0, boostStraight: true, reaction: 0.13,
   },
   balanced: {
-    label: 'Polyvalent',
+    label: t('Polyvalent'),
     gripUse: 0.92, brakeUse: 0.76, driftUse: 0.85, lineFocus: 0.92,
     aggression: 0.55, caution: 0.55, mistakeRate: 1.0, boostStraight: false, reaction: 0.13,
   },

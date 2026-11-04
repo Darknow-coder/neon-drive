@@ -1,5 +1,6 @@
 // Écran du garage : choisir sa voiture, voir ses caractéristiques, la peindre.
 
+import { t } from '../i18n/index.js';
 import { CARS, STAT_LABELS, getCar } from '../data/cars.js';
 import { isOwned, liveryFor, unlockLabel } from '../progression/garage.js';
 import { makeCarSprite } from '../render/carSprite.js';
@@ -113,7 +114,7 @@ export function createGarage({ save, onSave, onClose, sfx }) {
     const dot = (c) => `<i style="background:${c};color:${c}"></i>`;
     $('garage-quick').innerHTML = `<span class="cq-dots">${dot(l.body)}${dot(l.accent)}${dot(l.glow)}</span>
       <span>${nameOf(FINISHES, l.finish)} · ${nameOf(MOTIFS, l.motif)}${l.number ? ` · n°${l.number}` : ''}</span>
-      <span>Boost ${nameOf(TRAILS, l.trail)} · Drift ${nameOf(SMOKES, l.smoke)}</span>`;
+      <span>${t('Boost {a} · Drift {b}', { a: nameOf(TRAILS, l.trail), b: nameOf(SMOKES, l.smoke) })}</span>`;
   }
   $('garage-custom').querySelector('[data-open]').addEventListener('click', () => {
     if (!isOwned(save, car().id)) return;
@@ -134,7 +135,7 @@ export function createGarage({ save, onSave, onClose, sfx }) {
     const tr = c.trait ? TRAITS[c.trait] : null;
     $('garage-trait').classList.toggle('hidden', !tr);
     if (tr) $('garage-trait').innerHTML = `<b>${ico('star')} ${tr.name}</b><span>${tr.desc}</span>`;
-    $('garage-count').textContent = `${save.garage.owned.length} / ${CARS.length} voitures`;
+    $('garage-count').textContent = t('{a} / {b} voitures', { a: save.garage.owned.length, b: CARS.length });
     $('garage-credits').innerHTML = cr(save.credits);
     // Niveau, fragments et amélioration / déblocage anticipé
     const lvl = carLevel(save, c.id);
@@ -142,19 +143,19 @@ export function createGarage({ save, onSave, onClose, sfx }) {
     const upBtn = $('garage-upgrade');
     upBtn.classList.remove('can');
     if (owned) {
-      $('garage-level').innerHTML = `NIVEAU <b>${lvl}</b> / ${MAX_LEVEL}${lvl > 1 ? ` · performances +${((lvl - 1) * 1.1).toFixed(1)} %` : ''}`;
+      $('garage-level').innerHTML = `${t('NIVEAU')} <b>${lvl}</b> / ${MAX_LEVEL}${lvl > 1 ? ` · ${t('performances +{n} %', { n: ((lvl - 1) * 1.1).toFixed(1) })}` : ''}`;
       const cost = upgradeCost(save, c.id);
       if (cost) {
-        $('frag-text').textContent = `Fragments ${c.name}`;
+        $('frag-text').textContent = t('Fragments {c}', { c: c.name });
         $('frag-num').textContent = `${have} / ${cost.fragments}`;
         $('frag-fill').style.width = `${Math.min(100, (have / cost.fragments) * 100)}%`;
         const can = have >= cost.fragments && save.credits >= cost.credits;
-        upBtn.innerHTML = `AMÉLIORER → NIV. ${cost.level} &nbsp;${cr(cost.credits)} + ${cost.fragments} fragments`;
+        upBtn.innerHTML = `${t('AMÉLIORER → NIV. {n}', { n: cost.level })} &nbsp;${cr(cost.credits)} + ${t('{n} fragments', { n: cost.fragments })}`;
         upBtn.disabled = !can;
         upBtn.classList.toggle('can', can);
         $('garage-frags').classList.remove('hidden');
       } else {
-        upBtn.textContent = 'NIVEAU MAXIMUM ✓';
+        upBtn.textContent = t('NIVEAU MAXIMUM ✓');
         upBtn.disabled = true;
         $('garage-frags').classList.add('hidden');
       }
@@ -166,18 +167,18 @@ export function createGarage({ save, onSave, onClose, sfx }) {
       // Voiture exclusive du passe de saison : aucun autre moyen de l'obtenir
       $('garage-level').textContent = '';
       $('garage-frags').classList.add('hidden');
-      upBtn.textContent = `Exclusive : niveau ${c.unlock?.tier ?? 100} du PASSE DE SAISON`;
+      upBtn.textContent = t('Exclusive : niveau {n} du PASSE DE SAISON', { n: c.unlock?.tier ?? 100 });
       upBtn.disabled = true;
       upBtn.onclick = null;
     } else {
       $('garage-level').textContent = '';
       const need = unlockFragments(c.id);
-      $('frag-text').textContent = 'Fragments pour la débloquer tout de suite';
+      $('frag-text').textContent = t('Fragments pour la débloquer tout de suite');
       $('frag-num').textContent = `${have} / ${need}`;
       $('frag-fill').style.width = `${Math.min(100, (have / need) * 100)}%`;
       $('garage-frags').classList.remove('hidden');
       const can = have >= need;
-      upBtn.textContent = can ? 'DÉBLOQUER AVEC LES FRAGMENTS' : 'Fragments dans les packs (route, boutique)';
+      upBtn.textContent = can ? t('DÉBLOQUER AVEC LES FRAGMENTS') : t('Fragments dans les packs (route, boutique)');
       upBtn.disabled = !can;
       upBtn.classList.toggle('can', can);
       upBtn.onclick = () => {
@@ -197,11 +198,11 @@ export function createGarage({ save, onSave, onClose, sfx }) {
     $('garage-custom').classList.toggle('hidden', !owned);
     if (owned) renderQuick();
     $('garage-lock').classList.toggle('hidden', owned);
-    $('garage-lock').innerHTML = owned ? '' : `${ico('lock')} ${unlockLabel(c)} — aperçu`;
+    $('garage-lock').innerHTML = owned ? '' : `${ico('lock')} ${unlockLabel(c)} — ${t('aperçu')}`;
     const sel = $('garage-select');
     const isSelected = save.selectedCar === c.id;
     sel.disabled = !owned || isSelected;
-    sel.textContent = !owned ? 'VERROUILLÉE' : isSelected ? 'VOITURE ACTUELLE ✓' : 'CHOISIR CETTE VOITURE';
+    sel.textContent = !owned ? t('VERROUILLÉE') : isSelected ? t('VOITURE ACTUELLE ✓') : t('CHOISIR CETTE VOITURE');
   }
 
   $('garage-prev').addEventListener('click', () => { index = (index - 1 + CARS.length) % CARS.length; render(); });

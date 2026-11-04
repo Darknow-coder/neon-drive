@@ -3,10 +3,11 @@
 // mais des plaques de sable glissant dans deux virages et une épingle
 // à gauche en fin de tour. Les voitures rapides y sont reines.
 
+import { t } from '../../i18n/index.js';
 export default {
   id: 'dune-runner',
   name: 'DUNE RUNNER',
-  profile: 'Très rapide',
+  profile: t('Très rapide'),
   league: 'or',
   scale: 1.5,
   width: 260,

@@ -1,5 +1,6 @@
 // Menu principal : ligue, trophées, progression, statistiques.
 
+import { t, many } from '../i18n/index.js';
 import { leagueFor, nextLeague, leagueProgress } from '../data/progression.js';
 import { rivalFor } from '../data/rivals.js';
 import { getCar } from '../data/cars.js';
@@ -79,38 +80,38 @@ export function renderMenu(save, saveStatus) {
   const sb = shopBadge(save);
   $('shop-badge').textContent = String(sb);
   $('shop-badge').classList.toggle('hidden', sb === 0);
-  $('menu-trophies-word').textContent = save.trophies > 1 ? 'trophées' : 'trophée';
+  $('menu-trophies-word').textContent = many(save.trophies) ? t('trophées') : t('trophée');
   // Voiture
   const carId = selectedCar(save);
   $('menu-car-name').textContent = getCar(carId).name;
-  $('menu-car').textContent = `niveau ${carLevel(save, carId)}`;
+  $('menu-car').textContent = t('niveau {n}', { n: carLevel(save, carId) });
   startShowcase(save);
   // Bouton COURSE : gain possible
-  $('menu-race-gain').innerHTML = `jusqu'à +${TROPHY_REWARDS[0]} ${ico('trophy')}`;
+  $('menu-race-gain').innerHTML = `${t('jusqu\'à +{n}', { n: TROPHY_REWARDS[0] })} ${ico('trophy')}`;
   // Tuile CHRONO : médailles obtenues
   const mc = medalCounts(save);
   const got = Object.values(mc).reduce((a, b) => a + b, 0);
-  $('tt-sub').textContent = `${got} / ${TRACKS.filter((t) => !t.custom).length * 4} médailles`;
+  $('tt-sub').textContent = t('{a} / {b} médailles', { a: got, b: TRACKS.filter((x) => !x.custom).length * 4 });
   $('menu-league-fill').style.width = `${Math.round(leagueProgress(save.trophies) * 100)}%`;
   $('menu-league-next').textContent = next
-    ? `${save.trophies} / ${next.min} · ligue ${next.name} dans ${next.min - save.trophies}`
-    : 'Ligue maximale atteinte !';
+    ? t('{a} / {b} · ligue {l} dans {n}', { a: save.trophies, b: next.min, l: next.name, n: next.min - save.trophies })
+    : t('Ligue maximale atteinte !');
   const rv = rivalFor(league.id);
   const beaten = rv ? save.rivalsBeaten?.[rv.id] ?? 0 : 0;
   $('menu-rival').innerHTML = rv
-    ? `★ Rival : <b>${rv.name}</b> · ${beaten ? `battu ${beaten}×` : 'jamais battu'}`
+    ? `★ ${t('Rival :')} <b>${rv.name}</b> · ${beaten ? t('battu {n}×', { n: beaten }) : t('jamais battu')}`
     : '';
   const st = save.stats;
   $('menu-stats').textContent = st.races
-    ? `${st.races} course${st.races > 1 ? 's' : ''} · ${st.wins} victoire${st.wins > 1 ? 's' : ''} · ${st.podiums} podium${st.podiums > 1 ? 's' : ''}`
-    : 'Première course : bonne chance !';
+    ? t('{a} course(s) · {b} victoire(s) · {c} podium(s)', { a: st.races, b: st.wins, c: st.podiums })
+    : t('Première course : bonne chance !');
 
   const warn = $('save-warning');
   const msg = {
-    unavailable: 'Sauvegarde indisponible sur ce navigateur (navigation privée ?) : ta progression ne sera pas conservée.',
-    restored: 'La sauvegarde était abîmée : la copie de secours a été restaurée.',
-    reset: 'La sauvegarde était illisible : nouvelle partie.',
-    failed: "La dernière sauvegarde a échoué (mémoire pleine ?). Ta progression reste active tant que le jeu est ouvert.",
+    unavailable: t('Sauvegarde indisponible sur ce navigateur (navigation privée ?) : ta progression ne sera pas conservée.'),
+    restored: t('La sauvegarde était abîmée : la copie de secours a été restaurée.'),
+    reset: t('La sauvegarde était illisible : nouvelle partie.'),
+    failed: t('La dernière sauvegarde a échoué (mémoire pleine ?). Ta progression reste active tant que le jeu est ouvert.'),
   }[saveStatus];
   warn.textContent = msg ?? '';
   warn.classList.toggle('hidden', !msg);
@@ -125,7 +126,7 @@ export function revealTrack(pool, chosen, done, rival = null, mode = null) {
   prof.textContent = '';
   name.classList.remove('landed');
   const rvEl = $('reveal-rival');
-  document.querySelector('.reveal-label').textContent = mode ? `${mode} — CIRCUIT TIRÉ AU SORT` : 'CIRCUIT TIRÉ AU SORT';
+  document.querySelector('.reveal-label').textContent = mode ? `${mode} — ${t('CIRCUIT TIRÉ AU SORT')}` : t('CIRCUIT TIRÉ AU SORT');
   rvEl.classList.add('hidden');
   let k = 0;
   const steps = 12;
@@ -140,7 +141,7 @@ export function revealTrack(pool, chosen, done, rival = null, mode = null) {
       void name.offsetWidth; // relance l'animation
       name.classList.add('landed');
       if (rival) {
-        rvEl.innerHTML = `<div class="rv-title">★ RIVAL EN COURSE</div><div class="rv-name" style="color:${rival.colors.glow}">${rival.name}</div><div class="rv-quote">${getCar(rival.car).name} — « ${rival.quote} »</div>`;
+        rvEl.innerHTML = `<div class="rv-title">★ ${t('RIVAL EN COURSE')}</div><div class="rv-name" style="color:${rival.colors.glow}">${rival.name}</div><div class="rv-quote">${getCar(rival.car).name} — « ${rival.quote} »</div>`;
         setTimeout(() => rvEl.classList.remove('hidden'), 350);
       }
       setTimeout(() => { el.classList.add('hidden'); done(); }, rival ? 2300 : 1100);

@@ -1,6 +1,7 @@
 // Scène de course : relie la simulation (race/raceWorld.js) à l'affichage,
 // aux commandes du joueur et aux effets visuels.
 
+import { t, ord } from '../i18n/index.js';
 import { buildTrack } from '../track/buildTrack.js';
 import { getTrackData } from '../data/tracks/index.js';
 import { getCar } from '../data/cars.js';
@@ -198,21 +199,21 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
     // Verdict du départ canon
     if (!launchShown && player.launch && world.started) {
       launchShown = true;
-      const L = { perfect: ['DÉPART PARFAIT !', 'gold'], good: ['BON DÉPART', 'green'], spin: ['PATINAGE !', 'red'] }[player.launch];
+      const L = { perfect: [t('DÉPART PARFAIT !'), 'gold'], good: [t('BON DÉPART'), 'green'], spin: [t('PATINAGE !'), 'red'] }[player.launch];
       message = L[0]; msgTone = L[1]; messageTimer = 1.6;
       sfx?.launch?.(player.launch);
       if (player.launch === 'perfect' && settings.vibration && navigator.vibrate) navigator.vibrate(40);
     }
     if (!timeTrial && !quietLaps && player.laps.lap > lapBefore && lapBefore >= 1 && !player.finished) {
       const isBest = player.laps.lastLap <= player.laps.bestLap;
-      message = player.laps.lap === laps ? 'DERNIER TOUR !' : `${isBest ? 'MEILLEUR TOUR ' : 'Tour '}${formatTime(player.laps.lastLap)}`;
+      message = player.laps.lap === laps ? t('DERNIER TOUR !') : `${isBest ? t('MEILLEUR TOUR ') : t('Tour ')}${formatTime(player.laps.lastLap)}`;
       messageTimer = 2.5;
       sfx?.lap(isBest);
       if (player.laps.lap === laps && laps > 1) sfx?.music?.setFinal?.(true);
     }
     if (player.finished && !scene.announced) {
       scene.announced = true;
-      message = `ARRIVÉE — ${player.position}${player.position === 1 ? 'ER' : 'E'} / ${world.cars.length}`;
+      message = `${t('ARRIVÉE')} — ${ord(player.position).toUpperCase()} / ${world.cars.length}`;
       msgTone = '';
       messageTimer = 9999;
       // Jingle d'arrivée (dans la tonalité du morceau) ; sans musique : petit son
@@ -225,7 +226,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       if (!solo && !timeTrial && (player.position === 1 || close)) {
         slowmo = 1.8;
         if (player.position === 1) {
-          message = close ? 'VICTOIRE · PHOTO-FINISH !' : 'VICTOIRE !';
+          message = close ? t('VICTOIRE · PHOTO-FINISH !') : t('VICTOIRE !');
           msgTone = 'victory';
           // Pluie de confettis néon
           const cols = ['#ffd34d', '#ff2bd6', '#00f0ff', '#3dff9e', '#ffffff'];
@@ -241,14 +242,14 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
       }
     } else if (!solo && !player.finished && world.playerPositionLocked() && !scene.lockedMsg) {
       scene.lockedMsg = true;
-      message = 'TOUS LES ADVERSAIRES SONT ARRIVÉS';
+      message = t('TOUS LES ADVERSAIRES SONT ARRIVÉS');
       messageTimer = 9999;
     }
     // Le rival se plante : on le fait savoir (si rien d'autre n'est affiché)
     if (rivalCar && !rivalCar.finished && rivalCar.hitThisStep > 220 && rivalCar.ai?.state.big?.phase === 'go'
       && messageTimer <= 0 && world.time - (scene.rivalCrashAt ?? -99) > 6) {
       scene.rivalCrashAt = world.time;
-      message = `★ ${rivalCar.name} DANS LE DÉCOR !`;
+      message = `★ ${t('{r} DANS LE DÉCOR !', { r: rivalCar.name })}`;
       msgTone = 'gold';
       messageTimer = 1.8;
     }

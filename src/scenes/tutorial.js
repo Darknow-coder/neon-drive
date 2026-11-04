@@ -2,49 +2,50 @@
 // Chaque étape affiche une consigne, met en évidence le bon bouton, et passe
 // à la suivante quand le joueur a réussi l'action.
 
+import { t } from '../i18n/index.js';
 const $ = (id) => document.getElementById(id);
 
 export function createTutorial({ scene, input, touch, autoGas, onDone }) {
   const keys = touch
-    ? { gas: 'GAZ', brake: 'FREIN', steer: '◀ ▶', boost: 'BOOST', reset: '⟲' }
-    : { gas: '↑', brake: '↓', steer: '← →', boost: 'Maj', reset: 'R' };
+    ? { gas: t('GAZ'), brake: t('FREIN'), steer: '◀ ▶', boost: 'BOOST', reset: '⟲' }
+    : { gas: '↑', brake: '↓', steer: '← →', boost: t('Maj'), reset: 'R' };
 
   const steps = [
     {
       text: autoGas
-        ? "L'accélération est automatique : laisse la voiture prendre de la vitesse."
-        : `Maintiens ${keys.gas} pour accélérer.`,
+        ? t("L'accélération est automatique : laisse la voiture prendre de la vitesse.")
+        : t('Maintiens {k} pour accélérer.', { k: keys.gas }),
       hint: autoGas ? [] : ['gas'],
       done: (c) => c.speed > c.params.maxSpeed * 0.55,
     },
     {
-      text: `Utilise ${keys.steer} pour tourner et suis la piste.`,
+      text: t('Utilise {k} pour tourner et suis la piste.', { k: keys.steer }),
       hint: ['left', 'right'],
       done: (c, st) => st.dist > 1400 && st.steered,
     },
     {
-      text: `Appuie sur ${keys.brake} pour ralentir avant un virage.`,
+      text: t('Appuie sur {k} pour ralentir avant un virage.', { k: keys.brake }),
       hint: ['brake'],
       done: (c, st) => st.brakeTime > 0.35,
     },
     {
-      text: `DRIFT : lancé à grande vitesse, maintiens ${keys.brake} puis tourne. Garde la direction pour rester en glisse !`,
+      text: t('DRIFT : lancé à grande vitesse, maintiens {k} puis tourne. Garde la direction pour rester en glisse !', { k: keys.brake }),
       hint: ['brake', 'left', 'right'],
-      help: "Il faut rouler vite : accélère d'abord en ligne droite, puis frein + direction.",
+      help: t("Il faut rouler vite : accélère d'abord en ligne droite, puis frein + direction."),
       done: (c, st) => st.driftTime > 0.7, // cumulé : plusieurs essais possibles
     },
     {
-      text: 'Chaque drift remplit la jauge de BOOST (en haut à droite). Remplis-la à moitié.',
+      text: t('Chaque drift remplit la jauge de BOOST (en haut à droite). Remplis-la à moitié.'),
       hint: ['brake', 'left', 'right'],
       done: (c) => c.boost >= 0.5,
     },
     {
-      text: `Jauge prête : appuie sur ${keys.boost} pour une accélération fulgurante !`,
+      text: t('Jauge prête : appuie sur {k} pour une accélération fulgurante !', { k: keys.boost }),
       hint: ['boost'],
       done: (c, st) => st.boostTime > 0.6,
     },
     {
-      text: 'Bravo ! Tu es prêt pour ta première course. Gagne des trophées pour monter de ligue et débloquer des voitures.',
+      text: t('Bravo ! Tu es prêt pour ta première course. Gagne des trophées pour monter de ligue et débloquer des voitures.'),
       hint: [],
       done: (c, st) => st.t > 3.5,
       last: true,
@@ -68,7 +69,7 @@ export function createTutorial({ scene, input, touch, autoGas, onDone }) {
     const s = steps[i];
     st = { t: 0, dist: 0, steered: false, brakeTime: 0, driftTime: 0, boostTime: 0, stuck: 0, lastDist: null };
     textEl.textContent = s.text;
-    stepEl.textContent = s.last ? 'TERMINÉ' : `LEÇON ${i + 1} / ${steps.length - 1}`;
+    stepEl.textContent = s.last ? t('TERMINÉ') : t('LEÇON {a} / {b}', { a: i + 1, b: steps.length - 1 });
     helpEl.textContent = '';
     panel.classList.toggle('done', !!s.last);
     textEl.classList.remove('pop');
@@ -122,7 +123,7 @@ export function createTutorial({ scene, input, touch, autoGas, onDone }) {
       st.stuck = c.speed < 40 ? st.stuck + dt : 0;
 
       const s = steps[index];
-      if (st.stuck > 2.5) helpEl.textContent = `Coincé ? Appuie sur ${keys.reset} pour replacer la voiture.`;
+      if (st.stuck > 2.5) helpEl.textContent = t('Coincé ? Appuie sur {k} pour replacer la voiture.', { k: keys.reset });
       else if (s.help && st.t > 9) helpEl.textContent = s.help;
       else helpEl.textContent = '';
 

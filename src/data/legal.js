@@ -4,14 +4,16 @@
 
 // Contact pour toute question ou demande sur les données (null = page GitHub du jeu)
 export const LEGAL_CONTACT = 'neon.drive.support@gmail.com';
-export const LEGAL_UPDATED = '4 novembre 2026';
+import { LANG } from '../i18n/index.js';
+
+export const LEGAL_UPDATED = LANG === 'en' ? 'November 4, 2026' : '4 novembre 2026';
 const REPO = 'https://github.com/Darknow-coder/neon-drive';
 
 const contact = () => (LEGAL_CONTACT
   ? `par e-mail : <a href="mailto:${LEGAL_CONTACT}">${LEGAL_CONTACT}</a>`
   : `en ouvrant un message (« issue ») sur la <a href="${REPO}/issues" target="_blank" rel="noopener">page GitHub du jeu</a> (attention : ces messages sont publics, n'y écris aucune information personnelle)`);
 
-export const LEGAL = {
+const LEGAL_FR = {
   privacy: {
     title: 'POLITIQUE DE CONFIDENTIALITÉ',
     html: () => `
@@ -113,3 +115,113 @@ export const LEGAL = {
 <p>Code source : <a href="${REPO}" target="_blank" rel="noopener">${REPO.replace('https://', '')}</a>.</p>`,
   },
 };
+
+// ---------------------------------------------------------------- English
+const contactEn = () => (LEGAL_CONTACT
+  ? `by email: <a href="mailto:${LEGAL_CONTACT}">${LEGAL_CONTACT}</a>`
+  : `by opening an “issue” on the <a href="${REPO}/issues" target="_blank" rel="noopener">game's GitHub page</a> (careful: these messages are public, do not write any personal information there)`);
+
+const LEGAL_EN = {
+  privacy: {
+    title: 'PRIVACY POLICY',
+    html: () => `
+<p class="lg-lead">In short: NEON//DRIVE asks for <b>neither your name, nor your email, nor your phone number</b>. There are <b>no ads</b>, <b>no tracking</b> and <b>no selling</b> of data. Only what is needed for the leaderboards and friends is sent online, and you can erase everything with one button.</p>
+
+<h3>1. Who is responsible?</h3>
+<p>NEON//DRIVE is developed by a private individual (“the publisher”, pseudonym <b>Darknow</b>). For any question or request, contact them ${contactEn()}.</p>
+
+<h3>2. Data kept on your device</h3>
+<p>Your progress (trophies, cars, credits, settings, statistics…) is stored <b>only in your browser</b> (local storage). It never leaves your device, unless you export it yourself with a save code. The game uses <b>no advertising or analytics cookies</b>: local storage is only used to make the game work.</p>
+
+<h3>3. Data sent online (leaderboards and friends)</h3>
+<p>When you are connected to the internet, the game automatically creates an <b>anonymous account</b> (a random identifier, with no email or password) and sends the server:</p>
+<ul>
+<li>your <b>nickname</b> and its number (e.g. #4821), your emblem, its color, your title and your car;</li>
+<li>your <b>trophies</b> (current and best), your number of races and wins;</li>
+<li>your <b>friend code</b> and your list of friends and friend requests;</li>
+<li>your <b>time trial records</b>: your best time on each track, the car and its colors, and the <b>trajectory of that lap</b> (the “ghost”: the car's positions on the track);</li>
+<li>the date the profile was created and last updated.</li>
+</ul>
+<p><b>What is public</b>: nickname, number, emblem, title, car, trophies, races, wins and the date of your last game are visible to other players on the leaderboard. Your time trial records and their ghosts are also visible: other players can race against your ghost. Your friend code is only visible to your friends. <b>Do not put your real name in your nickname.</b></p>
+<p>As with any website, your device's <b>IP address</b> is technically seen by the servers during connections (it may appear in the host's security logs), but the game does not use it.</p>
+
+<h3>4. Why?</h3>
+<p>This data is only used to run the leaderboards (trophies and time trial), the ghosts, the friends feature and anti-cheat (checking that progress is possible). The legal basis is the <b>performance of the service</b> you request by using these features, and the <b>legitimate interest</b> in keeping the leaderboard fair.</p>
+
+<h3>5. Who has access?</h3>
+<ul>
+<li><b>Supabase</b> (database and anonymous accounts), which stores the online data on behalf of the publisher, on servers located in <b>Frankfurt (Germany)</b>, in the European Union;</li>
+<li><b>GitHub Pages</b> (website hosting), which receives visitors' IP addresses to display the pages;</li>
+<li>other players, for the public information listed above.</li>
+</ul>
+<p>The leaderboard and friends data therefore stays <b>in the European Union</b>. As both companies are American, they commit to protecting data according to European rules (standard contractual clauses). The game's fonts and images are hosted with the game: no data is sent to Google or to any advertising network.</p>
+
+<h3>6. How long?</h3>
+<p>Your online profile is kept as long as you play. You can delete it at any time. Profiles inactive for more than <b>2 years</b> may be deleted. The data on your device stays until you erase it (Settings → Account, or by clearing your browser data).</p>
+
+<h3>7. Your rights</h3>
+<p>At any time, directly in the game (<b>Settings → Account</b>), you can:</p>
+<ul>
+<li><b>view and download</b> your online data (“MY ONLINE DATA”);</li>
+<li><b>correct</b> your nickname and emblem;</li>
+<li><b>delete</b> your online profile, your friendships and your time trial records (“DELETE MY ONLINE PROFILE”);</li>
+<li><b>erase</b> your progress on the device.</li>
+</ul>
+<p>You can also contact the publisher (see point 1), and if you believe your rights are not respected, file a complaint with the French data protection authority, the <b>CNIL</b> (<a href="https://www.cnil.fr" target="_blank" rel="noopener">cnil.fr</a>), or your own country's authority.</p>
+
+<h3>8. Young players</h3>
+<p>The game asks for no information that could identify you. If you are <b>under 15</b>, talk to your parents before using the leaderboard and friends. Parents can delete the online profile at any time from the Settings.</p>
+
+<h3>9. Changes</h3>
+<p>This policy may change (for example if new online features appear). The update date is shown at the bottom. This English version is provided for convenience; in case of disagreement, the French version prevails. Last updated: <b>${LEGAL_UPDATED}</b>.</p>`,
+  },
+
+  terms: {
+    title: 'TERMS OF USE',
+    html: () => `
+<p class="lg-lead">In short: the game is <b>free</b>, with no real-money purchases. Play fair: no offensive nicknames, no cheating.</p>
+
+<h3>1. The game</h3>
+<p>NEON//DRIVE is a free racing game playable in a browser. By using it, you accept these terms. If you do not accept them, do not use the game.</p>
+
+<h3>2. Free, no real money</h3>
+<p>The game is entirely free. Credits, packs, fragments, cars and items can only be obtained by playing: they <b>have no real-money value</b>, cannot be bought, sold or traded, and may be changed in updates (balancing).</p>
+
+<h3>3. Your nickname and behavior</h3>
+<p>Your nickname is visible to other players. It is forbidden to use a nickname that is offensive, hateful, sexual, impersonates someone else or contains personal information (real name, address, phone…). A filter blocks forbidden words; the publisher may also rename or delete a profile that does not follow these rules.</p>
+
+<h3>4. No cheating</h3>
+<p>It is forbidden to modify the game, the save or the exchanges with the server to obtain trophies or advantages, to use automated programs, or to attack the server. Impossible progress is automatically rejected, and cheating profiles may be removed from the leaderboard or deleted.</p>
+
+<h3>5. Availability</h3>
+<p>The game is provided “as is”, without warranty. The publisher does their best but cannot promise it will always work without bugs or that the online features will always be available. Remember to <b>export your save</b> from time to time (Settings → Account): lost progress (cleared browser, new device…) cannot be recovered by the publisher. The game may evolve, be modified or be discontinued.</p>
+
+<h3>6. Ownership</h3>
+<p>The game, its tracks, cars, music, images and texts are original creations of the publisher. You may play freely and share screenshots and videos; you may not copy them or resell them as your own.</p>
+
+<h3>7. Responsibility</h3>
+<p>Play sensibly: take breaks. If you are sensitive to flashing lights, turn on “Reduce flashes” (Settings → Display). The publisher cannot be held responsible for misuse of the game.</p>
+
+<h3>8. Changes and governing law</h3>
+<p>These terms may be changed; the update date is shown at the bottom. They are governed by French law. This English version is provided for convenience; in case of disagreement, the French version prevails. Last updated: <b>${LEGAL_UPDATED}</b>.</p>`,
+  },
+
+  legal: {
+    title: 'LEGAL NOTICE',
+    html: () => `
+<h3>Publisher</h3>
+<p>NEON//DRIVE is a personal, non-commercial project, published by a private individual under the pseudonym <b>Darknow</b>. As French law (LCEN, article 6 III-2) allows for non-professional publishers, their identity is known to the host and is not published. Contact: ${contactEn()}.</p>
+
+<h3>Website hosting</h3>
+<p><b>GitHub Pages</b> — GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, United States — <a href="https://github.com" target="_blank" rel="noopener">github.com</a>.</p>
+
+<h3>Database (leaderboards and friends)</h3>
+<p><b>Supabase</b> — Supabase, Inc., San Francisco, United States — servers located in Frankfurt (Germany) — <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a>.</p>
+
+<h3>Credits</h3>
+<p>Game, tracks, cars, music and sound effects: original creations (the music and sounds are generated by the game itself). Fonts: <b>Orbitron</b> and <b>Rajdhani</b>, under the free SIL Open Font License, embedded in the game.</p>
+<p>Source code: <a href="${REPO}" target="_blank" rel="noopener">${REPO.replace('https://', '')}</a>.</p>`,
+  },
+};
+
+export const LEGAL = LANG === 'en' ? LEGAL_EN : LEGAL_FR;

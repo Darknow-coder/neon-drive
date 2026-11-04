@@ -2,15 +2,16 @@
 
 // Trophées gagnés selon la place d'arrivée (index 0 = 1re place).
 // Aucun trophée n'est perdu dans cette version.
+import { t } from '../i18n/index.js';
 export const TROPHY_REWARDS = [10, 7, 5, 3, 1, 0];
 
 // Ligues : seuil minimal de trophées (dans l'ordre croissant).
 export const LEAGUES = [
   { id: 'bronze', name: 'BRONZE', min: 0, color: '#d4894a' },
-  { id: 'argent', name: 'ARGENT', min: 100, color: '#c9d2ea' },
-  { id: 'or', name: 'OR', min: 250, color: '#ffd34d' },
-  { id: 'diamant', name: 'DIAMANT', min: 500, color: '#7af7ff' },
-  { id: 'elite', name: 'ÉLITE', min: 800, color: '#ff2bd6' },
+  { id: 'argent', name: t('ARGENT'), min: 100, color: '#c9d2ea' },
+  { id: 'or', name: t('OR'), min: 250, color: '#ffd34d' },
+  { id: 'diamant', name: t('DIAMANT'), min: 500, color: '#7af7ff' },
+  { id: 'elite', name: t('ÉLITE'), min: 800, color: '#ff2bd6' },
 ];
 
 // Nombre de tours par course

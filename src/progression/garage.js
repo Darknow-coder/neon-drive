@@ -1,6 +1,7 @@
 // Règles du garage : voitures possédées, déblocages, couleurs.
 // Aucune dépendance à l'affichage (testé dans tools/progressionCheck.js).
 
+import { t } from '../i18n/index.js';
 import { CARS, getCar } from '../data/cars.js';
 
 /** La condition de déblocage est-elle remplie ? */
@@ -31,10 +32,10 @@ export function syncUnlocks(save) {
 /** Texte expliquant comment obtenir une voiture verrouillée. */
 export function unlockLabel(car) {
   const u = car.unlock ?? { type: 'start' };
-  if (u.type === 'trophies') return `Débloquée à ${u.min} trophées`;
-  if (u.type === 'shop') return 'Disponible dans la boutique';
-  if (u.type === 'pass') return `Récompense du niveau ${u.tier} du PASSE DE SAISON`;
-  return 'Bientôt disponible';
+  if (u.type === 'trophies') return t('Débloquée à {n} trophées', { n: u.min });
+  if (u.type === 'shop') return t('Disponible dans la boutique');
+  if (u.type === 'pass') return t('Récompense du niveau {n} du PASSE DE SAISON', { n: u.tier });
+  return t('Bientôt disponible');
 }
 
 /** Prochaine voiture à débloquer par les trophées (ou null). */

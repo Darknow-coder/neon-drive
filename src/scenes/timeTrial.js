@@ -5,6 +5,7 @@
 //  - Les médailles gagnées sont récompensées tout de suite ; les packs
 //    s'ouvrent en sortant du mode (pour ne pas interrompre les tours).
 
+import { t, ord } from '../i18n/index.js';
 import { createRaceScene } from './raceScene.js';
 import { getTrackData } from '../data/tracks/index.js';
 import { getCar } from '../data/cars.js';
@@ -39,7 +40,7 @@ export function createTimeTrial({ save, onSave, trackId, carId, colors, level, r
     ...opts, trackId, carId, playerColors: colors, playerLevel: level,
     laps: 9999, solo: true, countdown: 3, timeTrial: true,
     onRespawn: () => {
-      if (scene.car.laps.lap >= 1 && !invalid) { invalid = true; scene.flash('TOUR INVALIDÉ (voiture replacée)', 2); }
+      if (scene.car.laps.lap >= 1 && !invalid) { invalid = true; scene.flash(t('TOUR INVALIDÉ (voiture replacée)'), 2); }
     },
   });
 
@@ -69,7 +70,7 @@ export function createTimeTrial({ save, onSave, trackId, carId, colors, level, r
   function nextTargetText() {
     const best = bestTime(save, trackId);
     const next = [...medals].reverse().find((m) => !best || best > m.time);
-    return next ? `Objectif ${next.name} : ${formatTime(next.time)}` : 'Toutes les médailles ! Bats ton record';
+    return next ? t('Objectif {m} : {t}', { m: next.name, t: formatTime(next.time) }) : t('Toutes les médailles ! Bats ton record');
   }
   let announced = false;
 
@@ -86,21 +87,21 @@ export function createTimeTrial({ save, onSave, trackId, carId, colors, level, r
       if (!fixedRival) setGhost(loadGhost(trackId), 'RECORD');
       // Envoi en ligne : on annonce la place mondiale dès que le serveur répond
       Promise.resolve(onRecord?.(time)).then((r) => {
-        if (r?.status === 'ok' && r.rank) setTimeout(() => { if (!disposed) scene.flash(`CLASSEMENT MONDIAL : ${r.rank === 1 ? '1er' : `${r.rank}e`} sur ce circuit !`, 3); }, 2800);
+        if (r?.status === 'ok' && r.rank) setTimeout(() => { if (!disposed) scene.flash(t('CLASSEMENT MONDIAL : {p} sur ce circuit !', { p: ord(r.rank) }), 3); }, 2800);
       }).catch(() => {});
-      parts.push(`${res.previous ? 'NOUVEAU RECORD' : 'PREMIER RECORD'} ${formatTime(time)}${res.previous ? ` (−${(res.previous - time).toFixed(2)} s)` : ''}`);
+      parts.push(`${res.previous ? t('NOUVEAU RECORD') : t('PREMIER RECORD')} ${formatTime(time)}${res.previous ? ` (−${(res.previous - time).toFixed(2)} s)` : ''}`);
     } else {
-      parts.push(`Tour ${formatTime(time)} (+${(time - res.previous).toFixed(2)} s)`);
+      parts.push(`${t('Tour ')}${formatTime(time)} (+${(time - res.previous).toFixed(2)} s)`);
     }
     if (res.newMedals.length) {
       const top = res.newMedals[res.newMedals.length - 1];
-      parts.push(`★ MÉDAILLE ${top.name} ! +${res.rewards.credits} crédits`);
+      parts.push(`★ ${t('MÉDAILLE {m} ! +{n} crédits', { m: top.name, n: res.rewards.credits })}`);
       opts.sfx?.unlock();
       for (const p of res.rewards.packs) pendingRewards.push(p);
     }
     if (fixedRival && !rivalBeaten && ghost && time < ghost.time) {
       rivalBeaten = true;
-      parts.unshift(`TU AS BATTU ${ghostLabel} !`);
+      parts.unshift(t('TU AS BATTU {x} !', { x: ghostLabel }));
       opts.sfx?.unlock();
     }
     if (xp) parts.push(`+${xp} XP`);

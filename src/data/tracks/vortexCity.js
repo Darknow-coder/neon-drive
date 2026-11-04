@@ -3,10 +3,11 @@
 // milieu de la piste et une zone glissante (« glitch ») dans un virage.
 // Les plaques de boost récompensent la bonne trajectoire.
 
+import { t } from '../../i18n/index.js';
 export default {
   id: 'vortex-city',
   name: 'VORTEX CITY',
-  profile: 'Technique',
+  profile: t('Technique'),
   league: 'argent',
   scale: 1.55,
   width: 220,

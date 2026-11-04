@@ -1,10 +1,11 @@
 // Passe de saison (gratuit). Saison 1, provisoirement sans date de fin.
 // Tout est réglable ici : XP gagnée, coût des niveaux, récompenses.
 
+import { t } from '../i18n/index.js';
 export const SEASON = {
   id: 's1',
   number: 1,
-  name: 'NÉON ORIGINES',
+  name: t('NÉON ORIGINES'),
   tiers: 100,
   color: '#7af7ff',
   accent: '#ff2bd6',
