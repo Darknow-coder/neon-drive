@@ -38,9 +38,11 @@ export function defaultSave() {
       keys: null,
       // Affichage et accessibilité
       display: { units: 'kmh', names: true, reduceFlash: false, reduceMotion: false },
+      stats: true,           // statistiques anonymes d'utilisation et rapports de bug
     },
     tutorialDone: false,
     tourDone: false,       // visite guidée du menu (après le tutoriel)
+    feedbackAsked: false,  // invitation à donner son avis déjà proposée
     rivalsBeaten: {},        // { idRival: nombre de victoires contre lui }
     credits: 0,              // monnaie gagnée en course (crédits NEON)
     cars: { levels: {}, fragments: {} }, // niveaux d'amélioration et fragments par voiture
@@ -138,6 +140,7 @@ function sanitize(raw) {
       if (['kmh', 'mph'].includes(dsp.units)) s.settings.display.units = dsp.units;
       for (const k of ['names', 'reduceFlash', 'reduceMotion']) if (typeof dsp[k] === 'boolean') s.settings.display[k] = dsp[k];
     }
+    if (typeof raw.settings.stats === 'boolean') s.settings.stats = raw.settings.stats;
   }
   const isColor = (c) => typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c);
   if (raw.garage && typeof raw.garage === 'object') {
@@ -296,6 +299,7 @@ function sanitize(raw) {
   s.tutorialDone = typeof raw.tutorialDone === 'boolean' ? raw.tutorialDone : s.stats.races > 0;
   // Visite du menu : les joueurs qui ont déjà fini le tutoriel ne la voient pas d'office
   s.tourDone = typeof raw.tourDone === 'boolean' ? raw.tourDone : s.tutorialDone;
+  s.feedbackAsked = raw.feedbackAsked === true;
   return s;
 }
 

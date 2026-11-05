@@ -70,7 +70,9 @@ const FLAME = '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><defs
 
 const PODIUM = line('<path d="M4 27h24"/><path d="M12 27V12h8v15M4 27v-9h8M20 27v-6h8v6"/><path d="M16 4l1.2 2.4 2.6.4-1.9 1.8.5 2.6L16 10l-2.4 1.2.5-2.6-1.9-1.8 2.6-.4z" fill="currentColor" stroke="none"/>');
 
-const SVGS = { podium: PODIUM, flame: FLAME, calendar: CALENDAR, star: STAR, career: CAREER, pass: PASS, dice: DICE, edit: EDIT, medal: MEDAL, stats: STATS, trophy: TROPHY, credit: CREDIT, lock: LOCK, shop: SHOP, missions: MISSIONS, road: ROAD, garage: GARAGE, cup: CUP, elim: ELIM, chrono: CHRONO, event: EVENT, gear: GEAR, play: PLAY, train: TRAIN };
+const CHAT = line('<path d="M5 8a3 3 0 0 1 3-3h16a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H13l-6 5v-5H8a3 3 0 0 1-3-3z"/><path d="M10.5 11.5h11M10.5 16h7"/>');
+
+const SVGS = { chat: CHAT, podium: PODIUM, flame: FLAME, calendar: CALENDAR, star: STAR, career: CAREER, pass: PASS, dice: DICE, edit: EDIT, medal: MEDAL, stats: STATS, trophy: TROPHY, credit: CREDIT, lock: LOCK, shop: SHOP, missions: MISSIONS, road: ROAD, garage: GARAGE, cup: CUP, elim: ELIM, chrono: CHRONO, event: EVENT, gear: GEAR, play: PLAY, train: TRAIN };
 
 /** Icône en ligne (HTML). `cls` : classe supplémentaire (taille…). */
 export function ico(name, cls = '') {

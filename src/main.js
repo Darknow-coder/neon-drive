@@ -65,6 +65,8 @@ import { createLegalScreen } from './ui/legal.js';
 import { rpc as onlineRpc, onlineId } from './online/api.js';
 import { syncProfile, onOnlineChange, deleteOnlineProfile } from './online/sync.js';
 import { uploadRecord, uploadPending, resetSent } from './online/chrono.js';
+import { startTelemetry, track, flush as flushStats } from './online/telemetry.js';
+import { createFeedback, sendPendingFeedback } from './ui/feedback.js';
 import { cached as onlineCached } from './online/api.js';
 import { starsHtml } from './ui/career.js';
 import { ico } from './ui/icons.js';
@@ -118,6 +120,10 @@ function persist() {
   if (!store.save(save) && store.available) saveStatus = 'failed';
 }
 setPlayerLabel(save.profile.name);
+// Statistiques anonymes (désactivables dans les réglages)
+startTelemetry(save);
+/** Une course terminée : total + mode joué. */
+function trackRace(mode) { track('race'); track(`mode_${mode}`); }
 // Voitures dont le palier est déjà atteint (ex. ancienne sauvegarde convertie)
 if (syncUnlocks(save).length) persist();
 
@@ -341,6 +347,7 @@ function cupRaceDone(rows, abandoned = false) {
       rivalBeaten, pads: me.stats.pads, trackId, carId, credits: credits.total,
     });
     recordRace(save, { position: me.position, carId, trackId, mode: 'cup' });
+    trackRace('cup');
     const sx = addSeasonXp(save, raceXp('cup', me.position), { race: true });
     info = `<span>${t('Crédits de la course :')} <b>+${credits.total}</b></span><span>${t('Passe de saison :')} <b>+${sx.gained} XP${sx.doubled ? ' (×2)' : ''}</b>${sx.after > sx.before ? ` · ${t('NIVEAU {n} !', { n: sx.after })}` : ''}</span>` +
       changes.map((c) => `<span class="${c.done ? 'ok' : ''}">${missionText(c.mission)} <b>${c.done ? '✓' : `${c.after}/${c.mission.target}`}</b></span>`).join('');
@@ -402,6 +409,7 @@ function handleRaceFinish(rows, { trophyTable } = {}) {
       rivalBeaten, pads: me.stats.pads, trackId, carId, credits: credits.total,
     });
     recordRace(save, { position: me.position, carId, trackId, mode: session.isElimination ? 'elim' : 'ranked' });
+    trackRace(session.isElimination ? 'elim' : 'ranked');
     season = addSeasonXp(save, raceXp(session.isElimination ? 'elim' : 'ranked', me.position), { race: true });
     persist();
   }
@@ -451,6 +459,7 @@ function backToMenu() {
   state = 'menu';
   updateMusic();
   if (pending.length) showRewards(save, pending, { sfx, onClose: refreshMenu });
+  else maybeAskFeedback();
 }
 
 // ---------------------------------------------------------------- DÉFI DU JOUR
@@ -495,6 +504,7 @@ function dailyDone(ch, rows) {
   let season;
   if (ch.format !== 'time') {
     recordRace(save, { position: me.position, carId, trackId: ch.base, mode: 'daily' });
+    trackRace('daily');
     season = addSeasonXp(save, raceXp('daily', me.position, rows.length) + (res.streakReward ? DAILY_DONE_XP : 0), { race: true });
   } else season = addSeasonXp(save, res.stars * 25 + (res.streakReward ? DAILY_DONE_XP : 0));
   persist();
@@ -577,6 +587,7 @@ function careerDone(stage, rows) {
   let season = null;
   if (stage.type !== 'time') {
     recordRace(save, { position: me.position, carId, trackId, mode: 'career' });
+    trackRace('career');
     season = addSeasonXp(save, raceXp('career', me.position, rows.length), { race: true });
   } else season = addSeasonXp(save, res.stars * 20 + 20);
   persist();
@@ -637,6 +648,7 @@ function eventDone(rows) {
   const me = rows.find((r) => r.isPlayer);
   const res = applyEventResult(save, me.position);
   recordRace(save, { position: me.position, carId, trackId, mode: 'event' });
+  trackRace('event');
   const season = addSeasonXp(save, raceXp('event', me.position, rows.length), { race: true });
   persist();
   const lines = [{ label: t('{p} place sur {n}', { p: ord(me.position, true), n: rows.length }), amount: res.credits }];
@@ -669,7 +681,7 @@ function eventDone(rows) {
 // ---------------------------------------------------------------- VISITE DU MENU
 const menuTour = createMenuTour({
   sfx,
-  onDone: () => { save.tourDone = true; persist(); },
+  onDone: ({ skipped } = {}) => { save.tourDone = true; persist(); track(skipped ? 'tour_skip' : 'tour_done'); },
   onRace: () => $('btn-start').click(),
 });
 /** Lance la visite quand le menu est vraiment libre (aucune fenêtre ouverte). */
@@ -682,6 +694,7 @@ function maybeStartTour(force = false, tries = 0) {
 
 /** Tutoriel : leçon de pilotage en solo. */
 function startTutorial() {
+  track('tutorial_start');
   session?.dispose();
   training = true;
   trackId = 'neon-boulevard';
@@ -694,6 +707,7 @@ function startTutorial() {
     scene, input, touch, autoGas: save.settings.controls.autoGas,
     onDone: () => {
       save.tutorialDone = true;
+      track('tutorial_done');
       persist();
       setTimeout(() => { backToMenu(); maybeStartTour(); }, 300);
     },
@@ -710,6 +724,7 @@ function startTutorial() {
 
 /** Contre-la-montre sur un circuit. */
 function startTimeTrial(id, rival = null) {
+  track('mode_tt');
   session?.dispose();
   training = true;
   trackId = id;
@@ -782,6 +797,7 @@ function startRankedRace() {
 }
 
 function startTraining() {
+  track('mode_training');
   training = true;
   trackId = trainingTrackId;
   startRace();
@@ -963,6 +979,23 @@ const settingsScreen = createSettingsScreen({
   onTour: () => maybeStartTour(true),
 });
 $('btn-settings').addEventListener('click', () => settingsScreen.open());
+// ---------------- Avis des joueurs ----------------
+const feedback = createFeedback({ sfx });
+$('btn-feedback').addEventListener('click', () => { sfx.click?.(); feedback.open('menu'); });
+$('btn-feedback-set').addEventListener('click', () => { $('settings').classList.add('hidden'); feedback.open('reglages'); });
+/** Après 5 courses, une seule fois : petite invitation (non bloquante) à donner son avis. */
+function maybeAskFeedback() {
+  if (save.feedbackAsked || save.career.races < 5 || !save.tourDone) return;
+  setTimeout(() => {
+    if (state !== 'menu' || document.querySelector('.overlay:not(.hidden)') || menuTour.active) return;
+    save.feedbackAsked = true;
+    persist();
+    $('fb-prompt').classList.remove('hidden');
+    track('feedback_prompt');
+  }, 900);
+}
+$('fb-prompt-yes').addEventListener('click', () => { $('fb-prompt').classList.add('hidden'); feedback.open('invitation'); });
+$('fb-prompt-no').addEventListener('click', () => { $('fb-prompt').classList.add('hidden'); });
 // ---------------- Confidentialité ----------------
 const legalScreen = createLegalScreen();
 $('btn-legal').addEventListener('click', () => legalScreen.open('privacy'));
@@ -973,16 +1006,17 @@ $('btn-online-data').addEventListener('click', async () => {
   if (!onlineId()) { msg.textContent = t('Aucun profil en ligne sur cet appareil : rien n\'est stocké sur le serveur.'); return; }
   msg.textContent = t('Récupération…');
   try {
-    const [profileData, friends, chrono] = await Promise.all([onlineRpc('player_card', { p_id: onlineId() }), onlineRpc('my_friends'), onlineRpc('tt_summary').catch(() => [])]);
+    const [profileData, friends, chrono, extra] = await Promise.all([onlineRpc('player_card', { p_id: onlineId() }), onlineRpc('my_friends'), onlineRpc('tt_summary').catch(() => []), onlineRpc('my_extra_data').catch(() => null)]);
     const records = chrono.filter((r) => r.my_time);
     const data = { exporté_le: new Date().toISOString(), identifiant_anonyme: onlineId(), profil: profileData,
       amis_et_demandes: friends.map((f) => ({ pseudo: `${f.name} #${String(f.tag).padStart(4, '0')}`, relation: f.relation })),
-      records_du_chrono: records.map((r) => ({ circuit: r.track_id, temps: r.my_time, place: r.my_rank, note: t('avec la trajectoire du tour (fantôme), visible par les autres joueurs') })) };
+      records_du_chrono: records.map((r) => ({ circuit: r.track_id, temps: r.my_time, place: r.my_rank, note: t('avec la trajectoire du tour (fantôme), visible par les autres joueurs') })),
+      avis_statistiques_et_bugs: extra };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = 'neon-drive-mes-donnees.json'; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-    msg.innerHTML = t('Fichier téléchargé. Le serveur connaît : ton pseudo <b>{name}</b>, ton emblème, ton titre, ta voiture, {tro} trophées, {races} courses, {wins} victoires, {fr} ami(s) ou demande(s) et {rec} record(s) du chrono (avec leur fantôme). Rien d\'autre.', { name: `${profileData.name} #${String(profileData.tag).padStart(4, '0')}`, tro: profileData.trophies, races: profileData.races, wins: profileData.wins, fr: friends.length, rec: records.length });
+    msg.innerHTML = t('Fichier téléchargé. Le serveur connaît : ton pseudo <b>{name}</b>, ton emblème, ton titre, ta voiture, {tro} trophées, {races} courses, {wins} victoires, {fr} ami(s) ou demande(s) et {rec} record(s) du chrono (avec leur fantôme), {fb} avis, tes statistiques anonymes d\'utilisation et {bug} rapport(s) d\'erreur. Rien d\'autre.', { name: `${profileData.name} #${String(profileData.tag).padStart(4, '0')}`, tro: profileData.trophies, races: profileData.races, wins: profileData.wins, fr: friends.length, rec: records.length, fb: extra?.avis?.length ?? 0, bug: extra?.rapports_de_bug ?? 0 });
   } catch { msg.textContent = t('Pas de connexion : réessaie plus tard.'); }
 });
 $('btn-pause-settings').addEventListener('click', () => settingsScreen.open({ inRace: true }));
@@ -1059,6 +1093,7 @@ runBoot({
     if (hasLink && save.profile.name) setTimeout(() => rankingScreen.open('friends', friendCode), 2200);
     // Connexion au classement en arrière-plan (sans bloquer)
     if (!skipIntro) setTimeout(() => syncProfile(save, { now: true }).then((me) => me && uploadPending(save)), 1200);
+    setTimeout(() => sendPendingFeedback(), 6000);
     if (!skipIntro) setTimeout(() => sfx.unlock(), 60);
     // Visite du menu interrompue (jeu fermé pendant la visite) : on la reprend
     if (save.tutorialDone && !save.tourDone && !skipIntro) maybeStartTour();
@@ -1070,7 +1105,7 @@ runBoot({
 });
 
 // Accès pour les tests automatiques
-window.__ND = { missing: () => missingKeys(), audio: () => audio, music: () => music, session: () => session, loop: () => loop, perf, state: () => state, save: () => save };
+window.__ND = { missing: () => missingKeys(), flushStats: () => flushStats(), track: (k) => track(k), audio: () => audio, music: () => music, session: () => session, loop: () => loop, perf, state: () => state, save: () => save };
 
 // Installation comme application + jeu hors ligne (version publiée uniquement)
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {

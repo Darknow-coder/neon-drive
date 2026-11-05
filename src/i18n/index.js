@@ -49,7 +49,7 @@ const norm = (s) => s.replace(/\s+/g, ' ').trim();
 const ATTRS = ['title', 'aria-label', 'placeholder', 'alt'];
 export function translateDom(root = document.body) {
   document.documentElement.lang = LANG;
-  if (LANG === 'fr') return;
+  if (LANG === 'fr') { document.title = 'NEON//DRIVE — Course néon arcade dans ton navigateur'; return; }
   const tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const nodes = [];
   while (tw.nextNode()) nodes.push(tw.currentNode);

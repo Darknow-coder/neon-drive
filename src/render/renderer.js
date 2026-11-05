@@ -1,5 +1,6 @@
 // Assemble l'image de chaque frame : sol, circuit, voitures, effets, filtres.
 
+import { t } from '../i18n/index.js';
 import { prefs } from '../core/prefs.js';
 import { createWeatherFx } from './weatherFx.js';
 import { makeCarSprite, makeGlowSprite } from './carSprite.js';
@@ -143,7 +144,7 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
         ctx.strokeStyle = `rgba(255,43,90,${pulse})`;
         ctx.lineWidth = fs * 0.25;
         ctx.beginPath(); ctx.arc(x, y, 34, 0, Math.PI * 2); ctx.stroke();
-        const label = car.isPlayer ? 'DANGER !' : `DANGER · ${car.name}`;
+        const label = car.isPlayer ? t('DANGER !') : `${t('DANGER')} · ${car.name}`;
         const w = ctx.measureText(label).width + fs * 0.8;
         ctx.fillStyle = `rgba(255,43,90,${0.75 + 0.25 * pulse})`;
         ctx.fillRect(x - w / 2, y - 30 - fs * 1.15, w, fs * 1.25);

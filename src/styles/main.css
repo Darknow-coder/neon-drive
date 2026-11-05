@@ -2537,3 +2537,34 @@ body.reduce-motion .badge, body.reduce-motion .boot * { animation: none !importa
   .tour-btns .tour-next { padding: 6px 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .tour-hole, .tour-hole.pulse, .tour-bubble.in { animation: none; } }
+
+/* ---------- Avis des joueurs ---------- */
+.fb-chip .ico { width: 20px; height: 20px; }
+.fb-card { width: min(620px, 100%); gap: 10px; }
+.fb-sub { font-size: 14px; color: var(--muted); text-align: center; }
+.fb-kinds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.fb-kinds button { font-family: var(--font-display); font-size: 11px; letter-spacing: 1.5px; padding: 10px 4px; border-radius: 11px; cursor: pointer; color: var(--muted); background: rgba(10, 6, 30, 0.7); border: 1px solid rgba(0, 240, 255, 0.25); }
+.fb-kinds button.on { color: #fff; border-color: var(--magenta); background: rgba(255, 43, 214, 0.18); box-shadow: 0 0 10px rgba(255, 43, 214, 0.35); }
+.fb-rate { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; color: var(--muted); }
+.fb-stars { display: flex; gap: 4px; }
+.fb-stars button { width: 34px; height: 34px; padding: 4px; border: none; background: none; cursor: pointer; color: rgba(255, 255, 255, 0.2); }
+.fb-stars button.on { color: #ffd34d; filter: drop-shadow(0 0 5px #ffb000); }
+.fb-stars .ico { width: 26px; height: 26px; }
+#fb-text { width: 100%; box-sizing: border-box; resize: vertical; min-height: 84px; padding: 10px 12px; border-radius: 12px; font: inherit; font-size: 15px; color: var(--text); background: rgba(5, 3, 16, 0.8); border: 1px solid rgba(0, 240, 255, 0.3); }
+#fb-text:focus { outline: none; border-color: var(--cyan); }
+.fb-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.fb-count { font-size: 12px; color: var(--muted); }
+.fb-foot .menu-btn { padding: 10px 26px; }
+.fb-msg { min-height: 18px; font-size: 13px; text-align: center; color: var(--muted); }
+.fb-msg.ok { color: #3dff9e; } .fb-msg.err { color: #ff9fae; }
+.fb-prompt { position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%); z-index: 60; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 12px;
+  width: min(560px, calc(100% - 32px)); padding: 10px 14px; border-radius: 14px; background: linear-gradient(160deg, #1a0d45, #0b0624); border: 1px solid var(--magenta); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); animation: tourIn 0.35s ease-out; }
+.fb-prompt b { font-family: var(--font-display); letter-spacing: 1.5px; color: #fff; font-size: 13px; }
+.fb-prompt span { font-size: 13px; color: var(--muted); }
+@media (max-height: 460px) {
+  .fb-card { padding: 8px 14px; gap: 6px; }
+  .fb-kinds button { padding: 7px 2px; font-size: 10px; }
+  #fb-text { min-height: 60px; font-size: 14px; }
+  .fb-stars button { width: 28px; height: 28px; } .fb-stars .ico { width: 22px; height: 22px; }
+  .fb-prompt { bottom: 64px; padding: 7px 10px; }
+}

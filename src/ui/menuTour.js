@@ -92,13 +92,13 @@ export function createMenuTour({ sfx, onDone, onRace }) {
     place();
   }
 
-  function end(race = false) {
+  function end(race = false, skipped = false) {
     if (!active) return;
     active = false;
     root.classList.add('hidden');
     removeEventListener('resize', place);
     removeEventListener('keydown', onKey, true);
-    onDone?.();
+    onDone?.({ skipped });
     if (race) onRace?.();
   }
   function next() {
@@ -108,12 +108,12 @@ export function createMenuTour({ sfx, onDone, onRace }) {
   }
   function onKey(e) {
     if (!active) return;
-    if (e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); end(); }
+    if (e.code === 'Escape') { e.preventDefault(); e.stopPropagation(); end(false, true); }
     else if (e.code === 'Enter' || e.code === 'Space' || e.code === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); next(); }
   }
 
   $('tour-next').addEventListener('click', (e) => { e.stopPropagation(); next(); });
-  $('tour-skip').addEventListener('click', (e) => { e.stopPropagation(); sfx?.click?.(); end(); });
+  $('tour-skip').addEventListener('click', (e) => { e.stopPropagation(); sfx?.click?.(); end(false, true); });
   // Le voile avale tous les appuis… sauf sur le bouton COURSE à la dernière étape
   root.addEventListener('click', (e) => {
     if (e.target.closest('.tour-bubble')) return;

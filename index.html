@@ -6,7 +6,22 @@
   <meta name="theme-color" content="#07041a" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <title>NEON//DRIVE</title>
+  <title>NEON//DRIVE — Neon arcade racing in your browser</title>
+  <meta name="description" content="Free neon arcade racing game in your browser, on phone and PC. Drift, boost, climb the leagues, race friends' ghosts. No download, no ads." />
+  <link rel="canonical" href="https://darknow-coder.github.io/neon-drive/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="NEON//DRIVE" />
+  <meta property="og:title" content="NEON//DRIVE — Neon arcade racing" />
+  <meta property="og:description" content="Drift, boost and climb the leagues. Career, time trial ghosts and a 20-car GIGA RUSH. Free in your browser, phone & PC." />
+  <meta property="og:url" content="https://darknow-coder.github.io/neon-drive/" />
+  <meta property="og:image" content="https://darknow-coder.github.io/neon-drive/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Six neon cars racing through a corner, NEON//DRIVE logo" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="NEON//DRIVE — Neon arcade racing" />
+  <meta name="twitter:description" content="Free neon arcade racing in your browser. Drift, boost, climb the leagues." />
+  <meta name="twitter:image" content="https://darknow-coder.github.io/neon-drive/og-image.jpg" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icon-192.png" />
@@ -189,6 +204,8 @@
           <button class="menu-btn" id="btn-legal">CONFIDENTIALITÉ ET CONDITIONS</button>
         </div>
         <div class="small muted" id="online-data-msg"></div>
+        <label class="set-row set-check"><span>Statistiques anonymes et rapports de bug <small class="muted">(nombre de parties, modes joués, erreurs : aide à améliorer le jeu)</small></span><input type="checkbox" id="set-stats" /></label>
+        <div class="row-btns"><button class="menu-btn" id="btn-feedback-set">DONNER MON AVIS</button></div>
         <div class="row-btns"><button class="menu-btn" id="btn-online-delete">SUPPRIMER MON PROFIL EN LIGNE</button></div>
         <div class="small muted" id="online-delete-msg">Efface ton profil du classement et tes amis. Ta partie sur cet appareil n'est pas touchée.</div>
         <div class="set-sub danger">ZONE DANGEREUSE</div>
@@ -270,6 +287,7 @@
         <button class="chip profile-chip badge-host" id="btn-profile" aria-label="Mon profil"><span id="menu-avatar"></span><span class="pc-txt"><b id="menu-name">PILOTE</b><small id="menu-title">Débutant</small></span><span class="badge hidden" id="profile-badge"></span></button>
         <span class="chip trophy-chip"><span data-ico="trophy"></span><b id="menu-trophies">0</b><span class="sr" id="menu-trophies-word">trophées</span></span>
         <span class="chip credit-chip" id="menu-credits"></span>
+        <button class="chip icon-chip fb-chip" id="btn-feedback" aria-label="Donner mon avis" title="Donner mon avis"><span data-ico="chat"></span></button>
         <button class="chip icon-chip" id="btn-settings" aria-label="Réglages"><span data-ico="gear"></span></button>
       </div>
     </header>
@@ -388,6 +406,31 @@
   <div id="cup" class="overlay cup-overlay hidden">
     <canvas id="cup-fx"></canvas>
     <div class="overlay-card cup-card" id="cup-card"></div>
+  </div>
+
+  <!-- Avis des joueurs -->
+  <div id="feedback" class="overlay hidden">
+    <div class="overlay-card fb-card">
+      <div class="garage-head">
+        <button class="menu-btn small-btn" id="fb-close">‹ RETOUR</button>
+        <div class="overlay-title">TON AVIS</div>
+        <div></div>
+      </div>
+      <div class="fb-sub">Chaque message est lu ! Dis ce qui te plaît, ce qui coince, ou signale un bug.</div>
+      <div class="fb-kinds" id="fb-kinds">
+        <button data-kind="like">J'ADORE</button><button data-kind="dislike">BOF</button><button data-kind="idea">UNE IDÉE</button><button data-kind="bug">UN BUG</button>
+      </div>
+      <div class="fb-rate"><span>Ta note pour le jeu :</span><div class="fb-stars" id="fb-stars"></div></div>
+      <textarea id="fb-text" maxlength="1000" rows="4" placeholder="Écris ton message… (n'y mets pas d'informations personnelles)"></textarea>
+      <div class="fb-foot"><span class="fb-count" id="fb-count">0 / 1000</span><button class="menu-btn primary" id="fb-send">ENVOYER</button></div>
+      <div class="fb-msg" id="fb-msg"></div>
+    </div>
+  </div>
+
+  <!-- Invitation à donner son avis (une seule fois) -->
+  <div id="fb-prompt" class="fb-prompt hidden">
+    <b>Tu as fait 5 courses !</b><span>Ton avis aide à améliorer NEON//DRIVE.</span>
+    <button class="menu-btn primary small-btn" id="fb-prompt-yes">DONNER MON AVIS</button><button class="menu-btn small-btn" id="fb-prompt-no">PLUS TARD</button>
   </div>
 
   <!-- Atelier : personnalisation poussée -->

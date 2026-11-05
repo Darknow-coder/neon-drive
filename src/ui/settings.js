@@ -1,3 +1,4 @@
+import { flush as flushStats } from '../online/telemetry.js';
 import { LANG, setLang, t } from '../i18n/index.js';
 // Écran des réglages (5 onglets) : son, commandes, graphismes, affichage, compte.
 
@@ -48,6 +49,7 @@ export function createSettingsScreen({ save, onChange, onImport, onTutorial, onT
     ['set-shake', () => settings.graphics.shake, (v) => { settings.graphics.shake = v; }],
     ['set-showfps', () => settings.graphics.showFps, (v) => { settings.graphics.showFps = v; }],
     ['set-names', () => settings.display.names, (v) => { settings.display.names = v; }],
+    ['set-stats', () => settings.stats !== false, (v) => { settings.stats = v; if (!v) flushStats(); }],
     ['set-flash', () => settings.display.reduceFlash, (v) => { settings.display.reduceFlash = v; }],
     ['set-motion', () => settings.display.reduceMotion, (v) => { settings.display.reduceMotion = v; }],
   ];

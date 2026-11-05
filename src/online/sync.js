@@ -25,6 +25,8 @@ const offlineTests = typeof navigator !== 'undefined' && navigator.webdriver && 
 let paused = false; // après suppression du profil : plus d'envoi jusqu'au prochain lancement
 /** Peut-on parler au serveur ? (pseudo choisi, pas en test automatique, profil non supprimé) */
 export const canSync = (save) => !!save.profile.name && !offlineTests && !paused;
+/** Peut-on envoyer des données anonymes (avis, statistiques) ? Pas besoin de pseudo. */
+export const onlineAllowed = () => !offlineTests && !paused;
 export function syncProfile(save, { now = false } = {}) {
   if (!canSync(save)) return Promise.resolve(null); // pas encore de pseudo / tests
   clearTimeout(pending?.timer);

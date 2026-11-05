@@ -6,7 +6,7 @@
 export const LEGAL_CONTACT = 'neon.drive.support@gmail.com';
 import { LANG } from '../i18n/index.js';
 
-export const LEGAL_UPDATED = LANG === 'en' ? 'November 4, 2026' : '4 novembre 2026';
+export const LEGAL_UPDATED = LANG === 'en' ? 'November 5, 2026' : '5 novembre 2026';
 const REPO = 'https://github.com/Darknow-coder/neon-drive';
 
 const contact = () => (LEGAL_CONTACT
@@ -17,7 +17,7 @@ const LEGAL_FR = {
   privacy: {
     title: 'POLITIQUE DE CONFIDENTIALITÉ',
     html: () => `
-<p class="lg-lead">En bref : NEON//DRIVE ne demande <b>ni ton nom, ni ton e-mail, ni ton numéro</b>. Il n'y a <b>aucune publicité</b>, <b>aucun pistage</b> et <b>aucune revente</b> de données. Seul ce qui est nécessaire au classement et aux amis est envoyé en ligne, et tu peux tout effacer en un bouton.</p>
+<p class="lg-lead">En bref : NEON//DRIVE ne demande <b>ni ton nom, ni ton e-mail, ni ton numéro</b>. Il n'y a <b>aucune publicité</b>, <b>aucun pistage publicitaire</b> et <b>aucune revente</b> de données. Seul ce qui est nécessaire au classement, aux amis et à l'amélioration du jeu est envoyé en ligne, et tu peux tout effacer en un bouton.</p>
 
 <h3>1. Qui est responsable ?</h3>
 <p>Le jeu NEON//DRIVE est développé par un particulier (« l'éditeur », pseudonyme <b>Darknow</b>). Pour toute question ou demande, contacte-le ${contact()}.</p>
@@ -34,11 +34,18 @@ const LEGAL_FR = {
 <li>tes <b>records du contre-la-montre</b> : ton meilleur temps sur chaque circuit, la voiture et ses couleurs, et la <b>trajectoire de ce tour</b> (le « fantôme » : positions de la voiture sur la piste) ;</li>
 <li>la date de création du profil et de la dernière mise à jour.</li>
 </ul>
-<p><b>Ce qui est public</b> : pseudo, numéro, emblème, titre, voiture, trophées, courses, victoires et la date de ta dernière partie sont visibles par les autres joueurs dans le classement. Tes records du chrono et leurs fantômes sont aussi visibles : les autres joueurs peuvent courir contre ton fantôme. Ton code ami n'est visible que par tes amis. <b>Ne mets pas ton vrai nom dans ton pseudo.</b></p>
+<p>Pour améliorer le jeu, il envoie aussi :</p>
+<ul>
+<li>des <b>statistiques anonymes d'utilisation</b> : combien de parties et de courses par jour, les modes joués, si le tutoriel est terminé, le type d'appareil (téléphone ou ordinateur, taille d'écran) et la langue ;</li>
+<li>les <b>erreurs techniques</b> du jeu (message d'erreur et version), pour corriger les bugs ;</li>
+<li>tes <b>avis</b>, seulement si tu en envoies (type, note, message, langue, type d'appareil, version du jeu).</li>
+</ul>
+<p>Tu peux désactiver les statistiques et les rapports d'erreur à tout moment (<b>Réglages → Compte</b>).</p>
+<p><b>Ce qui est public</b> : pseudo, numéro, emblème, titre, voiture, trophées, courses, victoires et la date de ta dernière partie sont visibles par les autres joueurs dans le classement. Tes records du chrono et leurs fantômes sont aussi visibles : les autres joueurs peuvent courir contre ton fantôme. Ton code ami n'est visible que par tes amis. Les statistiques, erreurs et avis ne sont jamais publics : seul l'éditeur les voit. <b>Ne mets pas ton vrai nom dans ton pseudo, ni d'informations personnelles dans tes avis.</b></p>
 <p>Comme pour tout site internet, l'<b>adresse IP</b> de ton appareil est vue techniquement par les serveurs lors des connexions (elle peut apparaître dans les journaux de sécurité de l'hébergeur), mais elle n'est pas utilisée par le jeu.</p>
 
 <h3>4. Pourquoi ?</h3>
-<p>Ces données servent uniquement à faire fonctionner les classements (trophées et chrono), les fantômes, les amis et l'anti-triche (vérifier qu'une progression est possible). La base légale est l'<b>exécution du service</b> que tu demandes en utilisant ces fonctions, et l'<b>intérêt légitime</b> à garder un classement honnête.</p>
+<p>Ces données servent uniquement à faire fonctionner les classements (trophées et chrono), les fantômes, les amis et l'anti-triche (vérifier qu'une progression est possible), et à <b>améliorer le jeu</b> (comprendre ce qui plaît, ce qui bloque, corriger les bugs). La base légale est l'<b>exécution du service</b> que tu demandes en utilisant ces fonctions, et l'<b>intérêt légitime</b> à garder un classement honnête et à améliorer le jeu (tu peux t'y opposer en désactivant les statistiques).</p>
 
 <h3>5. Qui y a accès ?</h3>
 <ul>
@@ -49,14 +56,15 @@ const LEGAL_FR = {
 <p>Les données des classements et des amis restent donc <b>dans l'Union européenne</b>. Ces deux entreprises étant américaines, elles s'engagent à protéger les données selon les règles européennes (clauses contractuelles types). Les polices et images du jeu sont hébergées avec le jeu : aucune donnée n'est envoyée à Google ou à un réseau publicitaire.</p>
 
 <h3>6. Combien de temps ?</h3>
-<p>Ton profil en ligne est conservé tant que tu joues. Tu peux le supprimer à tout moment. Les profils inactifs depuis plus de <b>2 ans</b> peuvent être supprimés. Les données sur ton appareil restent jusqu'à ce que tu les effaces (Réglages → Compte, ou en vidant les données du navigateur).</p>
+<p>Ton profil en ligne est conservé tant que tu joues. Tu peux le supprimer à tout moment. Les profils inactifs depuis plus de <b>2 ans</b> peuvent être supprimés, comme les statistiques et rapports d'erreur de plus de 2 ans. Les données sur ton appareil restent jusqu'à ce que tu les effaces (Réglages → Compte, ou en vidant les données du navigateur).</p>
 
 <h3>7. Tes droits</h3>
 <p>Tu peux à tout moment, directement dans le jeu (<b>Réglages → Compte</b>) :</p>
 <ul>
-<li><b>voir et télécharger</b> tes données en ligne (« MES DONNÉES EN LIGNE ») ;</li>
+<li><b>voir et télécharger</b> tes données en ligne (« MES DONNÉES EN LIGNE »), avis et statistiques compris ;</li>
+<li><b>désactiver</b> les statistiques anonymes et les rapports d'erreur ;</li>
 <li><b>corriger</b> ton pseudo et ton emblème ;</li>
-<li><b>supprimer</b> ton profil en ligne, tes amitiés et tes records du chrono (« SUPPRIMER MON PROFIL EN LIGNE ») ;</li>
+<li><b>supprimer</b> ton profil en ligne, tes amitiés, tes records du chrono, tes avis et tes statistiques (« SUPPRIMER MON PROFIL EN LIGNE ») ;</li>
 <li><b>effacer</b> ta progression sur l'appareil.</li>
 </ul>
 <p>Tu peux aussi contacter l'éditeur (voir point 1), et si tu estimes que tes droits ne sont pas respectés, saisir la <b>CNIL</b> (<a href="https://www.cnil.fr" target="_blank" rel="noopener">cnil.fr</a>).</p>
@@ -125,7 +133,7 @@ const LEGAL_EN = {
   privacy: {
     title: 'PRIVACY POLICY',
     html: () => `
-<p class="lg-lead">In short: NEON//DRIVE asks for <b>neither your name, nor your email, nor your phone number</b>. There are <b>no ads</b>, <b>no tracking</b> and <b>no selling</b> of data. Only what is needed for the leaderboards and friends is sent online, and you can erase everything with one button.</p>
+<p class="lg-lead">In short: NEON//DRIVE asks for <b>neither your name, nor your email, nor your phone number</b>. There are <b>no ads</b>, <b>no ad tracking</b> and <b>no selling</b> of data. Only what is needed for the leaderboards, friends and improving the game is sent online, and you can erase everything with one button.</p>
 
 <h3>1. Who is responsible?</h3>
 <p>NEON//DRIVE is developed by a private individual (“the publisher”, pseudonym <b>Darknow</b>). For any question or request, contact them ${contactEn()}.</p>
@@ -142,11 +150,18 @@ const LEGAL_EN = {
 <li>your <b>time trial records</b>: your best time on each track, the car and its colors, and the <b>trajectory of that lap</b> (the “ghost”: the car's positions on the track);</li>
 <li>the date the profile was created and last updated.</li>
 </ul>
-<p><b>What is public</b>: nickname, number, emblem, title, car, trophies, races, wins and the date of your last game are visible to other players on the leaderboard. Your time trial records and their ghosts are also visible: other players can race against your ghost. Your friend code is only visible to your friends. <b>Do not put your real name in your nickname.</b></p>
+<p>To improve the game, it also sends:</p>
+<ul>
+<li><b>anonymous usage statistics</b>: how many games and races per day, the modes played, whether the tutorial was completed, the device type (phone or computer, screen size) and the language;</li>
+<li>the game's <b>technical errors</b> (error message and version), to fix bugs;</li>
+<li>your <b>feedback</b>, only if you send some (type, rating, message, language, device type, game version).</li>
+</ul>
+<p>You can turn off statistics and error reports at any time (<b>Settings → Account</b>).</p>
+<p><b>What is public</b>: nickname, number, emblem, title, car, trophies, races, wins and the date of your last game are visible to other players on the leaderboard. Your time trial records and their ghosts are also visible: other players can race against your ghost. Your friend code is only visible to your friends. Statistics, errors and feedback are never public: only the publisher sees them. <b>Do not put your real name in your nickname, or personal information in your feedback.</b></p>
 <p>As with any website, your device's <b>IP address</b> is technically seen by the servers during connections (it may appear in the host's security logs), but the game does not use it.</p>
 
 <h3>4. Why?</h3>
-<p>This data is only used to run the leaderboards (trophies and time trial), the ghosts, the friends feature and anti-cheat (checking that progress is possible). The legal basis is the <b>performance of the service</b> you request by using these features, and the <b>legitimate interest</b> in keeping the leaderboard fair.</p>
+<p>This data is only used to run the leaderboards (trophies and time trial), the ghosts, the friends feature and anti-cheat (checking that progress is possible), and to <b>improve the game</b> (understanding what players enjoy, where they get stuck, fixing bugs). The legal basis is the <b>performance of the service</b> you request by using these features, and the <b>legitimate interest</b> in keeping the leaderboard fair and improving the game (you can object by turning off statistics).</p>
 
 <h3>5. Who has access?</h3>
 <ul>
@@ -157,14 +172,15 @@ const LEGAL_EN = {
 <p>The leaderboard and friends data therefore stays <b>in the European Union</b>. As both companies are American, they commit to protecting data according to European rules (standard contractual clauses). The game's fonts and images are hosted with the game: no data is sent to Google or to any advertising network.</p>
 
 <h3>6. How long?</h3>
-<p>Your online profile is kept as long as you play. You can delete it at any time. Profiles inactive for more than <b>2 years</b> may be deleted. The data on your device stays until you erase it (Settings → Account, or by clearing your browser data).</p>
+<p>Your online profile is kept as long as you play. You can delete it at any time. Profiles inactive for more than <b>2 years</b> may be deleted, as may statistics and error reports older than 2 years. The data on your device stays until you erase it (Settings → Account, or by clearing your browser data).</p>
 
 <h3>7. Your rights</h3>
 <p>At any time, directly in the game (<b>Settings → Account</b>), you can:</p>
 <ul>
-<li><b>view and download</b> your online data (“MY ONLINE DATA”);</li>
+<li><b>view and download</b> your online data (“MY ONLINE DATA”), including feedback and statistics;</li>
+<li><b>turn off</b> anonymous statistics and error reports;</li>
 <li><b>correct</b> your nickname and emblem;</li>
-<li><b>delete</b> your online profile, your friendships and your time trial records (“DELETE MY ONLINE PROFILE”);</li>
+<li><b>delete</b> your online profile, your friendships, your time trial records, your feedback and your statistics (“DELETE MY ONLINE PROFILE”);</li>
 <li><b>erase</b> your progress on the device.</li>
 </ul>
 <p>You can also contact the publisher (see point 1), and if you believe your rights are not respected, file a complaint with the French data protection authority, the <b>CNIL</b> (<a href="https://www.cnil.fr" target="_blank" rel="noopener">cnil.fr</a>), or your own country's authority.</p>
