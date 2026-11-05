@@ -91,6 +91,7 @@ const $ = (id) => document.getElementById(id);
 const show = (id, v = true) => $(id).classList.toggle('hidden', !v);
 
 const touch = isTouchDevice();
+document.body.classList.toggle('is-touch', touch);
 // Sur téléphone/tablette : résolution et mémoire allégées (fluidité avant tout).
 // Forçable pour les tests avec ?quality=low ou ?quality=high dans l'adresse.
 const q = new URLSearchParams(location.search).get('quality');

@@ -1116,4 +1116,5 @@ export const EN = {
   "VIRAGE ! {k} + {d} MAINTENANT": "CORNER! {k} + {d} NOW",
   "Aide au drift": "Drift assist",
   "(la courbe du drift suit le virage)": "(the drift's curve follows the corner)",
+  "Mini-carte pendant les courses": "Minimap during races",
 };

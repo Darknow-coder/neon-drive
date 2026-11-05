@@ -16,6 +16,7 @@ import { P_SPARK } from '../render/particles.js';
 import { weatherOf, lastLightning } from '../data/weather.js';
 import { formatTime } from '../core/math.js';
 import { computeResults, randomGrid } from '../race/results.js';
+import { createMinimap } from '../ui/minimap.js';
 
 const PLAYER_COLORS = { body: '#00f0ff', accent: '#ff2bd6', glow: '#00f0ff' };
 
@@ -84,9 +85,15 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   const weatherInfo = track.weather && track.weather !== 'clear' ? weatherOf(track.weather) : null;
   let lastBolt = -1;
 
+  // Mini-carte (désactivable : Réglages → Affichage)
+  const mmCanvas = typeof document !== 'undefined' ? document.getElementById('hud-minimap') : null;
+  const minimap = mmCanvas && settings.display?.minimap !== false ? createMinimap(mmCanvas, track, { theme: getTrackData(trackId).theme }) : null;
+  mmCanvas?.classList.toggle('hidden', !minimap);
+
   function resize() {
     renderer.resize();
     camera.baseZoom = computeBaseZoom(renderer.state.cssW, renderer.state.cssH);
+    minimap?.invalidate();
   }
   resize();
   snapCamera(camera, player);
@@ -282,6 +289,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
 
   function render(alpha) {
     renderer.render(scene, alpha);
+    minimap?.draw(world.cars, player, scene.ghost);
     hud.update({
       car: player,
       lap: Math.min(player.laps.lap, laps),

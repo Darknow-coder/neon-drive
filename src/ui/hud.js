@@ -93,6 +93,9 @@ export function createHud() {
       }
       set('pos', el.pos, String(position));
       set('total', el.total, `/${total}`);
+      // Grande grille (GIGA RUSH : « 19/20 ») : les blocs du haut s'écartent
+      const wide = total >= 10;
+      if (cache.wide !== wide) { cache.wide = wide; el.root.classList.toggle('wide', wide); }
       set('msg', el.msg, lastMsg || '');
       const rivalTxt = rival ? `★ ${rival.name} : ${ord(rival.position)}${rival.position > position ? ` — ${t('derrière toi')}` : ''}` : '';
       if (cache.rivalTxt !== rivalTxt) {

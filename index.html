@@ -67,6 +67,7 @@
     <div class="hud-weather hidden" id="hud-weather"></div>
     <div class="hud-wind hidden" id="hud-wind"><i id="hud-wind-arrow"><svg viewBox="0 0 32 32" width="30" height="30"><path d="M4 16h20M17 8l8 8-8 8" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></i><span>RAFALE</span></div>
     <div class="hud-fps hidden" id="hud-fps"></div>
+    <canvas class="hud-minimap hidden" id="hud-minimap" aria-hidden="true"></canvas>
     <div class="hud-center" id="hud-msg"></div>
     <div class="hud-danger hidden" id="hud-danger">TU ES DERNIER — DÉPASSE !</div>
     <div class="hud-count hidden" id="hud-count"></div>
@@ -172,6 +173,7 @@
         <div class="set-row"><span>Langue / Language</span><div class="seg" id="set-lang"><button data-v="fr">FRANÇAIS</button><button data-v="en">ENGLISH</button></div></div>
         <div class="set-row"><span>Unité de vitesse</span><div class="seg" id="set-units"><button data-v="kmh">KM/H</button><button data-v="mph">MPH</button></div></div>
         <label class="set-row set-check"><span>Noms des pilotes au-dessus des voitures</span><input type="checkbox" id="set-names" /></label>
+        <label class="set-row set-check"><span>Mini-carte pendant les courses</span><input type="checkbox" id="set-minimap" /></label>
         <div class="set-sub">ACCESSIBILITÉ</div>
         <label class="set-row set-check"><span>Réduire les flashs (éclairs de l'orage)</span><input type="checkbox" id="set-flash" /></label>
         <label class="set-row set-check"><span>Réduire les animations des menus</span><input type="checkbox" id="set-motion" /></label>

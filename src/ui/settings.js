@@ -50,6 +50,7 @@ export function createSettingsScreen({ save, onChange, onImport, onTutorial, onT
     ['set-shake', () => settings.graphics.shake, (v) => { settings.graphics.shake = v; }],
     ['set-showfps', () => settings.graphics.showFps, (v) => { settings.graphics.showFps = v; }],
     ['set-names', () => settings.display.names, (v) => { settings.display.names = v; }],
+    ['set-minimap', () => settings.display.minimap !== false, (v) => { settings.display.minimap = v; }],
     ['set-stats', () => settings.stats !== false, (v) => { settings.stats = v; if (!v) flushStats(); }],
     ['set-flash', () => settings.display.reduceFlash, (v) => { settings.display.reduceFlash = v; }],
     ['set-motion', () => settings.display.reduceMotion, (v) => { settings.display.reduceMotion = v; }],

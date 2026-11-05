@@ -37,7 +37,7 @@ export function defaultSave() {
       // Touches du clavier (null = touches par défaut, voir core/input.js)
       keys: null,
       // Affichage et accessibilité
-      display: { units: 'kmh', names: true, reduceFlash: false, reduceMotion: false },
+      display: { units: 'kmh', names: true, minimap: true, reduceFlash: false, reduceMotion: false },
       stats: true,           // statistiques anonymes d'utilisation et rapports de bug
     },
     tutorialDone: false,
@@ -139,7 +139,7 @@ function sanitize(raw) {
     const dsp = raw.settings.display;
     if (dsp && typeof dsp === 'object') {
       if (['kmh', 'mph'].includes(dsp.units)) s.settings.display.units = dsp.units;
-      for (const k of ['names', 'reduceFlash', 'reduceMotion']) if (typeof dsp[k] === 'boolean') s.settings.display[k] = dsp[k];
+      for (const k of ['names', 'minimap', 'reduceFlash', 'reduceMotion']) if (typeof dsp[k] === 'boolean') s.settings.display[k] = dsp[k];
     }
     if (typeof raw.settings.stats === 'boolean') s.settings.stats = raw.settings.stats;
   }
