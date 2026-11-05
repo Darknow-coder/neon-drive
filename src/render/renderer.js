@@ -93,6 +93,8 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
 
+    // Voitures : filtre de réduction de meilleure qualité (sprites fins réduits ×2 à ×3)
+    ctx.imageSmoothingQuality = 'high';
     // Fantôme (contre-la-montre) : voiture translucide
     const gh = scene.ghost;
     if (gh) {
@@ -128,6 +130,7 @@ export function createRenderer(canvas, { lowEnd = false } = {}) {
       ctx.restore();
     }
 
+    ctx.imageSmoothingQuality = 'low';
     particles.draw(ctx, 1);
 
     // Noms des pilotes au-dessus des voitures adverses

@@ -862,7 +862,9 @@ const perf = { update: 0, render: 0, worst: 0, frameUpdate: 0 };
 // baisse par paliers (le jeu reste net, mais un peu moins fin). Le réglage est
 // retenu pour les prochaines courses. Forçable avec ?quality=high.
 const QKEY = 'neondrive.quality';
-let quality = (() => { try { return Number(localStorage.getItem(QKEY)) || 1; } catch { return 1; } })();
+// Au lancement on repart d'au moins 85 % : un ralentissement passé ne doit pas rendre le jeu flou pour toujours
+const Q_MIN = 0.75;
+let quality = (() => { try { return Math.max(0.85, Number(localStorage.getItem(QKEY)) || 1); } catch { return 1; } })();
 /** Qualité choisie dans les réglages : auto (s'adapte), haute (pleine résolution), économie. */
 function applyGraphics() {
   applyPrefs(save.settings); // (avant le redimensionnement : le zoom en dépend)
@@ -882,8 +884,9 @@ function watchFps(dtReal) {
   fpsWatch.cooldown = Math.max(0, fpsWatch.cooldown - dtReal);
   if (fpsNow < 47) { fpsWatch.slow += dtReal; fpsWatch.fast = 0; } else if (fpsNow > 57) { fpsWatch.fast += dtReal; fpsWatch.slow = Math.max(0, fpsWatch.slow - dtReal * 0.5); }
   if (fpsWatch.cooldown > 0) return;
-  if (fpsWatch.slow > 1.2 && quality > 0.5) {
-    quality = Math.round((quality - 0.15) * 100) / 100;
+  if (fpsWatch.slow > 1.2 && quality > Q_MIN) {
+    // En dessous de 75 %, l'image devient trop floue (surtout les voitures) : on s'arrête là
+    quality = Math.max(Q_MIN, Math.round((quality - 0.1) * 100) / 100);
     renderer.setQuality(quality); session?.resize();
     try { localStorage.setItem(QKEY, String(quality)); } catch { /* rien */ }
     fpsWatch.slow = 0; fpsWatch.cooldown = 2;
