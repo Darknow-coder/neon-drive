@@ -22,12 +22,12 @@ export const DAILY_GIFTS = [
 // ---------- Finitions de carrosserie (utilisables sur toutes les voitures) ----------
 export const FINISHES = [
   { id: 'standard', name: t('STANDARD'), price: 0, desc: t('La finition d\'origine.') },
-  { id: 'metal', name: t('MÉTALLISÉ'), price: 250, desc: t('Reflets profonds et éclatants.') },
-  { id: 'matte', name: t('MAT'), price: 250, desc: t('Sobre, sans reflets, très racé.') },
-  { id: 'chrome', name: t('CHROME'), price: 500, desc: t('Miroir réfléchissant teinté par ta couleur.') },
-  { id: 'carbon', name: t('CARBONE'), price: 600, desc: t('Fibre de carbone tissée, accents colorés.') },
-  { id: 'holo', name: t('HOLOGRAPHIQUE'), price: 900, desc: t('Un arc-en-ciel qui change selon l\'angle.') },
-  { id: 'gold', name: t('OR'), price: 1200, desc: t('Or pur. Pour les légendes.') },
+  { id: 'metal', name: t('MÉTALLISÉ'), price: 600, desc: t('Reflets profonds et éclatants.') },
+  { id: 'matte', name: t('MAT'), price: 600, desc: t('Sobre, sans reflets, très racé.') },
+  { id: 'chrome', name: t('CHROME'), price: 1200, desc: t('Miroir réfléchissant teinté par ta couleur.') },
+  { id: 'carbon', name: t('CARBONE'), price: 1500, desc: t('Fibre de carbone tissée, accents colorés.') },
+  { id: 'holo', name: t('HOLOGRAPHIQUE'), price: 2200, desc: t('Un arc-en-ciel qui change selon l\'angle.') },
+  { id: 'gold', name: t('OR'), price: 3000, desc: t('Or pur. Pour les légendes.') },
   // Exclusives du passe de saison (jamais en boutique)
   { id: 'aurora', name: t('AURORE'), price: 0, exclusive: 'season', desc: t('Exclusif Saison 1 : des lumières boréales qui ondulent.') },
   { id: 'obsidian', name: t('OBSIDIENNE'), price: 0, exclusive: 'season', desc: t('Exclusif Saison 1 : noir miroir aux reflets de ta couleur.') },
@@ -40,15 +40,15 @@ export const FINISHES = [
 export const MOTIFS = [
   { id: 'origin', name: t('D\'ORIGINE'), price: 0, desc: t('Le motif propre à chaque voiture.') },
   { id: 'none', name: t('UNI'), price: 0, desc: t('Aucune décoration.') },
-  { id: 'twin', name: t('DOUBLE BANDE'), price: 150, desc: t('Deux fines bandes de course.') },
-  { id: 'single', name: t('BANDE LARGE'), price: 150, desc: t('Une large bande centrale.') },
-  { id: 'side', name: t('BANDES LATÉRALES'), price: 200, desc: t('Deux bandes le long des flancs.') },
-  { id: 'chevron', name: t('CHEVRONS'), price: 250, desc: t('Des flèches qui pointent vers l\'avant.') },
-  { id: 'split', name: t('BICOLORE'), price: 250, desc: t('Deux couleurs en diagonale.') },
-  { id: 'bolt', name: t('ÉCLAIR'), price: 300, desc: t('Un éclair d\'un bout à l\'autre.') },
-  { id: 'checker', name: t('DAMIER'), price: 300, desc: t('Le drapeau à damier de la victoire.') },
-  { id: 'circuit', name: t('CIRCUIT IMPRIMÉ'), price: 350, desc: t('Des pistes électroniques lumineuses.') },
-  { id: 'flames', name: t('FLAMMES'), price: 400, desc: t('Des flammes néon qui partent du nez.') },
+  { id: 'twin', name: t('DOUBLE BANDE'), price: 400, desc: t('Deux fines bandes de course.') },
+  { id: 'single', name: t('BANDE LARGE'), price: 400, desc: t('Une large bande centrale.') },
+  { id: 'side', name: t('BANDES LATÉRALES'), price: 500, desc: t('Deux bandes le long des flancs.') },
+  { id: 'chevron', name: t('CHEVRONS'), price: 600, desc: t('Des flèches qui pointent vers l\'avant.') },
+  { id: 'split', name: t('BICOLORE'), price: 600, desc: t('Deux couleurs en diagonale.') },
+  { id: 'bolt', name: t('ÉCLAIR'), price: 750, desc: t('Un éclair d\'un bout à l\'autre.') },
+  { id: 'checker', name: t('DAMIER'), price: 750, desc: t('Le drapeau à damier de la victoire.') },
+  { id: 'circuit', name: t('CIRCUIT IMPRIMÉ'), price: 900, desc: t('Des pistes électroniques lumineuses.') },
+  { id: 'flames', name: t('FLAMMES'), price: 1000, desc: t('Des flammes néon qui partent du nez.') },
   // Exclusifs du passe de saison
   { id: 'stars', name: t('ÉTOILES'), price: 0, exclusive: 'season', desc: t('Exclusif Saison 1 : une pluie d\'étoiles.') },
   { id: 'hex', name: t('HEXAGONES'), price: 0, exclusive: 'season', desc: t('Exclusif Saison 1 : un nid d\'abeille high-tech.') },
@@ -65,25 +65,25 @@ export const MOTIFS = [
 // rainbow : couleurs qui défilent · sparks : étincelles en plus · size : taille des flammes
 export const TRAILS = [
   { id: 'neon', name: t('NÉON'), price: 0, desc: t('Les flammes rose et cyan d\'origine.'), colors: ['#ff2bd6', '#ff2bd6', '#7af7ff'] },
-  { id: 'fire', name: t('FEU'), price: 300, desc: t('De vraies flammes orange et jaunes.'), colors: ['#ff6a00', '#ffb000', '#ffe14d', '#ff3b2b'] },
-  { id: 'ice', name: t('GLACE'), price: 300, desc: t('Un souffle glacé bleu et blanc.'), colors: ['#bfe9ff', '#ffffff', '#5ab8ff'] },
-  { id: 'toxic', name: t('TOXIQUE'), price: 350, desc: t('Un nuage vert radioactif.'), colors: ['#3dff9e', '#c6ff3d', '#3dff9e'] },
-  { id: 'plasma', name: t('PLASMA'), price: 400, desc: t('Prend la couleur néon de ta voiture.'), colors: ['glow', 'glow', '#ffffff'] },
-  { id: 'void', name: t('NÉANT'), price: 450, desc: t('Un trou noir violet qui aspire la lumière.'), colors: ['#8a2bff', '#4b1490', '#ff2bd6'], size: 1.25 },
-  { id: 'electric', name: t('ÉLECTRIQUE'), price: 550, desc: t('Des arcs électriques qui crépitent.'), colors: ['#7af7ff', '#ffffff', '#2b6bff'], sparks: '#e8fbff', size: 0.8 },
-  { id: 'gold', name: t('OR'), price: 650, desc: t('Une pluie de paillettes dorées.'), colors: ['#ffd34d', '#fff2b0', '#ffb000'], sparks: '#ffe680' },
-  { id: 'rainbow', name: t('ARC-EN-CIEL'), price: 900, desc: t('Toutes les couleurs, l\'une après l\'autre.'), rainbow: true },
+  { id: 'fire', name: t('FEU'), price: 750, desc: t('De vraies flammes orange et jaunes.'), colors: ['#ff6a00', '#ffb000', '#ffe14d', '#ff3b2b'] },
+  { id: 'ice', name: t('GLACE'), price: 750, desc: t('Un souffle glacé bleu et blanc.'), colors: ['#bfe9ff', '#ffffff', '#5ab8ff'] },
+  { id: 'toxic', name: t('TOXIQUE'), price: 900, desc: t('Un nuage vert radioactif.'), colors: ['#3dff9e', '#c6ff3d', '#3dff9e'] },
+  { id: 'plasma', name: t('PLASMA'), price: 1000, desc: t('Prend la couleur néon de ta voiture.'), colors: ['glow', 'glow', '#ffffff'] },
+  { id: 'void', name: t('NÉANT'), price: 1100, desc: t('Un trou noir violet qui aspire la lumière.'), colors: ['#8a2bff', '#4b1490', '#ff2bd6'], size: 1.25 },
+  { id: 'electric', name: t('ÉLECTRIQUE'), price: 1400, desc: t('Des arcs électriques qui crépitent.'), colors: ['#7af7ff', '#ffffff', '#2b6bff'], sparks: '#e8fbff', size: 0.8 },
+  { id: 'gold', name: t('OR'), price: 1600, desc: t('Une pluie de paillettes dorées.'), colors: ['#ffd34d', '#fff2b0', '#ffb000'], sparks: '#ffe680' },
+  { id: 'rainbow', name: t('ARC-EN-CIEL'), price: 2200, desc: t('Toutes les couleurs, l\'une après l\'autre.'), rainbow: true },
 ];
 
 // ---------- Fumées de drift ----------
 export const SMOKES = [
   { id: 'standard', name: t('D\'ORIGINE'), price: 0, desc: t('Teintée de la couleur néon de ta voiture.'), colors: ['glow', '#b9a8ff'] },
-  { id: 'pure', name: t('NÉON PUR'), price: 150, desc: t('Uniquement ta couleur néon, très vive.'), colors: ['glow'] },
-  { id: 'white', name: t('BLANCHE'), price: 150, desc: t('La fumée blanche des pneus qui fondent.'), colors: ['#f2f0ff', '#dcd8f0'] },
-  { id: 'embers', name: t('BRAISES'), price: 300, desc: t('Fumée orange et étincelles brûlantes.'), colors: ['#ff6a00', '#ffb000'], sparks: '#ffd34d' },
-  { id: 'duo', name: t('BICOLORE'), price: 300, desc: t('Ta couleur de carrosserie et ton accent.'), colors: ['body', 'accent'] },
-  { id: 'sparkle', name: t('ÉTINCELLES'), price: 450, desc: t('Une gerbe d\'étincelles à chaque drift.'), colors: ['glow', '#b9a8ff'], sparks: '#fff6c2' },
-  { id: 'rainbow', name: t('ARC-EN-CIEL'), price: 700, desc: t('Un drift aux couleurs de l\'arc-en-ciel.'), rainbow: true },
+  { id: 'pure', name: t('NÉON PUR'), price: 400, desc: t('Uniquement ta couleur néon, très vive.'), colors: ['glow'] },
+  { id: 'white', name: t('BLANCHE'), price: 400, desc: t('La fumée blanche des pneus qui fondent.'), colors: ['#f2f0ff', '#dcd8f0'] },
+  { id: 'embers', name: t('BRAISES'), price: 750, desc: t('Fumée orange et étincelles brûlantes.'), colors: ['#ff6a00', '#ffb000'], sparks: '#ffd34d' },
+  { id: 'duo', name: t('BICOLORE'), price: 750, desc: t('Ta couleur de carrosserie et ton accent.'), colors: ['body', 'accent'] },
+  { id: 'sparkle', name: t('ÉTINCELLES'), price: 1100, desc: t('Une gerbe d\'étincelles à chaque drift.'), colors: ['glow', '#b9a8ff'], sparks: '#fff6c2' },
+  { id: 'rainbow', name: t('ARC-EN-CIEL'), price: 1800, desc: t('Un drift aux couleurs de l\'arc-en-ciel.'), rainbow: true },
 ];
 
 // ---------- Numéro de course (gratuit) ----------
@@ -97,9 +97,9 @@ export const NUMBER_STYLES = [
 export const OFFERS = {
   // Lots de fragments d'une voiture : prix dégressif
   fragmentBundles: [
-    { amount: 5, price: 100 },
-    { amount: 10, price: 190 },
-    { amount: 20, price: 360 },
+    { amount: 5, price: 160 },
+    { amount: 10, price: 300 },
+    { amount: 20, price: 560 },
   ],
   featuredDiscount: 0.3,   // l'offre spéciale est à -30 %
   styleDiscount: 0.2,      // le cosmétique du jour est à -20 %

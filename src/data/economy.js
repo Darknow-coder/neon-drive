@@ -16,10 +16,10 @@ export const CREDITS = {
 export const MAX_LEVEL = 5;
 // Coût pour PASSER au niveau indiqué (index = niveau visé)
 export const UPGRADE_COST = {
-  2: { credits: 150, fragments: 10 },
-  3: { credits: 350, fragments: 20 },
-  4: { credits: 700, fragments: 40 },
-  5: { credits: 1200, fragments: 70 },
+  2: { credits: 200, fragments: 10 },
+  3: { credits: 450, fragments: 20 },
+  4: { credits: 900, fragments: 40 },
+  5: { credits: 1500, fragments: 70 },
 };
 // Effet de chaque niveau au-delà du 1er (en pourcentage des paramètres physiques)
 export const LEVEL_BONUS = { maxSpeed: 0.012, accel: 0.02, grip: 0.015, turn: 0.012, brake: 0.015 };
@@ -30,9 +30,9 @@ export const AI_CAR_LEVEL = { bronze: 1, argent: 2, or: 3, diamant: 4, elite: 5 
 // Fragments nécessaires pour débloquer une voiture AVANT son palier de trophées
 export const UNLOCK_FRAGMENTS = { volt: 20, pixie: 25, halo: 30, razor: 40, titan: 50, spectre: 60, ionix: 70, comet: 80, goliath: 90, bastion: 100, hyperion: 120 };
 export const PACKS = {
-  small: { name: t('PACK NÉON'), fragments: 6, price: 120, color: '#00f0ff' },
-  medium: { name: t('PACK PLASMA'), fragments: 15, price: 280, color: '#ff2bd6' },
-  large: { name: t('PACK HYPERNOVA'), fragments: 35, price: 600, color: '#ffd34d' },
+  small: { name: t('PACK NÉON'), fragments: 6, price: 200, color: '#00f0ff' },
+  medium: { name: t('PACK PLASMA'), fragments: 15, price: 450, color: '#ff2bd6' },
+  large: { name: t('PACK HYPERNOVA'), fragments: 35, price: 950, color: '#ffd34d' },
 };
 
 // ---------- Route des trophées ----------
