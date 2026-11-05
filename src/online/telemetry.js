@@ -7,6 +7,7 @@
 import { rpc } from './api.js';
 import { onlineAllowed } from './sync.js';
 import { LANG } from '../i18n/index.js';
+import { gameHost } from './config.js';
 
 const KEY = 'neondrive.stats';
 const MAX_DAYS = 7;
@@ -90,6 +91,7 @@ export function startTelemetry(s) {
   track('session');
   track(deviceInfo().startsWith('mobile') ? 'device_mobile' : 'device_pc');
   track(`lang_${LANG}`);
+  track(`host_${gameHost()}`); // d'où viennent les joueurs (itch.io, site…)
   setTimeout(flush, 8000);
   addEventListener('error', (e) => {
     const file = (e.filename || '').split('/').pop().split('?')[0];

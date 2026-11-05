@@ -66,6 +66,7 @@ import { rpc as onlineRpc, onlineId } from './online/api.js';
 import { syncProfile, onOnlineChange, deleteOnlineProfile } from './online/sync.js';
 import { uploadRecord, uploadPending, resetSent } from './online/chrono.js';
 import { startTelemetry, track, flush as flushStats } from './online/telemetry.js';
+import { isEmbedded } from './online/config.js';
 import { createFeedback, sendPendingFeedback } from './ui/feedback.js';
 import { cached as onlineCached } from './online/api.js';
 import { starsHtml } from './ui/career.js';
@@ -1112,7 +1113,8 @@ runBoot({
 window.__ND = { missing: () => missingKeys(), flushStats: () => flushStats(), track: (k) => track(k), audio: () => audio, music: () => music, session: () => session, loop: () => loop, perf, state: () => state, save: () => save };
 
 // Installation comme application + jeu hors ligne (version publiée uniquement)
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+// (pas d'installation hors ligne quand le jeu est intégré à une autre page, ex. itch.io)
+if (import.meta.env.PROD && 'serviceWorker' in navigator && !isEmbedded()) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => { /* pas grave : le jeu marche sans */ });
   });

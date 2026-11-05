@@ -1,3 +1,4 @@
+import { PUBLIC_URL, gameHost } from '../online/config.js';
 // Écran CLASSEMENT (en ligne) : monde, ma ligue, autour de moi, amis.
 // + fiche d'un pilote (en touchant une ligne) et demandes d'amis.
 import { t, fmtNum, many } from '../i18n/index.js';
@@ -13,7 +14,8 @@ const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const tagOf = (n) => `#${String(n).padStart(4, '0')}`;
 const fmt = (n) => fmtNum(n);
-export const friendLink = (code) => `${location.origin}${location.pathname}?ami=${code}`;
+// Toujours l'adresse publique : un lien vers la page itch.io intégrée ne marcherait pas
+export const friendLink = (code) => `${gameHost() === 'github' ? location.origin + location.pathname : PUBLIC_URL}?ami=${code}`;
 
 function ago(iso) {
   const s = (Date.now() - new Date(iso).getTime()) / 1000;

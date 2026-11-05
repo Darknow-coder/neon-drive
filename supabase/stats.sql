@@ -47,10 +47,10 @@ from public.activity
 where day > current_date - 7 and kind not in ('session', 'tutorial_done', 'tour_done', 'tour_skip')
 group by kind order by fois desc;
 
--- 6) Appareils et langues (7 derniers jours)
+-- 6) Appareils, langues et provenance (host_itch = page itch.io, host_github = site) — 7 derniers jours
 select kind, count(distinct user_id) as joueurs
 from public.activity
-where day > current_date - 7 and (kind like 'device_%' or kind like 'lang_%')
+where day > current_date - 7 and (kind like 'device_%' or kind like 'lang_%' or kind like 'host_%')
 group by kind order by joueurs desc;
 
 -- 7) Les derniers avis (les plus récents en haut)
