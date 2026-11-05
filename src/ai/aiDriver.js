@@ -305,7 +305,7 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
       let dirSteer = clamp(2 * k - 1, -1, 1);
       const keep = prof.drift[i] === 1;
       if (keep) dirSteer = Math.max(dirSteer, 0.2); // reste en drift tant que le virage dure
-      else dirSteer = Math.min(dirSteer, 0); // virage fini : on se redresse
+      else dirSteer = Math.min(dirSteer, -0.35); // virage fini : on se redresse (sortie franche)
       steer = dirSteer * car.driftDir;
     } else {
       const ratio = Math.abs(car.vF) / vmax;
@@ -358,6 +358,7 @@ export function createAiDriver(car, track, { profile, pace = 1, mistakesMul = 1,
     intent.throttle = throttle;
     intent.brake = brake;
     intent.boost = boost;
+    intent.analogDrift = true; // l'IA calcule l'angle de drift exact (direction analogique)
     return intent;
   }
 

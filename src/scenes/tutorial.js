@@ -29,9 +29,10 @@ export function createTutorial({ scene, input, touch, autoGas, onDone }) {
       done: (c, st) => st.brakeTime > 0.35,
     },
     {
-      text: t('DRIFT : lancé à grande vitesse, maintiens {k} puis tourne. Garde la direction pour rester en glisse !', { k: keys.brake }),
+      text: t('DRIFT : juste avant un virage, appuie sur {k} + la direction. Garde la direction pour serrer, lâche-la pour élargir.', { k: keys.brake }),
+      cue: true, // repère « virage en approche »
       hint: ['brake', 'left', 'right'],
-      help: t("Il faut rouler vite : accélère d'abord en ligne droite, puis frein + direction."),
+      help: t("Il faut rouler vite : accélère d'abord en ligne droite, puis frein + direction au début du virage."),
       done: (c, st) => st.driftTime > 0.7, // cumulé : plusieurs essais possibles
     },
     {
@@ -123,9 +124,20 @@ export function createTutorial({ scene, input, touch, autoGas, onDone }) {
       st.stuck = c.speed < 40 ? st.stuck + dt : 0;
 
       const s = steps[index];
+      // Leçon de drift : on signale le bon moment (un virage serré arrive)
+      let cue = '';
+      if (s.cue && !c.drifting && c.speed > 0.4 * c.params.maxSpeed) {
+        const tr = w.track, n = tr.count;
+        const from = Math.round((c.speed * 0.25) / tr.spacing), to = Math.round((c.speed * 0.55) / tr.spacing);
+        let turn = 0;
+        for (let k = from; k < to; k++) turn += tr.curv[(c.trackIndex + k) % n] * tr.spacing;
+        if (Math.abs(turn) > 0.45) cue = t('VIRAGE ! {k} + {d} MAINTENANT', { k: keys.brake, d: turn > 0 ? (touch ? '▶' : '→') : (touch ? '◀' : '←') });
+      }
       if (st.stuck > 2.5) helpEl.textContent = t('Coincé ? Appuie sur {k} pour replacer la voiture.', { k: keys.reset });
+      else if (cue) helpEl.textContent = cue;
       else if (s.help && st.t > 9) helpEl.textContent = s.help;
       else helpEl.textContent = '';
+      helpEl.classList.toggle('cue', !!cue);
 
       if (s.done(c, st)) {
         if (s.last) finish();
@@ -138,5 +150,7 @@ export function createTutorial({ scene, input, touch, autoGas, onDone }) {
       scene.dispose();
     },
     isTutorial: true,
+    /** (tests) aller directement à une leçon */
+    goStep: (i) => enter(i),
   };
 }

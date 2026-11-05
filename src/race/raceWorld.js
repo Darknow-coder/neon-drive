@@ -1,3 +1,4 @@
+import { assistDrift } from './driftAssist.js';
 // Simulation d'une course, sans aucun dessin.
 // Utilisée par le jeu ET par les outils de test (node tools/aiRace.js) :
 // les deux font donc exactement la même course.
@@ -184,7 +185,10 @@ export function createRaceWorld(opts) {
       let input;
       if (!world.started) input = idle;
       else if (car.finished && car.isPlayer) input = car.ai ? car.ai.update(dt, world) : coastIntent(car);
-      else if (car.isPlayer) input = playerIntent ?? idle;
+      else if (car.isPlayer) {
+        input = playerIntent ?? idle;
+        if (opts.driftAssist && car.drifting) input = assistDrift(car, track, input);
+      }
       else input = car.ai.update(dt, world);
       // Patinage (départ trop tôt) : l'accélérateur ne mord presque pas
       if (car.spinTimer > 0) {

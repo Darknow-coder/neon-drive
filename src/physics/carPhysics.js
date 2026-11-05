@@ -10,9 +10,12 @@
 //
 // DRIFT (frein + direction à vitesse élevée)
 //   La voiture se met en travers. Le joueur garde le contrôle :
-//   - tourner VERS l'intérieur du virage : la voiture se met plus en travers
-//     et serre la trajectoire ;
-//   - relâcher ou contre-braquer : elle se redresse, élargit, puis sort du drift.
+//   - garder la direction VERS l'intérieur : le drift se resserre peu à peu ;
+//   - relâcher la direction : il s'élargit (sans s'arrêter tout de suite) ;
+//     on peut donc le doser par petits coups, même avec des boutons ;
+//   - garder le frein : il serre et ralentit (« je vais trop vite ») ;
+//   - contre-braquer, ou relâcher un moment : la voiture se redresse et sort,
+//     dans la direction de son nez.
 //   L'angle de glisse reste borné : pas de tête-à-queue incontrôlable.
 //   Le drift remplit la jauge de boost.
 
@@ -32,7 +35,13 @@ export const GLOBAL_TUNING = {
   driftAngleMax: 0.66,      // angle de travers en braquant à fond (~38°)
   driftTurnMin: 0.35,       // rotation de la trajectoire en contre-braquage (fraction)
   driftAngleResponse: 9,    // vitesse à laquelle la voiture prend son angle
-  driftReleaseTime: 0.2,    // durée sans braquer avant la sortie du drift
+  driftReleaseTime: 0.45,   // durée direction relâchée avant la sortie du drift (contre-braquer : 2,5× plus vite)
+  driftTightenRate: 2.2,    // vitesse à laquelle le drift se resserre (direction tenue)
+  driftWidenRate: 3,        // vitesse à laquelle il s'élargit (direction relâchée)
+  driftEntryK: 0.6,         // serrage au déclenchement (0 = large, 1 = serré)
+  driftBrakeDecel: 380,     // freinage en drift (unités/s²)
+  driftBrakeTurn: 0.3,      // en freinant, le drift serre jusqu'à +30 %
+  driftExitAlign: 0.4,      // en sortie, la trajectoire s'aligne sur le nez (part de l'angle)
   driftGripShare: 0.95,     // en drift, force de virage max = cette part de l'adhérence
   driftUndersteer: 0.75,    // part de la perte de braquage à haute vitesse conservée en drift
   slideEntryAngle: 0.42,    // glisse involontaire au-delà de cet angle
@@ -111,6 +120,7 @@ export function createCar(def, { x = 0, y = 0, angle = 0, level = 1 } = {}) {
     driftDir: 0,       // +1 drift vers la droite, -1 vers la gauche
     driftBlend: 0,     // 0 → 1 (transition visuelle et d'adhérence)
     driftTime: 0,
+    driftK: 0.5,       // serrage du drift (0 = large, 1 = serré)
     releaseTime: 0,
     boost: 0,
     boosting: false,
@@ -191,10 +201,12 @@ export function stepCar(car, input, dt, surface = NO_SURFACE) {
     const slide = slipAngle > g.slideEntryAngle && vF > 0.3 * p.maxSpeed;
     if (handbrake || slide) {
       car.drifting = true;
-      // Sens du virage : celui de la direction (frein) ou celui de la glisse
-      car.driftDir = handbrake ? Math.sign(steer) : -Math.sign(vR);
+      // Sens du drift : toujours celui où le joueur braque (une glisse involontaire
+      // ne doit jamais partir à l'opposé de la direction tenue) ; sinon celui de la glisse
+      car.driftDir = Math.abs(steer) > 0.35 ? Math.sign(steer) : -Math.sign(vR);
       car.driftTime = 0;
       car.releaseTime = 0;
+      car.driftK = g.driftEntryK;
     }
   }
 
@@ -204,15 +216,24 @@ export function stepCar(car, input, dt, surface = NO_SURFACE) {
     // ================= MODE DRIFT =================
     const speed = Math.hypot(car.vx, car.vy);
     const dirSteer = steer * car.driftDir; // +1 = vers l'intérieur, -1 = contre-braquage
-    const k = (dirSteer + 1) / 2;          // 0 … 1
+    // Serrage du drift : il suit la direction progressivement (dosable par petits coups)
+    const kTarget = (dirSteer + 1) / 2;    // 0 … 1
+    // (direction analogique exacte, ex. IA : pas de lissage « boutons »)
+    if (input.analogDrift) car.driftK = kTarget;
+    else {
+      const kRate = kTarget > car.driftK ? g.driftTightenRate : g.driftWidenRate;
+      car.driftK += clamp(kTarget - car.driftK, -kRate * dt, kRate * dt);
+    }
+    const k = car.driftK;
 
     // 1) La trajectoire tourne, plus ou moins selon la direction
     const authority = 1 - g.highSpeedUndersteer * g.driftUndersteer * clamp(speed / g.understeerRefSpeed, 0, 1.3);
     let turnV = p.turnRate * p.driftTurnBoost * lerp(g.driftTurnMin, 1, k) * authority *
-      (0.5 + 0.5 * gripMul); // sur sol glissant, le drift s'élargit
+      (0.5 + 0.5 * gripMul) * // sur sol glissant, le drift s'élargit
+      (1 + g.driftBrakeTurn * brake); // le frein serre le drift
     // Les pneus en glisse ne peuvent pas fournir plus que leur adhérence :
     // un drift ne permet pas de tourner plus fort que ce que la voiture tient.
-    const latMax = (p.gripAccel * gripMul * g.driftGripShare) / Math.max(speed, 1);
+    const latMax = (p.gripAccel * gripMul * g.driftGripShare * (1 + 0.15 * brake)) / Math.max(speed, 1);
     turnV = car.driftDir * Math.min(turnV, latMax);
     const rot = turnV * dt;
     const c = Math.cos(rot), s = Math.sin(rot);
@@ -233,7 +254,7 @@ export function stepCar(car, input, dt, surface = NO_SURFACE) {
     if (throttle > 0 && speed < vmax) a += p.accel * throttle * Math.cos(slipNow) * clamp((vmax - speed) / (vmax * 0.38), 0, 1);
     if (car.boosting) a += g.boostAccel * clamp((vmax - speed) / (vmax * 0.2), 0, 1);
     a -= p.driftDrag * Math.sin(slipNow) + speed * g.airDrag * 0.5;
-    if (brake > 0) a -= 160 * brake;
+    if (brake > 0) a -= g.driftBrakeDecel * brake;
     if (speed > vmax) a -= (speed - vmax) * 2.2;
     const newSpeed = Math.max(0, speed + a * dt);
     const sc = speed > 1e-3 ? newSpeed / speed : 0;
@@ -248,9 +269,17 @@ export function stepCar(car, input, dt, surface = NO_SURFACE) {
 
     // 5) Sortie du drift
     car.driftTime += dt;
-    car.releaseTime = dirSteer < 0.15 ? car.releaseTime + dt : 0;
+    // Direction relâchée : le drift s'élargit puis finit ; contre-braquage : il finit vite
+    car.releaseTime = input.holdDrift ? 0 : dirSteer < -0.3 ? car.releaseTime + dt * 2.5 : dirSteer < 0.15 ? car.releaseTime + dt : 0;
     if ((car.releaseTime > g.driftReleaseTime && car.driftTime > 0.3) || speed < 0.25 * p.maxSpeed) {
       car.drifting = false;
+      // Sortie nette : la trajectoire se rapproche de la direction du nez
+      const va = Math.atan2(car.vy, car.vx);
+      const turnOut = wrapAngle(car.angle - va) * g.driftExitAlign;
+      const co = Math.cos(turnOut), so = Math.sin(turnOut);
+      const ox = car.vx;
+      car.vx = ox * co - car.vy * so;
+      car.vy = ox * so + car.vy * co;
     }
   } else {
     // ================= MODE GRIP =================
@@ -285,7 +314,7 @@ export function stepCar(car, input, dt, surface = NO_SURFACE) {
 
     // Adhérence latérale (force limitée, comme de vrais pneus).
     // Juste après un drift, l'adhérence revient progressivement.
-    const gripMax = p.gripAccel * gripMul * (1 - 0.55 * car.driftBlend);
+    const gripMax = p.gripAccel * gripMul * (1 - 0.25 * car.driftBlend);
     vR -= Math.sign(vR) * Math.min(Math.abs(vR), gripMax * dt);
 
     // On recompose avec l'orientation d'AVANT la rotation : la vitesse ne suit

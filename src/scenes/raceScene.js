@@ -61,7 +61,8 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
 
   // Départ canon : pas en accélération automatique (le gaz est toujours enfoncé)
   const launchControl = !settings.controls?.autoGas;
-  let world = createRaceWorld({ track, entries, laps, league, countdown, launchControl, rules });
+  const driftAssist = settings.controls?.driftAssist !== false;
+  let world = createRaceWorld({ track, entries, laps, league, countdown, launchControl, rules, driftAssist });
   let player = world.player;
   const rivalCar = world.cars.find((c) => c.isRival) ?? null;
   const fx = new Map(world.cars.map((c) => [c, createCarFx()]));
@@ -105,7 +106,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   function setCarDef(id) {
     // Changement de voiture (panneau ⚙) : on relance la course avec la nouvelle voiture
     carId = id;
-    world = createRaceWorld({ track, entries: entries.map((e) => (e.isPlayer ? { ...e, def: getCar(id) } : e)), laps, league, countdown: 3, launchControl });
+    world = createRaceWorld({ track, entries: entries.map((e) => (e.isPlayer ? { ...e, def: getCar(id) } : e)), laps, league, countdown: 3, launchControl, driftAssist });
     player = world.player;
     fx.clear();
     world.cars.forEach((c) => fx.set(c, createCarFx()));

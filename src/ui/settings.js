@@ -46,6 +46,7 @@ export function createSettingsScreen({ save, onChange, onImport, onTutorial, onT
     ['set-vibration', () => settings.vibration, (v) => { settings.vibration = v; }],
     ['set-swapped', () => settings.controls.swapped, (v) => { settings.controls.swapped = v; }],
     ['set-autogas', () => settings.controls.autoGas, (v) => { settings.controls.autoGas = v; }],
+    ['set-driftassist', () => settings.controls.driftAssist !== false, (v) => { settings.controls.driftAssist = v; }],
     ['set-shake', () => settings.graphics.shake, (v) => { settings.graphics.shake = v; }],
     ['set-showfps', () => settings.graphics.showFps, (v) => { settings.graphics.showFps = v; }],
     ['set-names', () => settings.display.names, (v) => { settings.display.names = v; }],

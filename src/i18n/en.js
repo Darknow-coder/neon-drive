@@ -414,8 +414,6 @@ export const EN = {
   "Maintiens {k} pour accélérer.": "Hold {k} to accelerate.",
   "Utilise {k} pour tourner et suis la piste.": "Use {k} to steer and follow the track.",
   "Appuie sur {k} pour ralentir avant un virage.": "Press {k} to slow down before a corner.",
-  "DRIFT : lancé à grande vitesse, maintiens {k} puis tourne. Garde la direction pour rester en glisse !": "DRIFT: at high speed, hold {k} then turn. Keep steering to stay in the slide!",
-  "Il faut rouler vite : accélère d'abord en ligne droite, puis frein + direction.": "You need speed: accelerate on a straight first, then brake + steer.",
   "Chaque drift remplit la jauge de BOOST (en haut à droite). Remplis-la à moitié.": "Every drift fills the BOOST gauge (top right). Fill it halfway.",
   "Jauge prête : appuie sur {k} pour une accélération fulgurante !": "Gauge ready: press {k} for a blazing burst of speed!",
   "Bravo ! Tu es prêt pour ta première course. Gagne des trophées pour monter de ligue et débloquer des voitures.": "Well done! You're ready for your first race. Win trophies to climb the leagues and unlock cars.",
@@ -1113,4 +1111,9 @@ export const EN = {
   "NEON//DRIVE — Neon arcade racing in your browser": "NEON//DRIVE — Neon arcade racing in your browser",
   "Free neon arcade racing game in your browser, on phone and PC. Drift, boost, climb the leagues, race friends' ghosts. No download, no ads.": "Free neon arcade racing game in your browser, on phone and PC. Drift, boost, climb the leagues, race friends' ghosts. No download, no ads.",
   "Fichier téléchargé. Le serveur connaît : ton pseudo <b>{name}</b>, ton emblème, ton titre, ta voiture, {tro} trophées, {races} courses, {wins} victoires, {fr} ami(s) ou demande(s) et {rec} record(s) du chrono (avec leur fantôme), {fb} avis, tes statistiques anonymes d'utilisation et {bug} rapport(s) d'erreur. Rien d'autre.": "File downloaded. The server knows: your nickname <b>{name}</b>, your emblem, your title, your car, {tro} trophies, {races} races, {wins} wins, {fr} friend(s) or request(s), {rec} time trial record(s) (with their ghost), {fb} feedback message(s), your anonymous usage statistics and {bug} error report(s). Nothing else.",
+  "DRIFT : juste avant un virage, appuie sur {k} + la direction. Garde la direction pour serrer, lâche-la pour élargir.": "DRIFT: just before a corner, press {k} + a direction. Hold the direction to tighten, let go to widen.",
+  "Il faut rouler vite : accélère d'abord en ligne droite, puis frein + direction au début du virage.": "You need speed: accelerate on a straight first, then brake + steer at the start of the corner.",
+  "VIRAGE ! {k} + {d} MAINTENANT": "CORNER! {k} + {d} NOW",
+  "Aide au drift": "Drift assist",
+  "(la courbe du drift suit le virage)": "(the drift's curve follows the corner)",
 };

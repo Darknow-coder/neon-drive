@@ -2568,3 +2568,6 @@ body.reduce-motion .badge, body.reduce-motion .boot * { animation: none !importa
   .fb-stars button { width: 28px; height: 28px; } .fb-stars .ico { width: 22px; height: 22px; }
   .fb-prompt { bottom: 64px; padding: 7px 10px; }
 }
+.tuto-help.cue { font-family: var(--font-display); font-size: 15px; letter-spacing: 2px; color: #fff; text-shadow: 0 0 10px var(--magenta); animation: cuePulse 0.5s ease-in-out infinite alternate; }
+@keyframes cuePulse { to { color: #ffd34d; transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .tuto-help.cue { animation: none; } }

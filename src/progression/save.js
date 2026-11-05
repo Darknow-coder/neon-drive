@@ -31,7 +31,7 @@ export function defaultSave() {
     settings: {
       music: 0.7, sfx: 0.85, vibration: true,
       master: 1, engine: 0.8,
-      controls: { swapped: false, autoGas: false, size: 1, opacity: 0.85, steer: 'normal' },
+      controls: { swapped: false, autoGas: false, driftAssist: true, size: 1, opacity: 0.85, steer: 'normal' },
       // Graphismes : qualité auto / haute / économie, limite d'images, effets, secousses, compteur
       graphics: { quality: 'auto', fps: 60, effects: 'full', shake: true, showFps: false, zoom: 'normal' },
       // Touches du clavier (null = touches par défaut, voir core/input.js)
@@ -112,6 +112,7 @@ function sanitize(raw) {
     if (c && typeof c === 'object') {
       if (typeof c.swapped === 'boolean') s.settings.controls.swapped = c.swapped;
       if (typeof c.autoGas === 'boolean') s.settings.controls.autoGas = c.autoGas;
+      if (typeof c.driftAssist === 'boolean') s.settings.controls.driftAssist = c.driftAssist;
       if (typeof c.size === 'number' && c.size >= 0.7 && c.size <= 1.4) s.settings.controls.size = c.size;
       if (typeof c.opacity === 'number' && c.opacity >= 0.2 && c.opacity <= 1) s.settings.controls.opacity = c.opacity;
       if (['soft', 'normal', 'sharp'].includes(c.steer)) s.settings.controls.steer = c.steer;
