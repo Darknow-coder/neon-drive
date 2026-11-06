@@ -93,6 +93,7 @@ export function createRaceScene({ renderer, input, hud, lowEnd, trackId, carId, 
   function resize() {
     renderer.resize();
     camera.baseZoom = computeBaseZoom(renderer.state.cssW, renderer.state.cssH);
+    camera.portrait = renderer.state.cssH > renderer.state.cssW;
     minimap?.invalidate();
   }
   resize();

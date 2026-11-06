@@ -38,8 +38,10 @@ export function updateCamera(cam, car, dt) {
 
   // Anticipation : on décale la vue dans la direction du mouvement
   const lead = 0.38;
-  const tx = clamp(car.vx * lead, -320, 320);
-  const ty = clamp(car.vy * lead, -220, 220);
+  // (écran en hauteur : on anticipe plus en vertical qu'en horizontal)
+  const mx = cam.portrait ? 170 : 320, my = cam.portrait ? 320 : 220;
+  const tx = clamp(car.vx * lead, -mx, mx);
+  const ty = clamp(car.vy * lead, -my, my);
   cam.lookX += (tx - cam.lookX) * damp(2.6, dt);
   cam.lookY += (ty - cam.lookY) * damp(2.6, dt);
 

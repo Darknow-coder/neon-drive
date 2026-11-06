@@ -3,3 +3,4 @@ dist/
 .DS_Store
 *.log
 marketing/itch/*.zip
+marketing/videos/*.mp4
