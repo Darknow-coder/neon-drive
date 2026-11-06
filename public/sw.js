@@ -1,11 +1,12 @@
 // Service worker : permet de jouer hors ligne et d'installer le jeu.
-// - Page principale : réseau d'abord (pour avoir la dernière version), cache sinon.
+// - Pages (présentation, jeu…) : réseau d'abord (pour avoir la dernière version), cache sinon.
 // - Fichiers du jeu (noms uniques à chaque version) : cache d'abord.
 // - Polices Google : servies depuis le cache, rafraîchies en arrière-plan.
-const CACHE = 'neondrive-v1';
+const CACHE = 'neondrive-v2';
+const GAME = './jouer/';
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html', './manifest.webmanifest', './icon.svg'])).catch(() => {}));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll([GAME, './manifest.webmanifest', './icon.svg'])).catch(() => {}));
   self.skipWaiting();
 });
 
@@ -16,22 +17,29 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+/** Clé de cache d'une page : son adresse sans les paramètres (?ami=…, ?lang=…). */
+const pageKey = (url) => { const u = new URL(url); u.search = ''; u.hash = ''; if (u.pathname.endsWith('/index.html')) u.pathname = u.pathname.slice(0, -10); return u.href; };
+
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
   if (req.mode === 'navigate') {
+    const key = pageKey(req.url);
     e.respondWith(
       fetch(req)
-        .then((res) => { const copy = res.clone(); caches.open(CACHE).then((c) => c.put('./index.html', copy)); return res; })
-        .catch(() => caches.match('./index.html')),
+        .then((res) => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(key, copy)); } return res; })
+        // Hors ligne : la page demandée si on l'a, sinon le jeu
+        .catch(() => caches.match(key).then((hit) => hit || caches.match(new URL(GAME, self.registration.scope).href))),
     );
     return;
   }
 
   const isFont = url.hostname.endsWith('fonts.googleapis.com') || url.hostname.endsWith('fonts.gstatic.com');
   if (url.origin !== self.location.origin && !isFont) return;
+  // Grosses vidéos de la page de présentation : jamais mises en cache
+  if (/\.(mp4|webm)$/.test(url.pathname)) return;
   e.respondWith(
     caches.match(req).then((hit) => {
       const update = () => fetch(req).then((res) => {
