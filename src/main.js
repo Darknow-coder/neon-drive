@@ -689,9 +689,10 @@ const menuTour = createMenuTour({
 /** Lance la visite quand le menu est vraiment libre (aucune fenêtre ouverte). */
 function maybeStartTour(force = false, tries = 0) {
   if ((!force && save.tourDone) || menuTour.active) return;
-  const busy = state !== 'menu' || document.querySelector('.overlay:not(.hidden)') || !$('menu-training').classList.contains('hidden') || $('boot');
-  if (busy) { if (tries < 40) setTimeout(() => maybeStartTour(force, tries + 1), 500); return; }
-  setTimeout(() => menuTour.start(), 350);
+  const busy = () => state !== 'menu' || document.querySelector('.overlay:not(.hidden)') || !$('menu-training').classList.contains('hidden') || $('boot');
+  if (busy()) { if (tries < 40) setTimeout(() => maybeStartTour(force, tries + 1), 500); return; }
+  // On revérifie au dernier moment : une fenêtre a pu s'ouvrir entre-temps
+  setTimeout(() => { if (busy()) maybeStartTour(force, tries + 1); else menuTour.start(); }, 350);
 }
 
 /** Tutoriel : leçon de pilotage en solo. */
@@ -711,6 +712,10 @@ function startTutorial() {
       save.tutorialDone = true;
       track('tutorial_done');
       persist();
+      // Le joueur a encore les doigts sur les commandes : on ignore les appuis
+      // sur le menu pendant un instant (sinon il ouvre le garage sans le vouloir)
+      document.body.classList.add('tap-guard');
+      setTimeout(() => document.body.classList.remove('tap-guard'), 1500);
       setTimeout(() => { backToMenu(); maybeStartTour(); }, 300);
     },
   });

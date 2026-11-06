@@ -2600,3 +2600,6 @@ body.is-touch .hud-minimap { bottom: auto; top: calc(128px + var(--safe-t)); wid
 .hud.wide .hud-pos { min-width: 92px; }
 .hud.wide .hud-lap { left: calc(114px + var(--safe-l)); }
 .hud.wide .hud-times { left: calc(186px + var(--safe-l)); }
+
+/* Juste après le tutoriel : les appuis sur le menu sont ignorés un instant */
+body.tap-guard #start { pointer-events: none; }
