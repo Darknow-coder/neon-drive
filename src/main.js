@@ -1045,16 +1045,25 @@ $('btn-career').addEventListener('click', () => careerScreen.open());
 canvas.addEventListener('contextlost', (e) => e.preventDefault());
 canvas.addEventListener('contextrestored', () => session?.reloadGraphics());
 
+// Plein écran + écran bloqué à l'horizontale (Android ; l'iPhone ne le permet pas :
+// l'écran « Tourne ton téléphone » prend alors le relais)
 async function enterFullscreenOnMobile() {
   if (touch) {
-    $('rotate-hint').classList.add('enabled');
     try {
-      await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
       await screen.orientation?.lock?.('landscape');
     } catch { /* pas grave : certains navigateurs refusent */ }
     setTimeout(() => session?.resize(), 300);
   }
 }
+// Téléphone à la verticale : la course se met en pause (l'écran d'attente la cache)
+const portraitQuery = matchMedia('(orientation: portrait)');
+portraitQuery.addEventListener?.('change', () => {
+  if (touch && portraitQuery.matches && state === 'race') pause();
+  setTimeout(() => session?.resize(), 300);
+});
+$('rl-full').addEventListener('click', () => enterFullscreenOnMobile());
+if (!document.documentElement.requestFullscreen) $('rotate-lock').classList.add('no-fs');
 $('btn-start').addEventListener('click', () => { enterFullscreenOnMobile(); startRankedRace(); });
 $('btn-train-go').addEventListener('click', () => { enterFullscreenOnMobile(); startTraining(); });
 

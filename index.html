@@ -788,7 +788,14 @@
     <button onclick="location.reload()">Recharger le jeu</button>
   </div>
 
-  <div id="rotate-hint" class="rotate-hint">Tourne ton téléphone à l'horizontale pour un meilleur confort ↻</div>
+  <!-- Téléphone tenu à la verticale : le jeu se met en attente (il se joue à l'horizontale) -->
+  <div id="rotate-lock" class="rotate-lock" aria-live="polite">
+    <div class="rl-phone" aria-hidden="true"><div class="rl-screen"></div></div>
+    <b>Tourne ton téléphone</b>
+    <p>NEON//DRIVE se joue à l'horizontale.</p>
+    <button id="rl-full" class="rl-full" type="button">PLEIN ÉCRAN</button>
+    <small>L'écran ne tourne pas ? Désactive le verrouillage de la rotation de ton téléphone.</small>
+  </div>
 
   <script>
     // Affiche les erreurs à l'écran : utile pour les signaler depuis un téléphone.
