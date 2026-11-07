@@ -2,7 +2,7 @@
   "name": "NEON//DRIVE",
   "short_name": "NEON DRIVE",
   "description": "Course arcade néon : drift, boost et 5 adversaires.",
-  "start_url": "./jouer/",
+  "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
   "orientation": "landscape",

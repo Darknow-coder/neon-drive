@@ -1,6 +1,6 @@
 // Vérifie que chaque texte du jeu a sa traduction anglaise (src/i18n/en.js).
 //  - textes du code : premier argument de chaque appel t('…') (y compris a ? 'x' : 'y')
-//  - textes de la page : jouer/index.html (textes visibles, title, aria-label, placeholder)
+//  - textes de la page : index.html (textes visibles, title, aria-label, placeholder)
 // Usage : node tools/i18nCheck.js          → liste les manquants (échec s'il y en a)
 //         node tools/i18nCheck.js --dump    → écrit tous les textes dans i18n-keys.json
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
@@ -72,7 +72,7 @@ function htmlKeys(file) {
 
 const all = new Map(); // clé → fichier
 for (const f of walk(join(ROOT, 'src'))) for (const k of keysOf(readFileSync(f, 'utf8'))) if (!all.has(k)) all.set(k, f.replace(ROOT, ''));
-for (const k of htmlKeys('jouer/index.html')) if (!all.has(k)) all.set(k, 'jouer/index.html');
+for (const k of htmlKeys('index.html')) if (!all.has(k)) all.set(k, 'index.html');
 
 if (process.argv.includes('--dump')) {
   writeFileSync(join(ROOT, 'i18n-keys.json'), JSON.stringify([...all.entries()].map(([k, f]) => ({ k, f, en: EN[k] ?? null })), null, 1));

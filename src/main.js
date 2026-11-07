@@ -819,7 +819,7 @@ refreshMenu();
 // Lien vers l'éditeur de circuits (mode développeur)
 if (devMode) {
   const a = document.createElement('a');
-  a.href = '../editor.html';
+  a.href = './editor.html';
   a.textContent = t('ÉDITEUR DE CIRCUITS');
   a.className = 'menu-btn';
   a.style.textDecoration = 'none';
@@ -1130,6 +1130,6 @@ window.__ND = { missing: () => missingKeys(), flushStats: () => flushStats(), tr
 // (pas d'installation hors ligne quand le jeu est intégré à une autre page, ex. itch.io)
 if (import.meta.env.PROD && 'serviceWorker' in navigator && !isEmbedded()) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('../sw.js', { scope: '../' }).catch(() => { /* pas grave : le jeu marche sans */ });
+    navigator.serviceWorker.register('./sw.js').catch(() => { /* pas grave : le jeu marche sans */ });
   });
 }

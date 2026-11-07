@@ -10,8 +10,8 @@ export default defineConfig({
     target: 'es2020',
     assetsInlineLimit: 0,
     rollupOptions: {
-      // Pages : présentation (FR / EN), le jeu, l'éditeur de circuits, les mentions légales
-      input: { site: 'index.html', siteEn: 'en/index.html', main: 'jouer/index.html', editor: 'editor.html', legal: 'legal.html' },
+      // Pages : le jeu, le site de présentation (FR / EN), l'éditeur de circuits, les mentions légales
+      input: { main: 'index.html', site: 'site/index.html', siteEn: 'site/en/index.html', editor: 'editor.html', legal: 'legal.html' },
     },
   },
   server: { host: true },

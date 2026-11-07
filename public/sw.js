@@ -2,8 +2,8 @@
 // - Pages (présentation, jeu…) : réseau d'abord (pour avoir la dernière version), cache sinon.
 // - Fichiers du jeu (noms uniques à chaque version) : cache d'abord.
 // - Polices Google : servies depuis le cache, rafraîchies en arrière-plan.
-const CACHE = 'neondrive-v2';
-const GAME = './jouer/';
+const CACHE = 'neondrive-v3';
+const GAME = './';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll([GAME, './manifest.webmanifest', './icon.svg'])).catch(() => {}));

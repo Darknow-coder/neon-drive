@@ -41,9 +41,9 @@ Une fois validé :
 ## Étape 4 : demander à Google de passer tout de suite
 
 1. Tout en haut, dans la barre « Inspecter n'importe quelle URL », colle :
-   `https://darknow-coder.github.io/neon-drive/`
+   `https://darknow-coder.github.io/neon-drive/site/`
 2. Attends le résultat, puis clique sur **Demander une indexation**.
-3. Recommence avec la version anglaise : `https://darknow-coder.github.io/neon-drive/en/`
+3. Recommence avec la version anglaise : `https://darknow-coder.github.io/neon-drive/site/en/`, puis avec le jeu : `https://darknow-coder.github.io/neon-drive/`
 
 C'est fini ! Les premiers résultats apparaissent en général après quelques jours.
 Dans **Performances**, tu verras combien de fois le site s'affiche dans Google, et combien de clics il reçoit.
@@ -51,6 +51,6 @@ Dans **Performances**, tu verras combien de fois le site s'affiche dans Google, 
 ## Pour monter plus haut dans Google
 
 Google fait davantage confiance à un site quand d'autres sites parlent de lui. Ce qui aide :
-- mettre le lien du site dans la description de ta page itch.io ;
+- mettre le lien du site (`https://darknow-coder.github.io/neon-drive/site/`) dans la description de ta page itch.io ;
 - le mettre dans la bio de tes réseaux, et sur ta chaîne YouTube si tu en ouvres une ;
 - chaque fois que quelqu'un parle du jeu (forum, Discord, article), qu'il donne ce lien.
