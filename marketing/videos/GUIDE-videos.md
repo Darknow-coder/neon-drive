@@ -1,26 +1,48 @@
 # Vidéos pour TikTok, YouTube Shorts et Instagram Reels
 
-Trois vidéos verticales (1080 × 1920, 13 secondes), chacune en français et en anglais.
-Elles finissent toutes sur un écran avec le lien du jeu : **neon-drive-game.itch.io/neon-drive**
+Huit vidéos verticales (1080 × 1920, environ 13 secondes), chacune en français et en anglais.
+
+- **Série 1** (vidéos 1 à 3) : elles finissent sur le lien itch.io.
+- **Série 2** (vidéos 4 à 8) : elles finissent sur le lien de ton site, **darknow-coder.github.io/neon-drive/site**.
+
+Les deux marchent très bien : dans tous les cas, les gens cliquent sur le lien de ta **bio**.
 
 | Vidéo | Ce qu'on voit |
 |---|---|
-| `1-drift-fr.mp4` / `1-drift-en.mp4` | Une course avec drifts et boost : « Mon jeu de course est enfin sorti » |
-| `2-giga-rush-fr.mp4` / `2-giga-rush-en.mp4` | La GIGA RUSH à 20 voitures : « Tu finirais à quelle place ? » |
-| `3-meteo-fr.mp4` / `3-weather-en.mp4` | Pluie, neige puis orage : « Quelle météo tu choisis ? » |
+| `1-drift` | Une course avec drifts et boost : « Mon jeu de course est enfin sorti » |
+| `2-giga-rush` | La GIGA RUSH à 20 voitures : « Tu finirais à quelle place ? » |
+| `3-meteo` / `3-weather` | Pluie, neige puis orage : « Quelle météo tu choisis ? » |
+| `4-depart-canon` / `4-rocket-start` | Les feux rouges, puis le départ canon au vert : « Tu l'aurais eu ? » |
+| `5-rival` | Course contre ZENITH, le rival de la ligue : « Il n'a jamais perdu… jusqu'à aujourd'hui ? » |
+| `6-drift-ralenti` / `6-slowmo-drift` | Les drifts passent au ralenti : « Le drift parfait n'existe pas… ou presque » |
+| `7-circuits` / `7-tracks` | 5 circuits en 10 secondes : « Lequel tu choisis ? » |
+| `8-atelier` / `8-workshop` | La voiture change de couleurs, de motifs et d'effets : « Ta voiture, tes couleurs » |
 
 ## Avant de poster : 3 réglages importants
 
-1. **Mets le lien dans ta bio** (TikTok et Instagram ne rendent pas les liens cliquables sous les vidéos) :
-   `https://neon-drive-game.itch.io/neon-drive`
+1. **Mets le lien de ton site dans ta bio** (TikTok et Instagram ne rendent pas les liens cliquables sous les vidéos) :
+   `https://darknow-coder.github.io/neon-drive/site/`
 2. **Ajoute une musique** au moment de poster : les vidéos n'ont pas de son.
    Choisis une musique **tendance** dans l'application (synthwave, phonk ou électro), car ces musiques
    aident beaucoup les vidéos à être montrées.
-3. **Poste une vidéo à la fois**, par exemple une tous les 2 ou 3 jours, plutôt que tout le même jour.
-   Commence par la vidéo 1.
+   Pour la vidéo 6 (ralenti), une musique lente ou un « drop » qui tombe au moment du ralenti marche très bien.
+3. **Poste une vidéo à la fois**, une tous les 2 ou 3 jours, plutôt que tout le même jour.
 
 Langue : poste les versions **FR** si ton compte parle français, ou les versions **EN** si tu veux toucher le monde entier.
 Ne poste pas les deux langues de la même vidéo sur le même compte.
+
+## Ordre conseillé pour les prochaines
+
+Tu as déjà posté une ou deux vidéos de la série 1. Ensuite, dans cet ordre :
+
+1. `6-drift-ralenti`
+2. `4-depart-canon`
+3. Les vidéos de la série 1 pas encore postées
+4. `8-atelier`
+5. `5-rival`
+6. `7-circuits`
+
+Ça te fait environ **3 semaines** de vidéos.
 
 ---
 
@@ -65,14 +87,79 @@ Rain, snow or a storm: which weather would you pick? ⛈️❄️ My racing game
 #indiegame #indiedev #gamedev #racinggame #neon #synthwave #browsergame
 ```
 
+### Vidéo 4 : Départ canon
+
+**FR**
+```
+Accélère pile au feu vert = départ canon 🚀 Tu l'aurais eu ? Le jeu est gratuit, lien en bio.
+#jeuvideo #indiedev #jeuindé #gamedev #racing #neon #reflexes
+```
+**EN**
+```
+Hit the gas right on green = rocket start 🚀 Would you nail it? The game is free, link in bio.
+#indiegame #indiedev #gamedev #racinggame #neon #reflexes #browsergame
+```
+
+### Vidéo 5 : Rival
+
+**FR**
+```
+Chaque ligue a son rival. ZENITH n'a jamais perdu… pour l'instant 👀 Joue gratuitement, lien en bio.
+#jeuvideo #indiedev #jeuindé #gamedev #racing #neon #rival
+```
+**EN**
+```
+Every league has its rival. ZENITH has never lost… yet 👀 Play free, link in bio.
+#indiegame #indiedev #gamedev #racinggame #neon #rival #browsergame
+```
+
+### Vidéo 6 : Drift au ralenti
+
+**FR**
+```
+Le drift parfait n'existe pas… ou presque 😮‍💨 Mon jeu de course néon est gratuit, lien en bio.
+#jeuvideo #indiedev #jeuindé #gamedev #drift #ralenti #neon #satisfying
+```
+**EN**
+```
+The perfect drift doesn't exist… or does it? 😮‍💨 My neon racing game is free, link in bio.
+#indiegame #indiedev #gamedev #drift #slowmo #neon #satisfying #browsergame
+```
+
+### Vidéo 7 : Circuits
+
+**FR**
+```
+13 circuits, 13 ambiances. Tu choisis lequel ? 🌸🏜️🌫️🌃⛈️ Jeu gratuit, lien en bio.
+#jeuvideo #indiedev #jeuindé #gamedev #racing #neon #synthwave #aesthetic
+```
+**EN**
+```
+13 tracks, 13 vibes. Which one would you pick? 🌸🏜️🌫️🌃⛈️ Free game, link in bio.
+#indiegame #indiedev #gamedev #racinggame #neon #synthwave #aesthetic #browsergame
+```
+
+### Vidéo 8 : Atelier
+
+**FR**
+```
+Ta voiture, tes couleurs, tes effets 🎨 Tu la ferais comment, toi ? Jeu gratuit, lien en bio.
+#jeuvideo #indiedev #jeuindé #gamedev #racing #neon #customisation
+```
+**EN**
+```
+Your car, your colors, your effects 🎨 How would you paint yours? Free game, link in bio.
+#indiegame #indiedev #gamedev #racinggame #neon #customization #browsergame
+```
+
 ---
 
 ## Petits conseils
 
 - **Réponds aux commentaires**, même aux questions simples (« c'est sur iPhone ? » : oui, dans le navigateur).
   Les applis montrent davantage les vidéos qui ont des conversations.
+- Les vidéos 4, 5, 7 et 8 finissent par **une question** : c'est fait exprès, ça pousse les gens à répondre en commentaire.
 - **N'achète jamais de vues ou d'abonnés** : les applis le détectent et montrent ensuite moins tes vidéos.
 - Les premières vidéos font souvent peu de vues : c'est normal. C'est la régularité qui paie.
-- **YouTube Shorts** : mets le lien du jeu dans la description, il y est cliquable.
-- Si une vidéo marche bien, dis-le-moi : j'en ferai d'autres dans le même style
-  (un autre circuit, l'atelier de personnalisation, un duel contre un rival…).
+- **YouTube Shorts** : mets le lien du site dans la description, il y est cliquable.
+- Si une vidéo marche mieux que les autres, dis-le-moi : j'en ferai d'autres dans le même style.
